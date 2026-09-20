@@ -1,6 +1,5 @@
 # Xmake cache
 .xmake/
-build/
 bin/
 data/
 dat/
