@@ -1,4 +1,4 @@
-#include <core/MesonPipeline.h>
+#include <ParseLQCData/MesonPipeline.h>
 #include <MesonAnalysis/MesonExtractor.h>
 #include <Statistics/Resampling.h>
 #include <IOdata/DirectoryScanner.h>

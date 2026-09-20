@@ -197,7 +197,7 @@ load_condensate_configs_from_docs(const std::filesystem::path& json_hint = "docs
             while (val_start < obj_str.size() && (obj_str[val_start] == ' ' || obj_str[val_start] == '\t')) val_start++;
             size_t val_end = obj_str.find_first_of(",}\r\n ", val_start);
             if (val_end == std::string_view::npos) val_end = obj_str.size();
-            iodata::parse_double(obj_str.substr(val_start, val_end - val_start), out_val);
+            (void)iodata::parse_double(obj_str.substr(val_start, val_end - val_start), out_val);
         };
 
         CondensateConfig c;

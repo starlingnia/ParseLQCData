@@ -1,4 +1,4 @@
-#include <core/MesonPipeline.h>
+#include <ParseLQCData/MesonPipeline.h>
 #include <core/LQCDataTypes.h>
 
 #include <cstring>

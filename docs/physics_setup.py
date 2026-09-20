@@ -203,6 +203,62 @@ MRES_TABLE: Dict[str, dict] = {
     },
 }
 
+# 5.1 格点数据集目录命名结构字典 (Ensemble Configurations & Directory Patterns)
+ENSEMBLE_CONFIGS: Dict[str, dict] = {
+    "L32T12_beta4.17ms0.040m0.0020": {
+        "ns": 32, "nt": 12, "beta": 4.17, "ms": 0.040, "ml": 0.0020,
+        "mres": 0.000339722, "zm": 0.966247, "aliases": ["L32T12beta4.17"]
+    },
+    "L32T14_beta4.17ms0.040m0.0020": {
+        "ns": 32, "nt": 14, "beta": 4.17, "ms": 0.040, "ml": 0.0020,
+        "mres": 0.000339722, "zm": 0.966247, "aliases": []
+    },
+    "L40T16_beta4.17ms0.040m0.0020": {
+        "ns": 40, "nt": 16, "beta": 4.17, "ms": 0.040, "ml": 0.0020,
+        "mres": 0.000339722, "zm": 0.966247, "aliases": []
+    },
+    "L48T18_beta4.17ms0.040m0.0020": {
+        "ns": 48, "nt": 18, "beta": 4.17, "ms": 0.040, "ml": 0.0020,
+        "mres": 0.000339722, "zm": 0.966247, "aliases": []
+    },
+    "L48T18_beta4.17ms0.040m0.0020_2": {
+        "ns": 48, "nt": 18, "beta": 4.17, "ms": 0.040, "ml": 0.0020,
+        "mres": 0.000339722, "zm": 0.966247, "aliases": []
+    },
+    "L48T16beta4.13ms0.043547m0.000805": {
+        "ns": 48, "nt": 16, "beta": 4.13, "ms": 0.043547, "ml": 0.000805,
+        "mres": 0.000731464, "zm": 0.937703, "aliases": ["48x16b4.13", "13", "4.13"]
+    },
+    "L48T16beta4.15ms0.040843m0.000930": {
+        "ns": 48, "nt": 16, "beta": 4.15, "ms": 0.040843, "ml": 0.000930,
+        "mres": 0.000498493, "zm": 0.95239, "aliases": ["48x16b4.15", "15", "4.15"]
+    },
+    "L48T16beta4.17ms0.038400m0.001001": {
+        "ns": 48, "nt": 16, "beta": 4.17, "ms": 0.038400, "ml": 0.001001,
+        "mres": 0.000339722, "zm": 0.966247, "aliases": ["48x16b4.17", "17", "4.17"]
+    },
+    "L48T16beta4.18ms0.037265m0.001022": {
+        "ns": 48, "nt": 16, "beta": 4.18, "ms": 0.037265, "ml": 0.001022,
+        "mres": 0.000280451, "zm": 0.972899, "aliases": ["48x16b4.18", "18", "4.18"]
+    },
+    "L48T16beta4.20ms0.035150m0.001041": {
+        "ns": 48, "nt": 16, "beta": 4.20, "ms": 0.035150, "ml": 0.001041,
+        "mres": 0.000191127, "zm": 0.98571, "aliases": ["48x16b4.20", "20", "4.20"]
+    },
+    "L48T16beta4.23ms0.032315m0.001033": {
+        "ns": 48, "nt": 16, "beta": 4.23, "ms": 0.032315, "ml": 0.001033,
+        "mres": 0.000107528, "zm": 1.00385, "aliases": ["48x16b4.23", "23", "4.23"]
+    },
+    "L48T16beta4.30ms0.026930m0.000939": {
+        "ns": 48, "nt": 16, "beta": 4.30, "ms": 0.026930, "ml": 0.000939,
+        "mres": 0.0000280963, "zm": 1.04224, "aliases": ["48x16b4.30", "30", "4.30"]
+    },
+    "L48T16beta4.405ms0.021032m0.000760": {
+        "ns": 48, "nt": 16, "beta": 4.405, "ms": 0.021032, "ml": 0.000760,
+        "mres": 0.00000375269, "zm": 1.09274, "aliases": ["48x16b4.405", "405", "4.405"]
+    }
+}
+
 # 手征凝聚物理配置列表 (Chiral Condensate Configurations)
 CONDENSATE_CONFIGS: List[dict] = [
     {
@@ -331,6 +387,101 @@ def calculate_residual_mass(beta_val) -> float:
     import numpy as np
     return float(2.547e28 * np.exp(-17.559 * b_float))
 
+def calculate_temperature(beta_val: float, nt: int = 16) -> float:
+    """根据有限温度公式 T = 1 / (a(beta) * nt) 计算物理温度 (MeV)"""
+    b_val = float(beta_val)
+    b_key = f"{b_val:.2f}" if abs(b_val - 4.405) > 1e-4 else "4.405"
+    t_16 = TEMP_MAP.get(b_key, TEMP_MAP.get(str(beta_val), 153.31))
+    return float(t_16 * 16.0 / float(nt)) if nt > 0 else float(t_16)
+
+# 8. 格点目录结构正则解析与智能定位函数 (Directory Pattern Matcher & Resolver)
+import re
+
+ENSEMBLE_REGEX = re.compile(
+    r"^L(?P<L>\d+)T(?P<T>\d+)(?:_)?beta(?P<beta>[\d\.]+)ms(?P<ms>[\d\.]+)m(?:0)?(?P<ml>[\d\.]+)(?:_(?P<subid>\w+))?$"
+)
+LEGACY_REGEX = re.compile(
+    r"^(?P<L>\d+)x(?P<T>\d+)b(?P<beta>[\d\.]+)$"
+)
+
+def parse_ensemble_dirname(dirname: str) -> dict:
+    """从目录名称解析格点规模与夸克质量参数及对应温度"""
+    # 1. 优先查表精确匹配
+    if dirname in ENSEMBLE_CONFIGS:
+        info = dict(ENSEMBLE_CONFIGS[dirname])
+        info["dirname"] = dirname
+        info["temperature"] = calculate_temperature(info["beta"], info.get("nt", 16))
+        return info
+
+    # 2. 正则解析新格式: L32T12_beta4.17ms0.040m0.0020 或 L48T16beta4.13ms0.043547m0.000805
+    m = ENSEMBLE_REGEX.match(dirname)
+    if m:
+        gd = m.groupdict()
+        b_val = float(gd["beta"])
+        t_val = int(gd["T"])
+        return {
+            "dirname": dirname,
+            "ns": int(gd["L"]),
+            "nt": t_val,
+            "beta": b_val,
+            "ms": float(gd["ms"]),
+            "ml": float(gd["ml"]),
+            "mres": calculate_residual_mass(b_val),
+            "zm": float(MRES_TABLE.get(f"{b_val:.2f}", {}).get("zm", 1.0)),
+            "temperature": calculate_temperature(b_val, t_val),
+        }
+
+    # 3. 解析遗留格式: 48x16b4.17 或 L32T12beta4.17
+    m_leg = LEGACY_REGEX.match(dirname)
+    if m_leg:
+        gd = m_leg.groupdict()
+        b_val = float(gd["beta"])
+        b_key = f"{b_val:.2f}"
+        mres_info = MRES_TABLE.get(b_key, {})
+        return {
+            "dirname": dirname,
+            "ns": int(gd["L"]),
+            "nt": int(gd["T"]),
+            "beta": b_val,
+            "ms": float(mres_info.get("m_strange", 0.04)),
+            "ml": float(mres_info.get("m_light", 0.001)),
+            "mres": float(mres_info.get("m_residual", calculate_residual_mass(b_val))),
+            "zm": float(mres_info.get("zm", 1.0)),
+            "temperature": calculate_temperature(b_val, int(gd["T"])),
+        }
+
+    return {}
+
+def resolve_dataset_dir(base_dir: Path, target: str) -> Path:
+    """在 base_dir (如 data/readin/) 检索目标数据集，支持别名、beta 和完整目录名"""
+    # 直接存在
+    direct = base_dir / target
+    if direct.exists():
+        return direct
+
+    # 别名/名称在 ENSEMBLE_CONFIGS 中的匹配
+    for name, cfg in ENSEMBLE_CONFIGS.items():
+        if target == name or target in cfg.get("aliases", []):
+            candidate = base_dir / name
+            if candidate.exists():
+                return candidate
+            for alias in cfg.get("aliases", []):
+                if (base_dir / alias).exists():
+                    return base_dir / alias
+
+    # 模糊匹配 beta
+    target_clean = target.replace("beta", "").replace("b", "")
+    for child in base_dir.iterdir():
+        if not child.is_directory():
+            continue
+        cname = child.name
+        if target in cname:
+            return child
+        if target_clean in cname:
+            return child
+
+    return base_dir / target
+
 # 导出为标准 JSON 便于 C++ 及其他语言读取
 def export_to_json(out_path: Path) -> None:
     data = {
@@ -358,6 +509,7 @@ def export_to_json(out_path: Path) -> None:
         "CHANNEL_CONFIGS": CHANNEL_CONFIGS,
         "CONDENSATE_CONFIGS": CONDENSATE_CONFIGS,
         "MRES_TABLE": MRES_TABLE,
+        "ENSEMBLE_CONFIGS": ENSEMBLE_CONFIGS,
         "SYMMETRY_PAIRS": SYMMETRY_PAIRS,
         "FIT_SLICE_END": FIT_SLICE_END,
         "MULTI_FIT_SLICES": MULTI_FIT_SLICES,
@@ -369,3 +521,4 @@ if __name__ == "__main__":
     json_target = Path(__file__).parent / "physics_setup.json"
     export_to_json(json_target)
     print(f"[OK] Physics setup exported to JSON: {json_target}")
+

@@ -327,5 +327,151 @@ bash tests/run_tests.sh
 │   ├── condensate_orchestrator.py       # 手征凝聚专职调度器 (加载 liblqcd_condensate.dylib 等)
 │   ├── lqcd_orchestrator.py             # 统一调用门面封装
 │   └── Services/ (Service -> Services)  # C ABI 动态库桥接层 (MesonService.cpp, CondensateService.cpp)
-└── xmake.lua                            # 模块化 xmake 现代构建描述文件
 ```
+
+---
+
+## 常用执行与测试指令清单 (Execution & Testing Guide)
+
+### 1. 核心流水线一键运行 (Scripts Automation)
+- **端到端完整分析流水线** (按序执行介子与手征凝聚测量、分析与出图):
+  ```bash
+  bash scripts/run_all.sh
+  ```
+- **介子关联函数全量流水线** (多源/单源抽取、有效质量求解、平台拟合与绘图):
+  ```bash
+  bash scripts/run_meson.sh
+  ```
+- **手征凝聚全量流水线** (构型 XML 抽取、残余质量扣除、重整化与绘图):
+  ```bash
+  bash scripts/run_condensate.sh
+  ```
+- **单独执行多源 / 单源介子数据抽取与拟合**:
+  ```bash
+  bash scripts/run_meson_multi.sh
+  bash scripts/run_meson_single.sh
+  ```
+
+### 2. 原生 C++ 任务程序与 CLI 调度 (`apps/` & `build/`)
+本项目支持通过注册表机制统一驱动 C++ 计算任务，并直接支持目录正则解析与 `meas.*/PsibarPsi/*.xml` 数据抽取：
+- **编译 CLI 主程序**:
+  ```bash
+  g++-mp-15 -std=c++26 -Iinclude -O3 \
+      apps/main.cpp build/meson_task.cpp build/condensate_task.cpp \
+      src/IOdata/* src/Statistics/* \
+      build/MesonAnalysis/MesonExtractor.cpp src/core/MesonPipeline.cpp \
+      build/CondensateAnalysis/CondensateExtractor.cpp src/core/CondensatePipeline.cpp \
+      -o bin/ParseLQCData
+  ```
+- **查看所有已注册任务**:
+  ```bash
+  ./bin/ParseLQCData
+  ```
+- **执行手征凝聚测量任务**:
+  ```bash
+  # 测量指定数据集 (支持传入 L32T12_beta4.17ms0.040m0.0020 等新目录名)
+  ./bin/ParseLQCData condensate L32T12_beta4.17ms0.040m0.0020
+  # 手动指定物理参数: condensate [路径/名称] [ml] [ms] [mres] [zm]
+  ./bin/ParseLQCData condensate L32T12_beta4.17ms0.040m0.0020 0.0020 0.040 0.000339722 0.966247
+  # 批量扫描 readin 目录下所有包含 meas.* 构型的数据集
+  ./bin/ParseLQCData condensate_all data/readin
+  ```
+- **执行介子关联函数测量任务**:
+  ```bash
+  # 多源测量: meson_multi [beta] [channel] [binsize]
+  ./bin/ParseLQCData meson_multi 17 AV 4
+  # 单源测量: meson_single [beta] [channel] [binsize]
+  ./bin/ParseLQCData meson_single 17 S 4
+  # 全信道批量测量: meson_all [beta] [multi|single]
+  ./bin/ParseLQCData meson_all 17 multi
+  ```
+
+### 3. C++ 单元测试 (`tests/`)
+- **手征凝聚 C++ 核心流水线测试**:
+  ```bash
+  g++-mp-15 -std=c++26 -Wall -Wextra -Iinclude -O3 \
+      tests/test_condensate_pipeline.cpp \
+      src/IOdata/* src/Statistics/* \
+      build/CondensateAnalysis/CondensateExtractor.cpp src/core/CondensatePipeline.cpp \
+      -o bin/test_condensate
+  ./bin/test_condensate
+  ```
+- **介子关联函数 C++ 核心流水线测试**:
+  ```bash
+  g++-mp-15 -std=c++26 -Wall -Wextra -Iinclude -O3 \
+      tests/test_meson_pipeline.cpp \
+      src/IOdata/* src/Statistics/* \
+      build/MesonAnalysis/MesonExtractor.cpp src/core/MesonPipeline.cpp \
+      -o bin/test_meson
+  ./bin/test_meson
+  ```
+
+### 4. 物理数值精度与基准回归测试 (`tests/`)
+- **一键运行全部测试套件**:
+  ```bash
+  bash tests/run_tests.sh
+  ```
+- **运行逐点数值精度回归测试** (对比原 ana，IEEE-754 精度):
+  ```bash
+  uv run python tests/compare_with_ana.py
+  ```
+- **运行高并发多线程与内存承压测试**:
+  ```bash
+  uv run python tests/benchmark_stress_test.py
+  ```
+- **运行 Binsize 自相关消除与误差饱和度分析**:
+  ```bash
+  uv run python tests/test_binsize_autocorr.py
+  ```
+
+### 5. C ABI 动态链接库编译 (`lib/`)
+```bash
+# 介子动态库
+g++-mp-15 -std=c++26 -Iinclude -O3 -shared -fPIC \
+    tools/Services/MesonService.cpp src/IOdata/* src/Statistics/* \
+    build/MesonAnalysis/MesonExtractor.cpp src/core/MesonPipeline.cpp \
+    -o lib/liblqcd_meson.so
+
+# 手征凝聚动态库
+g++-mp-15 -std=c++26 -Iinclude -O3 -shared -fPIC \
+    tools/Services/CondensateService.cpp src/IOdata/* src/Statistics/* \
+    build/CondensateAnalysis/CondensateExtractor.cpp src/core/CondensatePipeline.cpp \
+    -o lib/liblqcd_condensate.so
+```
+
+
+            +    build/MesonAnalysis/MesonExtractor.cpp src/core/MesonPipeline.cpp \
+            +    -o lib/liblqcd_meson.so
+            +
+            +# 手征凝聚动态库
+            +g++-mp-15 -std=c++26 -Iinclude -O3 -shared -fPIC \
+            +    tools/Services/CondensateService.cpp src/IOdata/* src/Statistics/* \
+            +    build/CondensateAnalysis/CondensateExtractor.cpp src/core/CondensatePipeline.cpp \
+            +    -o lib/liblqcd_condensate.so
+            +```
+            + (ctrl+o to collapse)
+
+  已将全套执行与测试指令追加写入 README.md 末尾（纯追加模式，未修改或覆盖旧内容）。
+  ──────
+  ### 追加内容概览（可在 README.md:334-442 查看完整文档）：
+
+  1. 核心流水线一键运行：
+      • bash scripts/run_all.sh（端到端完整分析流水线）
+      • bash scripts/run_meson.sh（介子分析流水线）
+      • bash scripts/run_condensate.sh（手征凝聚全量流水线）
+      • bash scripts/run_meson_multi.sh / bash scripts/run_meson_single.sh
+  2. 原生 C++ CLI 调度程序（基于注册表）：
+      • bin/ParseLQCData 编译命令
+      • condensate 任务命令（直接支持 L32T12_beta4.17ms0.040m0.0020 等新数据集）
+      • condensate_all 批量扫描命令
+      • meson_multi / meson_single / meson_all 测量命令
+  3. C++ 单元测试：
+      • test_condensate（手征凝聚核心流水线与 XML 解析单元测试）
+      • test_meson（介子抽取与 Folding 单元测试）
+  4. Python 数值精度与基准回归测试：
+      • bash tests/run_tests.sh（全量测试套件）
+      • tests/compare_with_ana.py（严格逐点精度回归）
+      • tests/benchmark_stress_test.py（高并发压力与内存测试）
+      • tests/test_binsize_autocorr.py（自相关与误差饱和度分析）
+  5. C ABI 动态链接库编译指令（liblqcd_meson.so 与 liblqcd_condensate.so）。
+
