@@ -1,4 +1,4 @@
-#include <core/Registry.h>
+#include <ParseLQCData/Registry.h>
 #include <iostream>
 #include <vector>
 #include <string_view>
