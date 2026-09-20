@@ -17,6 +17,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from src.parselqcdata.meson_pipeline import process_channel
+from docs.physics_setup import ANA_ROOT, OUTPUT_ROOT
 
 def main():
     print("=================================================================")
@@ -27,7 +28,7 @@ def main():
     channel = "AV"
     binsize = 4
 
-    ground_truth_path = Path(f"/Users/junxiongnie/code/ana/dat/func/pickdata/b4.{beta_str}/save_{channel}.csv")
+    ground_truth_path = ANA_ROOT / "dat" / "func" / "pickdata" / f"b4.{beta_str}" / f"save_{channel}.csv"
     if not ground_truth_path.exists():
         print(f"❌ 未找到原工程基准数据: {ground_truth_path}")
         sys.exit(1)
@@ -68,14 +69,14 @@ def main():
     is_stds_match = np.allclose(errors, gt_stds, rtol=1e-11, atol=1e-13)
 
     if is_means_match and is_stds_match:
-        print("\n🎉 测试成功！新架构计算结果与原项目基准数据 100% 精确吻合！")
+        print("\n[OK] 测试成功！新架构计算结果与原项目基准数据 100% 精确吻合！")
         print("   前 5 行比对样例 (新值 vs 基准值):")
         for i in range(5):
             print(f"   Row {i:02d} | Calc Mean: {means[i]:.16e} | GT Mean: {gt_means[i]:.16e}")
             print(f"          | Calc Std:  {errors[i]:.16e} | GT Std:  {gt_stds[i]:.16e}")
         return 0
     else:
-        print("\n❌ 精度比对不匹配，请检查计算差异！")
+        print("\n[FAIL] 精度比对不匹配，请检查计算差异！")
         return 1
 
 if __name__ == "__main__":

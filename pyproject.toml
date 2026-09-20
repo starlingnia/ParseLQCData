@@ -8,9 +8,14 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "gvar>=13.1.9",
+    "lsqfit>=13.3.1",
     "matplotlib>=3.11.2",
     "numpy>=2.5.3",
+    "pandas>=3.0.6",
     "polars>=1.44.2",
+    "psutil>=7.2.2",
+    "scipy>=1.18.1",
 ]
 
 [project.scripts]

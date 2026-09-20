@@ -1,0 +1,7 @@
+{
+    errdata = "\27[1mtests/meson_task.cpp:73:5: \27[0m\27[0;1;35mwarning: \27[0m\27[1mignoring return value of function declared with 'nodiscard' attribute [-Wunused-result]\27[0m\
+   73 |     iodata::write_pairs_to_csv(save_file, res.means, res.errors);\27[0m\
+      | \27[0;1;32m    ^~~~~~~~~~~~~~~~~~~~~~~~~~\
+\27[0m1 warning generated.\
+"
+}

@@ -1,4 +1,4 @@
-#include <ParseLQCData/MesonAnalysis/MesonExtractor.h>
+#include <MesonAnalysis/MesonExtractor.h>
 #include <IOdata/FastParser.h>
 #include <IOdata/FileReader.h>
 
@@ -124,4 +124,59 @@ namespace {
     return sum_rolled;
 }
 
+[[nodiscard]] std::vector<double> extract_single_file_singlesrc_block(
+    std::string_view file_content,
+    std::string_view exact_tag,
+    const size_t num_lines) {
+
+    std::vector<double> block;
+    block.reserve(num_lines);
+
+    bool in_block = false;
+    size_t line_count = 0;
+
+    iodata::for_each_line(file_content, [&](std::string_view line) {
+        if (line_count >= num_lines) {
+            return;
+        }
+
+        // 去除末尾空白
+        while (!line.empty() && (line.back() == ' ' || line.back() == '\t' || line.back() == '\r')) {
+            line.remove_suffix(1);
+        }
+
+        if (line == exact_tag) {
+            in_block = true;
+            return;
+        }
+
+        if (in_block) {
+            size_t token_idx = 0;
+            double real_val = 0.0;
+            bool got_real = false;
+
+            iodata::for_each_token(line, [&](std::string_view token) {
+                if (token_idx == 1) {
+                    if (iodata::parse_double(token, real_val)) {
+                        got_real = true;
+                    }
+                }
+                ++token_idx;
+            });
+
+            if (got_real) {
+                block.push_back(real_val);
+                ++line_count;
+            }
+        }
+    });
+
+    if (block.size() != num_lines) {
+        return {};
+    }
+
+    return block;
+}
+
 } // namespace lqcd::meson
+

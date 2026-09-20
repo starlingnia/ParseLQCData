@@ -1,4 +1,4 @@
-#include <ParseLQCData/Statistics/Resampling.h>
+#include <Statistics/Resampling.h>
 
 #include <numeric>
 #include <cmath>

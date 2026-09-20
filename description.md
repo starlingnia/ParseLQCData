@@ -35,3 +35,34 @@
   • DirectoryScanner.h / DirectoryScanner.cpp：自然排序（与 Python natsort 严格等价）。
   • FastParser.h：零分配字符切片转双精度浮点与坐标解析。
   • FileWriter.h / FileWriter.cpp：高精度 CSV 格式化落盘。
+  
+    ### 1. 编译原生 CLI 可执行文件 (bin/ParseLQCData)
+
+    mkdir -p bin
+
+    gc -O3 -Wall \
+      apps/main.cpp \
+      tests/meson_task.cpp \
+      tests/demo_task.cpp \
+      src/IOdata/*.cpp \
+      src/Statistics/*.cpp \
+      src/MesonAnalysis/*.cpp \
+      src/CondensateAnalysis/*.cpp \
+      src/core/*.cpp \
+      -o bin/ParseLQCData
+
+  ### 2. 编译供 Python 调用的共享动态库 (build/libparselqcdata.dylib)
+
+    mkdir -p build
+
+    gc -O3 -Wall -fPIC -shared \
+      tools/Services/*.cpp \
+      src/IOdata/*.cpp \
+      src/Statistics/*.cpp \
+      src/MesonAnalysis/*.cpp \
+      src/CondensateAnalysis/*.cpp \
+      src/core/*.cpp \
+      -o build/libparselqcdata.dylib
+  
+  
+  

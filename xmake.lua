@@ -1,29 +1,79 @@
 add_rules("mode.debug", "mode.release")
 
--- C++ 共享动态库目标：供 Python ctypes 高性能高并发调用
+-- ==============================================================================
+-- 独立原子组件 (Modular Components)
+-- ==============================================================================
+
+-- 组件 1: 文本 I/O 与零拷贝解析器
+target("iodata")
+    set_kind("static")
+    set_languages("c++26")
+    add_includedirs("include")
+    add_files("src/IOdata/*.cpp")
+
+-- 组件 2: 统计重采样与 Folding
+target("statistics")
+    set_kind("static")
+    set_languages("c++26")
+    add_includedirs("include")
+    add_files("src/Statistics/*.cpp")
+
+-- 组件 3: 介子关联函数特征抽取
+target("meson_analysis")
+    set_kind("static")
+    set_languages("c++26")
+    add_includedirs("include")
+    add_files("src/MesonAnalysis/*.cpp")
+    add_deps("iodata")
+
+-- 组件 4: 手征凝聚 XML 抽取与重整化
+target("condensate_analysis")
+    set_kind("static")
+    set_languages("c++26")
+    add_includedirs("include")
+    add_files("src/CondensateAnalysis/*.cpp")
+    add_deps("iodata")
+
+-- 组件 5: 底层多线程并行调度流水线核心
+target("core")
+    set_kind("static")
+    set_languages("c++26")
+    add_includedirs("include")
+    add_files("src/core/*.cpp")
+    add_deps("iodata", "statistics", "meson_analysis")
+
+-- ==============================================================================
+-- 产物目标 (Artifact Targets)
+-- ==============================================================================
+
+-- 目标 A: C ABI 共享动态库 (供 Python ctypes 调用)
 target("parselqcdata_shared")
     set_kind("shared")
     set_languages("c++26")
     set_basename("parselqcdata")
-    add_includedirs("include", "../leetcode/FuncSolv/include")
-    add_files(
-        "../leetcode/FuncSolv/src/IOdata/*.cpp",
-        "src/Statistics/*.cpp",
-        "src/MesonAnalysis/*.cpp",
-        "tools/Services/*.cpp"
-    )
-    set_targetdir("bin")
+    add_includedirs("include")
+    add_files("tools/Services/*.cpp")
+    add_deps("core", "condensate_analysis", "meson_analysis", "statistics", "iodata")
+    set_targetdir("build")
 
--- 原生可执行文件目标：支持任务注册与 CLI 驱动
+-- 目标 B: 原生 CLI 驱动主程序 (包含 apps/ 下注册的所有业务 Task)
 target("ParseLQCData")
     set_kind("binary")
     set_languages("c++26")
-    add_includedirs("include", "../leetcode/FuncSolv/include")
-    add_files(
-        "apps/main.cpp",
-        "tests/*.cpp",
-        "../leetcode/FuncSolv/src/IOdata/*.cpp",
-        "src/Statistics/*.cpp",
-        "src/MesonAnalysis/*.cpp"
-    )
+    add_includedirs("include")
+    add_files("apps/*.cpp")
+    add_deps("core", "condensate_analysis", "meson_analysis", "statistics", "iodata")
+    set_targetdir("bin")
+
+-- ==============================================================================
+-- 测试目标 (Tests Target - 仅在需要测试时单独编译与运行)
+-- 默认构建不包含此目标，需使用 `xmake build unit_tests` 或 `xmake run unit_tests`
+-- ==============================================================================
+target("unit_tests")
+    set_default(false)
+    set_kind("binary")
+    set_languages("c++26")
+    add_includedirs("include")
+    add_files("tests/test_meson_pipeline.cpp")
+    add_deps("core", "condensate_analysis", "meson_analysis", "statistics", "iodata")
     set_targetdir("bin")

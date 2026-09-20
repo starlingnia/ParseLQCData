@@ -1,108 +1,77 @@
-import ctypes
-import os
-from pathlib import Path
+#!/usr/bin/env python3
+"""
+tools/lqcd_orchestrator.py
+--------------------------------------------------------------------------------
+Unified bridge wrapping MesonOrchestrator and CondensateOrchestrator
+--------------------------------------------------------------------------------
+"""
+
 from typing import List, Optional, Tuple
 import numpy as np
 
+from tools.meson_orchestrator import MesonOrchestrator
+from tools.condensate_orchestrator import CondensateOrchestrator
+
+
 class LQCDOrchestrator:
-    """
-    Python 高层任务编排器：负责参数组织与驱动底层 C++ 多线程并发数据分析引擎
-    """
+    """Unified Orchestrator delegating to specialized Meson and Condensate bridges."""
+
     def __init__(self, library_path: Optional[str] = None) -> None:
-        if library_path is None:
-            library_path = self._find_library()
-        self.library_path = str(library_path)
-        self._lib = ctypes.CDLL(self.library_path)
-        self._setup_bindings()
+        self.meson = MesonOrchestrator(library_path)
+        self.condensate = CondensateOrchestrator(library_path)
 
-    def _find_library(self) -> Path:
-        current_dir = Path(__file__).resolve().parent
-        project_root = current_dir.parent
-        candidates = [
-            project_root / "bin" / "libparselqcdata.dylib",
-            project_root / "bin" / "libparselqcdata.so",
-            project_root / "build" / "libparselqcdata.dylib",
-            project_root / "build" / "libparselqcdata.so",
-        ]
-        for c in candidates:
-            if c.exists():
-                return c
-        raise FileNotFoundError(f"未找到共享库文件！尝试查找路径:\n" + "\n".join(f"  - {c}" for c in candidates))
+    def process_channel(
+        self,
+        input_dir: str,
+        channel_configs: List[dict],
+        binsize: int = 4,
+        num_lines: int = 48,
+        thread_count: int = 0,
+        is_single_source: bool = False
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, int, int]:
+        return self.meson.process_channel(
+            input_dir=input_dir,
+            channel_configs=channel_configs,
+            binsize=binsize,
+            num_lines=num_lines,
+            thread_count=thread_count,
+            is_single_source=is_single_source
+        )
 
-    def _setup_bindings(self) -> None:
-        # int run_meson_pipeline_c_api(...)
-        self._lib.run_meson_pipeline_c_api.argtypes = [
-            ctypes.c_char_p,                                    # input_dir
-            ctypes.c_char_p,                                    # channel_types_csv
-            ctypes.c_char_p,                                    # channel_dirs_csv
-            ctypes.c_int,                                       # binsize
-            ctypes.c_int,                                       # num_lines
-            ctypes.c_int,                                       # thread_count
-            ctypes.POINTER(ctypes.c_double),                    # out_means
-            ctypes.POINTER(ctypes.c_double),                    # out_errors
-            ctypes.POINTER(ctypes.POINTER(ctypes.c_double)),    # out_folded_jk
-            ctypes.POINTER(ctypes.c_int),                       # out_n_bins
-            ctypes.POINTER(ctypes.c_int),                       # out_n_raw_cfgs
-        ]
-        self._lib.run_meson_pipeline_c_api.restype = ctypes.c_int
-
-        self._lib.free_lqcd_buffer.argtypes = [ctypes.c_void_p]
-        self._lib.free_lqcd_buffer.restype = None
+    def process_chiral_condensate(
+        self,
+        base_dir: str,
+        m_light: float = 0.001,
+        m_strange: float = 0.050,
+        m_residual: float = 0.0003,
+        zm_factor: float = 1.0
+    ) -> Tuple[float, float, int]:
+        return self.condensate.process_condensate(
+            base_dir=base_dir,
+            m_light=m_light,
+            m_strange=m_strange,
+            m_residual=m_residual,
+            zm_factor=zm_factor
+        )
 
     def execute_meson_analysis(
         self,
         input_dir: str,
-        channel_mappings: List[dict],
+        channel_mappings: Optional[List[dict]] = None,
+        channel_configs: Optional[List[dict]] = None,
         binsize: int = 4,
         num_lines: int = 48,
         thread_count: int = 0,
-        return_folded_jk: bool = False
-    ) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
-        """
-        驱动 C++ 引擎执行端到端 Meson 数据分析与统计计算
-        返回: (means, errors, [folded_jk_matrix])
-        """
-        types = [m['type'] for m in channel_mappings]
-        dirs = [m['dir'] for m in channel_mappings]
-        types_str = ",".join(types).encode('utf-8')
-        dirs_str = ",".join(dirs).encode('utf-8')
-        input_dir_bytes = str(input_dir).encode('utf-8')
-
-        out_means = (ctypes.c_double * num_lines)()
-        out_errors = (ctypes.c_double * num_lines)()
-        out_n_bins = ctypes.c_int(0)
-        out_n_raw_cfgs = ctypes.c_int(0)
-
-        c_folded_ptr = ctypes.POINTER(ctypes.c_double)() if return_folded_jk else None
-        p_c_folded_ptr = ctypes.byref(c_folded_ptr) if return_folded_jk else None
-
-        ret = self._lib.run_meson_pipeline_c_api(
-            input_dir_bytes,
-            types_str,
-            dirs_str,
-            ctypes.c_int(binsize),
-            ctypes.c_int(num_lines),
-            ctypes.c_int(thread_count),
-            out_means,
-            out_errors,
-            p_c_folded_ptr,
-            ctypes.byref(out_n_bins),
-            ctypes.byref(out_n_raw_cfgs)
+        is_single_source: bool = False,
+        return_folded_jk: bool = True
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        return self.meson.execute_meson_analysis(
+            input_dir=input_dir,
+            channel_mappings=channel_mappings,
+            channel_configs=channel_configs,
+            binsize=binsize,
+            num_lines=num_lines,
+            thread_count=thread_count,
+            is_single_source=is_single_source,
+            return_folded_jk=return_folded_jk
         )
-
-        if ret != 0:
-            raise RuntimeError(f"C++ 底层计算失败，错误码: {ret}")
-
-        means = np.array([out_means[i] for i in range(num_lines)], dtype=np.float64)
-        errors = np.array([out_errors[i] for i in range(num_lines)], dtype=np.float64)
-
-        folded_jk = None
-        if return_folded_jk and c_folded_ptr:
-            n_bins = out_n_bins.value
-            total_elements = num_lines * n_bins
-            # 零拷贝读取连续内存
-            raw_buf = np.ctypeslib.as_array(c_folded_ptr, shape=(num_lines, n_bins))
-            folded_jk = raw_buf.copy()
-            self._lib.free_lqcd_buffer(c_folded_ptr)
-
-        return means, errors, folded_jk

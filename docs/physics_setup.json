@@ -1,0 +1,467 @@
+{
+  "DIRECTORIES": {
+    "PROJECT_ROOT": "/Users/junxiongnie/code/build/ParseLQCData",
+    "DOCS_DIR": "/Users/junxiongnie/code/build/ParseLQCData/docs",
+    "FIGURES_DIR": "/Users/junxiongnie/code/build/ParseLQCData/docs/figures",
+    "REPORT_PATH": "/Users/junxiongnie/code/build/ParseLQCData/docs/verification_report.md",
+    "ANA_ROOT": "/Users/junxiongnie/code/ana",
+    "DEFAULT_DATA_DIR": "/Users/junxiongnie/code/build/ParseLQCData/data",
+    "DEFAULT_READIN_DIR": "/Users/junxiongnie/code/build/ParseLQCData/data/readin",
+    "OUTPUT_ROOT": "/Users/junxiongnie/code/build/ParseLQCData/output",
+    "OUTPUT_PICKDATA_DIR": "/Users/junxiongnie/code/build/ParseLQCData/output/pickdata",
+    "OUTPUT_PICKDATA_SINGLE_DIR": "/Users/junxiongnie/code/build/ParseLQCData/output/pickdata-singlesrc",
+    "OUTPUT_RATIO_DIR": "/Users/junxiongnie/code/build/ParseLQCData/output/ratio_results",
+    "OUTPUT_RATIO_SINGLE_DIR": "/Users/junxiongnie/code/build/ParseLQCData/output/ratio_results-singlesrc",
+    "OUTPUT_SIMULATE_DIR": "/Users/junxiongnie/code/build/ParseLQCData/output/simulateresult",
+    "OUTPUT_SIMULATE_SINGLE_DIR": "/Users/junxiongnie/code/build/ParseLQCData/output/simulateresult-singlesrc",
+    "OUTPUT_CONDENSATE_DIR": "/Users/junxiongnie/code/build/ParseLQCData/output/condensate"
+  },
+  "TEMP_MAP": {
+    "4.13": 138.23,
+    "4.15": 145.75,
+    "4.17": 153.31,
+    "4.18": 157.03,
+    "4.20": 164.55,
+    "4.23": 176.43,
+    "4.30": 202.52,
+    "4.405": 241.6
+  },
+  "BETAS": [
+    "13",
+    "15",
+    "17",
+    "18",
+    "20",
+    "23",
+    "30"
+  ],
+  "CHANNELS": [
+    "AV",
+    "S",
+    "Tt",
+    "PS",
+    "Xt",
+    "Vec"
+  ],
+  "TRANSITION_REGION": [
+    155.5,
+    160.5
+  ],
+  "CHANNEL_CONFIGS": {
+    "AV": [
+      {
+        "type": "AVector2",
+        "dir": "DIRX"
+      },
+      {
+        "type": "AVector3",
+        "dir": "DIRX"
+      },
+      {
+        "type": "AVector3",
+        "dir": "DIRY"
+      },
+      {
+        "type": "AVector1",
+        "dir": "DIRY"
+      },
+      {
+        "type": "AVector1",
+        "dir": "DIRZ"
+      },
+      {
+        "type": "AVector2",
+        "dir": "DIRZ"
+      }
+    ],
+    "S": [
+      {
+        "type": "TVector4",
+        "dir": "DIRZ"
+      },
+      {
+        "type": "TVector4",
+        "dir": "DIRX"
+      },
+      {
+        "type": "TVector4",
+        "dir": "DIRY"
+      }
+    ],
+    "Tt": [
+      {
+        "type": "TVector1",
+        "dir": "DIRX"
+      },
+      {
+        "type": "TVector3",
+        "dir": "DIRZ"
+      },
+      {
+        "type": "TVector2",
+        "dir": "DIRY"
+      }
+    ],
+    "PS": [
+      {
+        "type": "TAVector4",
+        "dir": "DIRZ"
+      },
+      {
+        "type": "TAVector4",
+        "dir": "DIRX"
+      },
+      {
+        "type": "TAVector4",
+        "dir": "DIRY"
+      }
+    ],
+    "Xt": [
+      {
+        "type": "TAVector1",
+        "dir": "DIRX"
+      },
+      {
+        "type": "TAVector3",
+        "dir": "DIRZ"
+      },
+      {
+        "type": "TAVector2",
+        "dir": "DIRY"
+      }
+    ],
+    "Vec": [
+      {
+        "type": "Vector2",
+        "dir": "DIRX"
+      },
+      {
+        "type": "Vector3",
+        "dir": "DIRX"
+      },
+      {
+        "type": "Vector3",
+        "dir": "DIRY"
+      },
+      {
+        "type": "Vector1",
+        "dir": "DIRY"
+      },
+      {
+        "type": "Vector1",
+        "dir": "DIRZ"
+      },
+      {
+        "type": "Vector2",
+        "dir": "DIRZ"
+      }
+    ]
+  },
+  "CONDENSATE_CONFIGS": [
+    {
+      "beta": "4.13",
+      "ml": 0.000805,
+      "ms": 0.043547,
+      "mres": 0.000731464,
+      "zm": 0.937703,
+      "pbp_l": 0.0016688,
+      "pbp_l_err": 6.34e-06,
+      "pbp_s": 0.01942524,
+      "pbp_s_err": 1.35e-06,
+      "pbp_rm": 0.00106082,
+      "pbp_rm_err": 6.74e-06
+    },
+    {
+      "beta": "4.15",
+      "ml": 0.00093,
+      "ms": 0.040843,
+      "mres": 0.000498493,
+      "zm": 0.95239,
+      "pbp_l": 0.00135913,
+      "pbp_l_err": 6.44e-06,
+      "pbp_s": 0.01808069,
+      "pbp_s_err": 1.28e-06,
+      "pbp_rm": 0.00077109,
+      "pbp_rm_err": 6.75e-06
+    },
+    {
+      "beta": "4.17",
+      "ml": 0.001001,
+      "ms": 0.0384,
+      "mres": 0.000339722,
+      "zm": 0.966247,
+      "pbp_l": 0.00107396,
+      "pbp_l_err": 6.42e-06,
+      "pbp_s": 0.01686886,
+      "pbp_s_err": 1.27e-06,
+      "pbp_rm": 0.00050728,
+      "pbp_rm_err": 6.62e-06
+    },
+    {
+      "beta": "4.18",
+      "ml": 0.001022,
+      "ms": 0.037265,
+      "mres": 0.000280451,
+      "zm": 0.972899,
+      "pbp_l": 0.00097061,
+      "pbp_l_err": 6.42e-06,
+      "pbp_s": 0.01629887,
+      "pbp_s_err": 1.34e-06,
+      "pbp_rm": 0.00041649,
+      "pbp_rm_err": 6.59e-06
+    },
+    {
+      "beta": "4.20",
+      "ml": 0.001041,
+      "ms": 0.03515,
+      "mres": 0.000191127,
+      "zm": 0.98571,
+      "pbp_l": 0.00076708,
+      "pbp_l_err": 5.54e-06,
+      "pbp_s": 0.01524584,
+      "pbp_s_err": 1.27e-06,
+      "pbp_rm": 0.00023896,
+      "pbp_rm_err": 5.61e-06
+    },
+    {
+      "beta": "4.23",
+      "ml": 0.001033,
+      "ms": 0.032315,
+      "mres": 0.000107528,
+      "zm": 1.00385,
+      "pbp_l": 0.00058018,
+      "pbp_l_err": 3.83e-06,
+      "pbp_s": 0.01384239,
+      "pbp_s_err": 1.2e-06,
+      "pbp_rm": 9.289e-05,
+      "pbp_rm_err": 3.81e-06
+    },
+    {
+      "beta": "4.30",
+      "ml": 0.000939,
+      "ms": 0.02693,
+      "mres": 2.80963e-05,
+      "zm": 1.04224,
+      "pbp_l": 0.0004121,
+      "pbp_l_err": 1.39e-06,
+      "pbp_s": 0.01124911,
+      "pbp_s_err": 9e-07,
+      "pbp_rm": 8.2e-06,
+      "pbp_rm_err": 1.33e-06
+    },
+    {
+      "beta": "4.405",
+      "ml": 0.00076,
+      "ms": 0.021032,
+      "mres": 3.75269e-06,
+      "zm": 1.09274,
+      "pbp_l": 0.00031129,
+      "pbp_l_err": 3e-08,
+      "pbp_s": 0.00856161,
+      "pbp_s_err": 2.7e-07,
+      "pbp_rm": 4e-07,
+      "pbp_rm_err": 2e-08
+    }
+  ],
+  "MRES_TABLE": {
+    "4.13": {
+      "m_light": 0.000805,
+      "m_strange": 0.043547,
+      "m_residual": 0.000731464,
+      "zm": 0.937703
+    },
+    "4.15": {
+      "m_light": 0.00093,
+      "m_strange": 0.040843,
+      "m_residual": 0.000498493,
+      "zm": 0.95239
+    },
+    "4.17": {
+      "m_light": 0.001001,
+      "m_strange": 0.0384,
+      "m_residual": 0.000339722,
+      "zm": 0.966247
+    },
+    "4.18": {
+      "m_light": 0.001022,
+      "m_strange": 0.037265,
+      "m_residual": 0.000280451,
+      "zm": 0.972899
+    },
+    "4.20": {
+      "m_light": 0.001041,
+      "m_strange": 0.03515,
+      "m_residual": 0.000191127,
+      "zm": 0.98571
+    },
+    "4.23": {
+      "m_light": 0.001033,
+      "m_strange": 0.032315,
+      "m_residual": 0.000107528,
+      "zm": 1.00385
+    },
+    "4.30": {
+      "m_light": 0.000939,
+      "m_strange": 0.02693,
+      "m_residual": 2.80963e-05,
+      "zm": 1.04224
+    },
+    "4.405": {
+      "m_light": 0.00076,
+      "m_strange": 0.021032,
+      "m_residual": 3.75269e-06,
+      "zm": 1.09274
+    }
+  },
+  "SYMMETRY_PAIRS": [
+    {
+      "name": "Chiral SU(2)_L x SU(2)_R",
+      "ch1": "Vec",
+      "ch2": "AV",
+      "label": "$SU(2)_L \\times SU(2)_R$ (Vec - AV)",
+      "color": "#69b3a2",
+      "marker": "o"
+    },
+    {
+      "name": "Axial Anomaly U(1)_A (Scalar-Pseudoscalar)",
+      "ch1": "S",
+      "ch2": "PS",
+      "label": "$U(1)_A$ (S - PS)",
+      "color": "#ba68c8",
+      "marker": "s"
+    },
+    {
+      "name": "Axial Anomaly U(1)_A (Tensor Channels)",
+      "ch1": "Xt",
+      "ch2": "Tt",
+      "label": "$U(1)_A$ (Xt - Tt)",
+      "color": "#64b5f6",
+      "marker": "^"
+    },
+    {
+      "name": "Chiral-Spin SU(2)_CS",
+      "ch1": "AV",
+      "ch2": "Tt",
+      "label": "$SU(2)_{CS}$ (AV - Tt)",
+      "color": "#ffb74d",
+      "marker": "v"
+    }
+  ],
+  "FIT_SLICE_END": 25,
+  "MULTI_FIT_SLICES": {
+    "13": {
+      "AV": 16,
+      "S": 14,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 16
+    },
+    "15": {
+      "AV": 13,
+      "S": 10,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 13
+    },
+    "17": {
+      "AV": 14,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 14
+    },
+    "18": {
+      "AV": 16,
+      "S": 18,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 16
+    },
+    "20": {
+      "AV": 15,
+      "S": 19,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 15
+    },
+    "23": {
+      "AV": 16,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 16
+    },
+    "30": {
+      "AV": 16,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 16
+    }
+  },
+  "SINGLE_FIT_SLICES": {
+    "13": {
+      "AV": 16,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 16
+    },
+    "15": {
+      "AV": 13,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 13
+    },
+    "17": {
+      "AV": 14,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 14
+    },
+    "18": {
+      "AV": 16,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 16
+    },
+    "20": {
+      "AV": 15,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 15
+    },
+    "23": {
+      "AV": 16,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 16
+    },
+    "30": {
+      "AV": 16,
+      "S": 8,
+      "Tt": 10,
+      "PS": 8,
+      "Xt": 10,
+      "Vec": 16
+    }
+  }
+}
