@@ -26,6 +26,7 @@ def fit_single_jackknife_column(x_data: np.ndarray, y_val: np.ndarray, y_err: np
             data=(x_data, y_gv),
             fcn=target_cosh_func,
             p0={'a': 1.0, 'm': 0.5},
+            fitter='scipy_least_squares',
             debug=False
         )
         return {
