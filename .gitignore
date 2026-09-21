@@ -6,4 +6,8 @@ dat/
 # MacOS Cache
 .DS_Store
 
-
+# Build artifacts & cache
+build/.*
+build/macosx/
+__pycache__/
+*.pyc

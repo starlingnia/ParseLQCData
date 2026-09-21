@@ -1,0 +1,19 @@
+{
+  "dataset_name": "L32T12_beta4.17ms0.040m0.0020",
+  "dataset_path": "/Users/junxiongnie/code/algo/ParseLQCData/data/readin/L32T12_beta4.17ms0.040m0.0020",
+  "ns": 32,
+  "nt": 12,
+  "beta": 4.17,
+  "temperature": 204.41333333333333,
+  "ml": 0.002,
+  "ms": 0.04,
+  "mres": 0.000339722,
+  "zm": 0.966247,
+  "num_cfgs": 108,
+  "pbpl": 0.0006864934985449735,
+  "pbpl_err": 4.332893217942757e-05,
+  "pbps": 0.012177465833333333,
+  "pbps_err": 0.0007301615808860567,
+  "pbp_rm": -2.0496820100281747e-05,
+  "pbp_rm_err": 1.8947098045840344e-05
+}

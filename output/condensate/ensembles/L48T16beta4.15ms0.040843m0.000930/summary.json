@@ -1,0 +1,19 @@
+{
+  "dataset_name": "L48T16beta4.15ms0.040843m0.000930",
+  "dataset_path": "/Users/junxiongnie/code/algo/ParseLQCData/data/readin/L48T16beta4.15ms0.040843m0.000930",
+  "ns": 48,
+  "nt": 16,
+  "beta": 4.15,
+  "temperature": 145.75,
+  "ml": 0.00093,
+  "ms": 0.040843,
+  "mres": 0.000498493,
+  "zm": 0.95239,
+  "num_cfgs": 2024,
+  "pbpl": 0.0013591269210968414,
+  "pbpl_err": 6.444326217664843e-06,
+  "pbps": 0.018080692183794475,
+  "pbps_err": 1.280546693449951e-06,
+  "pbp_rm": 0.0007710873124156676,
+  "pbp_rm_err": 6.748422981807969e-06
+}

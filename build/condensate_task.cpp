@@ -3,10 +3,14 @@
 #include <ParseLQCData/CondensatePipeline.h>
 #include <IOdata/FileWriter.h>
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <filesystem>
+#include <fstream>
+#include <format>
 #include <iostream>
+#include <map>
 #include <print>
 #include <vector>
 #include <string>
@@ -16,16 +20,37 @@ namespace {
 // 智能定位手征凝聚数据集目录与物理参数
 struct CondensateDatasetInfo {
     std::filesystem::path dir_path;
+    int ns{48};
+    int nt{16};
+    double beta{4.17};
+    double temperature{153.31};
     double ml{0.001001};
     double ms{0.0384};
     double mres{0.000339722};
     double zm{0.966247};
-    double beta{4.17};
     std::string name;
 };
 
 // 快速从目录名如 L32T12_beta4.17ms0.040m0.0020 或 L48T16beta4.13ms0.043547m0.000805 中提取物理参数
 inline bool parse_condensate_dirname(std::string_view name, CondensateDatasetInfo& info) {
+    // 提取 L 和 T
+    if (name.starts_with("L")) {
+        size_t t_pos = name.find('T');
+        if (t_pos != std::string_view::npos) {
+            double ns_val = 0;
+            if (iodata::parse_double(name.substr(1, t_pos - 1), ns_val)) {
+                info.ns = static_cast<int>(ns_val);
+            }
+            size_t under_pos = name.find_first_of("_b", t_pos + 1);
+            if (under_pos != std::string_view::npos) {
+                double nt_val = 0;
+                if (iodata::parse_double(name.substr(t_pos + 1, under_pos - (t_pos + 1)), nt_val)) {
+                    info.nt = static_cast<int>(nt_val);
+                }
+            }
+        }
+    }
+
     size_t beta_pos = name.find("beta");
     if (beta_pos == std::string_view::npos) return false;
     size_t ms_pos = name.find("ms", beta_pos);
@@ -50,6 +75,18 @@ inline bool parse_condensate_dirname(std::string_view name, CondensateDatasetInf
     if (ml_end == std::string_view::npos) ml_end = name.size();
     std::string_view ml_sv = name.substr(ml_start, ml_end - ml_start);
     (void)iodata::parse_double(ml_sv, info.ml);
+
+    // 根据有限温度公式计算温度: T(Nt) = T(16) * (16 / Nt)
+    double t_16 = 153.31;
+    if (std::abs(info.beta - 4.13) < 0.005) t_16 = 138.23;
+    else if (std::abs(info.beta - 4.15) < 0.005) t_16 = 145.75;
+    else if (std::abs(info.beta - 4.17) < 0.005) t_16 = 153.31;
+    else if (std::abs(info.beta - 4.18) < 0.005) t_16 = 157.03;
+    else if (std::abs(info.beta - 4.20) < 0.005) t_16 = 164.55;
+    else if (std::abs(info.beta - 4.23) < 0.005) t_16 = 176.43;
+    else if (std::abs(info.beta - 4.30) < 0.005) t_16 = 202.52;
+    else if (std::abs(info.beta - 4.405) < 0.005) t_16 = 241.60;
+    info.temperature = (info.nt > 0) ? (t_16 * 16.0 / static_cast<double>(info.nt)) : t_16;
 
     return true;
 }
@@ -125,7 +162,7 @@ CondensateDatasetInfo resolve_condensate_info(std::string_view target_hint) {
 int execute_condensate_measurement(const CondensateDatasetInfo& info) {
     std::println("=================================================");
     std::println("启动 C++ 手征凝聚 (Chiral Condensate) 测量流水线");
-    std::println("数据集: {}", info.name);
+    std::println("数据集: {} (Ns={}, Nt={}, T={:.2f} MeV)", info.name, info.ns, info.nt, info.temperature);
     std::println("目标路径: {}", info.dir_path.string());
     std::println("物理参数: ml={:.6f}, ms={:.6f}, mres={:.8f}, Zm={:.6f}",
                  info.ml, info.ms, info.mres, info.zm);
@@ -151,17 +188,89 @@ int execute_condensate_measurement(const CondensateDatasetInfo& info) {
     }
 
     std::println("测量物理结果:");
-    std::println("  - 扣除残余质量并重整化后的手征凝聚: <pbp_sub> = {:.16e} +/- {:.16e}",
+    std::println("  - 裸光夸克手征凝聚: <pbpl> = {:.10e} +/- {:.10e}", res.pbp_l_mean, res.pbp_l_error);
+    std::println("  - 裸奇夸克手征凝聚: <pbps> = {:.10e} +/- {:.10e}", res.pbp_s_mean, res.pbp_s_error);
+    std::println("  - 扣除残余质量并重整化后的手征凝聚: <pbp_sub> = {:.10e} +/- {:.10e}",
                  res.mean, res.error);
 
-    // 写入输出文件
-    const std::filesystem::path out_file = "output/condensate/results_condensate_cpp.csv";
-    std::filesystem::create_directories(out_file.parent_path());
-    std::vector<double> means = {res.mean};
-    std::vector<double> errs = {res.error};
-    if (iodata::write_pairs_to_csv(out_file, means, errs)) {
-        std::println("结果已落盘至: {}", out_file.string());
+    // 1. 保存单个数据集专属隔离目录，杜绝文件相互覆盖
+    const std::filesystem::path ensemble_dir = std::filesystem::path("output/condensate/ensembles") / info.name;
+    std::filesystem::create_directories(ensemble_dir);
+    const std::filesystem::path ensemble_csv = ensemble_dir / "summary.csv";
+    {
+        std::ofstream ofs(ensemble_csv);
+        ofs << "dataset_name,ns,nt,beta,temperature,ml,ms,mres,zm,num_cfgs,pbpl,pbpl_err,pbps,pbps_err,pbp_rm,pbp_rm_err\n";
+        ofs << std::format("{},{},{},{:.4f},{:.2f},{:.6f},{:.6f},{:.8f},{:.6f},{},{:.10e},{:.10e},{:.10e},{:.10e},{:.10e},{:.10e}\n",
+                           info.name, info.ns, info.nt, info.beta, info.temperature,
+                           info.ml, info.ms, info.mres, info.zm, res.num_cfgs,
+                           res.pbp_l_mean, res.pbp_l_error,
+                           res.pbp_s_mean, res.pbp_s_error,
+                           res.mean, res.error);
     }
+    const std::filesystem::path ensemble_json = ensemble_dir / "summary.json";
+    {
+        std::ofstream ofs(ensemble_json);
+        ofs << std::format(
+            "{{\n"
+            "  \"dataset_name\": \"{}\",\n"
+            "  \"ns\": {},\n"
+            "  \"nt\": {},\n"
+            "  \"beta\": {:.4f},\n"
+            "  \"temperature\": {:.2f},\n"
+            "  \"ml\": {:.6f},\n"
+            "  \"ms\": {:.6f},\n"
+            "  \"mres\": {:.8f},\n"
+            "  \"zm\": {:.6f},\n"
+            "  \"num_cfgs\": {},\n"
+            "  \"pbpl\": {:.10e},\n"
+            "  \"pbpl_err\": {:.10e},\n"
+            "  \"pbps\": {:.10e},\n"
+            "  \"pbps_err\": {:.10e},\n"
+            "  \"pbp_rm\": {:.10e},\n"
+            "  \"pbp_rm_err\": {:.10e}\n"
+            "}}\n",
+            info.name, info.ns, info.nt, info.beta, info.temperature,
+            info.ml, info.ms, info.mres, info.zm, res.num_cfgs,
+            res.pbp_l_mean, res.pbp_l_error,
+            res.pbp_s_mean, res.pbp_s_error,
+            res.mean, res.error
+        );
+    }
+    std::println("单个数据集结果已独立保存至: {}", ensemble_dir.string());
+
+    // 2. 增量更新/合并全局全量总表 ensembles_summary.csv
+    const std::filesystem::path summary_file = "output/condensate/ensembles_summary.csv";
+    std::map<std::string, std::string> all_records;
+    if (std::filesystem::exists(summary_file)) {
+        std::ifstream ifs(summary_file);
+        std::string line;
+        bool first = true;
+        while (std::getline(ifs, line)) {
+            if (line.empty()) continue;
+            if (first) { first = false; continue; }
+            size_t comma = line.find(',');
+            if (comma != std::string::npos) {
+                all_records[line.substr(0, comma)] = line;
+            }
+        }
+    }
+    all_records[info.name] = std::format(
+        "{},{},{},{:.4f},{:.2f},{:.6f},{:.6f},{:.8f},{:.6f},{},{:.10e},{:.10e},{:.10e},{:.10e},{:.10e},{:.10e}",
+        info.name, info.ns, info.nt, info.beta, info.temperature,
+        info.ml, info.ms, info.mres, info.zm, res.num_cfgs,
+        res.pbp_l_mean, res.pbp_l_error,
+        res.pbp_s_mean, res.pbp_s_error,
+        res.mean, res.error
+    );
+
+    {
+        std::ofstream ofs(summary_file);
+        ofs << "dataset_name,ns,nt,beta,temperature,ml,ms,mres,zm,num_cfgs,pbpl,pbpl_err,pbps,pbps_err,pbp_rm,pbp_rm_err\n";
+        for (const auto& [k, v] : all_records) {
+            ofs << v << "\n";
+        }
+    }
+    std::println("全局数据集总表已更新: {} (当前汇总 {} 组数据集)", summary_file.string(), all_records.size());
     std::println("=================================================");
 
     return 0;
@@ -196,6 +305,7 @@ int run_condensate_all_task(std::span<const std::string_view> args) {
     std::println(">>> 批量扫描 {} 下所有手征凝聚数据集...", readin_dir.string());
     int processed = 0;
 
+    std::vector<std::filesystem::path> valid_paths;
     for (const auto& entry : std::filesystem::directory_iterator(readin_dir)) {
         if (!entry.is_directory()) continue;
         const auto p = entry.path();
@@ -205,14 +315,18 @@ int run_condensate_all_task(std::span<const std::string_view> args) {
             }
             return false;
         }();
-
         if (has_meas) {
-            auto info = resolve_condensate_info(p.filename().string());
-            info.dir_path = p;
-            info.name = p.filename().string();
-            execute_condensate_measurement(info);
-            ++processed;
+            valid_paths.push_back(p);
         }
+    }
+    std::sort(valid_paths.begin(), valid_paths.end());
+
+    for (const auto& p : valid_paths) {
+        auto info = resolve_condensate_info(p.filename().string());
+        info.dir_path = p;
+        info.name = p.filename().string();
+        execute_condensate_measurement(info);
+        ++processed;
     }
 
     std::println("批量测量结束，共完成 {} 组数据集分析。", processed);

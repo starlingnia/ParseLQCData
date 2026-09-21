@@ -10,6 +10,10 @@ namespace lqcd::condensate {
 struct CondensateResult {
     double mean{0.0};
     double error{0.0};
+    double pbp_l_mean{0.0};
+    double pbp_l_error{0.0};
+    double pbp_s_mean{0.0};
+    double pbp_s_error{0.0};
     std::vector<double> jackknife_samples;
     size_t num_cfgs{0};
 };
