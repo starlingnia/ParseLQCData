@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.10.23)  24 SEP 2026 07:48
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.10.23)  24 SEP 2026 08:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -836,65 +836,84 @@ Package fontspec Info: Font family 'STFangsong(0)' created for font
  [2]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 106.
+(hyperref)                removing `subscript' on input line 108.
+
+[3]
+Overfull \hbox (67.39555pt too wide) in paragraph at lines 168--170
+\TU/STSong(0)/m/n/10.95 统 计 提 取 全 系 综 无 偏 均 值 $[] \OT1/cmr/m/n/10.95 = [](\OML/
+cmm/m/it/10.95 ^^_[]\OT1/cmr/m/n/10.95 )$ \TU/STSong(0)/m/n/10.95 与 统 计 标 准 误 $
+\OML/cmm/m/it/10.95 ^^[[] \OT1/cmr/m/n/10.95 = [] [](\OML/cmm/m/it/10.95 ^^_[]\
+OT1/cmr/m/n/10.95 )$\TU/STSong(0)/m/n/10.95 。|  最 终 按 照 \TU/lmtt/m/n/10.95 ana/
+ttest/plot_chisce.py
+ []
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `superscript' on input line 143.
+(hyperref)                removing `superscript' on input line 174.
 
-[3]
+[4]
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <12> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 169.
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 200.
 
-Overfull \hbox (8.94913pt too wide) in paragraph at lines 180--191
+Overfull \hbox (8.94913pt too wide) in paragraph at lines 211--222
  [][] 
  []
 
 
-Overfull \hbox (12.24323pt too wide) in alignment at lines 217--217
+Overfull \hbox (53.90353pt too wide) in paragraph at lines 236--250
+ [][] 
+ []
+
+
+Overfull \hbox (12.24323pt too wide) in alignment at lines 277--277
 [][][][][] 
  []
 
-[4]
+[5]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 224.
+(hyperref)                removing `subscript' on input line 285.
 
 File: docs/figures/conden_re_plot.pdf Graphic file (type pdf)
 <use docs/figures/conden_re_plot.pdf>
-[5]
+[6]
 File: docs/figures/conden_plot.pdf Graphic file (type pdf)
 <use docs/figures/conden_plot.pdf>
-
+ [7]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 258.
+(hyperref)                removing `subscript' on input line 319.
 
 File: docs/figures/pbp_temperature_plot.pdf Graphic file (type pdf)
 <use docs/figures/pbp_temperature_plot.pdf>
-[6]
+[8]
 File: docs/figures/conden_scaling_beta4.17.pdf Graphic file (type pdf)
 <use docs/figures/conden_scaling_beta4.17.pdf>
- [7]
+ [9]
 File: docs/figures/conden_volume_scaling.pdf Graphic file (type pdf)
 <use docs/figures/conden_volume_scaling.pdf>
 File: docs/figures/conden_all_ensembles_overview.pdf Graphic file (type pdf)
 <use docs/figures/conden_all_ensembles_overview.pdf>
- [8] [9] [10] (./report.aux)
+ [10]
+File: docs/figures/sucep_plot.pdf Graphic file (type pdf)
+<use docs/figures/sucep_plot.pdf>
+File: docs/figures/pbpchisce.pdf Graphic file (type pdf)
+<use docs/figures/pbpchisce.pdf>
+ [11] [12] [13] (./report.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2022/07/14>
  ***********
 Package rerunfilecheck Info: File `report.out' has not changed.
-(rerunfilecheck)             Checksum: CA6FC5D56C2AB0E6A817A458798D64E0;5701.
+(rerunfilecheck)             Checksum: 1A3106D14BA57A97E41CDC3D8CAB015C;6179.
  ) 
 Here is how much of TeX's memory you used:
- 20615 strings out of 474773
- 442135 string characters out of 5757723
- 1955839 words of memory out of 5000000
- 42435 multiletter control sequences out of 15000+600000
- 569860 words of font info for 121 fonts, out of 8000000 for 9000
+ 20695 strings out of 474773
+ 444604 string characters out of 5757723
+ 1959839 words of memory out of 5000000
+ 42499 multiletter control sequences out of 15000+600000
+ 569948 words of font info for 132 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 93i,13n,97p,1193b,550s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 93i,14n,97p,1193b,652s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on report.pdf (10 pages).
+Output written on report.pdf (13 pages).

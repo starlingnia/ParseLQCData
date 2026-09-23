@@ -326,71 +326,81 @@ class SusceptibilityPipeline:
 
     def run_cluster_scan(self, readin_dir: Path) -> pl.DataFrame:
         """
-        在拥有全量构型测量数据的计算机/集群上执行全温度扫描计算。
+        在拥有全量构型测量数据的计算机/集群上执行全温度与全系综扫描计算。
         自动遍历 readin_dir 下的所有格点目录，智能过滤介子关联函数目录，
         计算手征磁化率，导出至 output/condensate/results_susceptibility.csv。
         """
-        betas = sorted(list(SUSCEPTIBILITY_TEMP_MAP.keys()), key=float)
+        all_dirs = sorted([d for d in readin_dir.iterdir() if d.is_dir()])
         results = []
 
-        print(f"[SusceptibilityPipeline] 正在从数据目录 {readin_dir} 执行集群全量扫描...")
+        print(f"[SusceptibilityPipeline] 正在从数据目录 {readin_dir} 执行集群全量扫描，共发现 {len(all_dirs)} 个子目录...")
 
-        for beta in betas:
-            patterns = [
-                f"L48T16beta{beta}*",
-                f"L*beta{beta}*",
-                f"48x16b{beta}*",
-                f"*{beta}*",
-            ]
-            matched = []
-            for pat in patterns:
-                for p in readin_dir.glob(pat):
-                    if p.is_dir() and p not in matched:
-                        matched.append(p)
-
-            # 过滤出真正包含手征凝聚 meas.*/PsibarPsi 的有效目录
-            valid_dirs = [d for d in matched if is_valid_condensate_dir(d)]
-
-            # 打印被过滤的介子目录提示
-            meson_dirs = [d for d in matched if (d / "Output").exists() and d not in valid_dirs]
-            for md in meson_dirs:
-                print(f"  [跳过介子目录] {md.name} (包含 Output/ 强子关联函数，无 PsibarPsi 随机源)")
-
-            if not valid_dirs:
-                print(f"  [跳过] 未在 {readin_dir} 找到包含有效 PsibarPsi 测量的 beta={beta} 数据目录")
+        for d in all_dirs:
+            if not is_valid_condensate_dir(d):
+                if (d / "Output").exists():
+                    print(f"  [跳过介子目录] {d.name} (包含 Output/ 强子关联函数，无 PsibarPsi 随机源)")
                 continue
 
-            target_dir = valid_dirs[0]
-            temp = SUSCEPTIBILITY_TEMP_MAP[beta]
-            print(f"  -> 处理 beta={beta} (T={temp} MeV) 目录: {target_dir.name}")
+            meta = parse_ensemble_meta_from_dir(d.name)
+            try:
+                from docs.physics_setup import parse_ensemble_dirname as p_ed, calculate_temperature as c_temp
+                rich_meta = p_ed(d.name)
+                if rich_meta:
+                    meta.update(rich_meta)
+            except Exception:
+                pass
 
-            res = self.extract_from_meas_directory(target_dir, temp_mev=temp)
-            results.append({
-                "Beta": float(beta),
-                "Temp": temp,
-                "Ns": res["ns"],
-                "Nt": res["nt"],
-                "Mean_unscaled": res["mean_unscaled"],
-                "Error_unscaled": res["error_unscaled"],
-                "Mean_vol_scaled": res["mean_vol_scaled"],
-                "Error_vol_scaled": res["error_vol_scaled"],
-                "Mean_scaled": res["mean_scaled"],
-                "Error_scaled": res["error_scaled"],
-            })
+            eff_ns = int(meta.get("ns", 48))
+            eff_nt = int(meta.get("nt", 16))
+            eff_beta_str = str(meta.get("beta", "4.17"))
+            try:
+                eff_beta_val = float(eff_beta_str)
+            except ValueError:
+                eff_beta_val = 4.17
+
+            # 温度计算：优先使用标准几何比例 T = T(Nt=16) * 16 / Nt
+            try:
+                from docs.physics_setup import calculate_temperature
+                eff_temp = float(calculate_temperature(eff_beta_val, eff_nt))
+            except Exception:
+                base_temp = SUSCEPTIBILITY_TEMP_MAP.get(eff_beta_str, 153.31)
+                eff_temp = float(base_temp * (16.0 / eff_nt))
+
+            print(f"  -> 正在处理 [{d.name}] (Ns={eff_ns}, Nt={eff_nt}, beta={eff_beta_str}, T={eff_temp:.2f} MeV)...")
+            try:
+                res = self.extract_from_meas_directory(d, ns=eff_ns, nt=eff_nt, temp_mev=eff_temp)
+                results.append({
+                    "Ensemble": d.name,
+                    "Beta": eff_beta_val,
+                    "Temp": eff_temp,
+                    "Ns": eff_ns,
+                    "Nt": eff_nt,
+                    "Num_cfgs": res.get("num_configs", 0),
+                    "Mean_unscaled": res["mean_unscaled"],
+                    "Error_unscaled": res["error_unscaled"],
+                    "Mean_vol_scaled": res["mean_vol_scaled"],
+                    "Error_vol_scaled": res["error_vol_scaled"],
+                    "Mean_scaled": res["mean_scaled"],
+                    "Error_scaled": res["error_scaled"],
+                })
+            except Exception as e:
+                print(f"  [WARN] 处理 {d.name} 失败: {e}")
 
         if not results:
             print("[WARN] 未能在给定数据目录中提取到任何有效数据，载入已有全量基准数据...")
             return self.get_full_scan_results()
 
-        df_res = pl.DataFrame(results).sort("Temp")
+        df_res = pl.DataFrame(results).sort(["Beta", "Temp"])
 
         out_csv = self.output_dir / "results_susceptibility.csv"
         out_parquet = self.output_dir / "results_susceptibility.parquet"
+        out_all_csv = self.output_dir / "all_ensembles_susceptibility.csv"
 
         df_res.write_csv(out_csv)
         df_res.write_parquet(out_parquet)
+        df_res.write_csv(out_all_csv)
 
-        print(f"[OK] 集群计算完成，结果已保存至 {out_csv}")
+        print(f"[OK] 集群计算完成，结果已保存至 {out_csv} 及 {out_all_csv}")
         return df_res
 
 

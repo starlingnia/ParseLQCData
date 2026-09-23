@@ -381,15 +381,8 @@ $\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM 标度值 [$
 
 \subsection{\texorpdfstring{手征磁化率与赝临界相变峰分析 (Chiral Susceptibility Analysis)}{手征磁化率与赝临界相变峰分析}}
 
-图 \ref{fig:sucep_comparison} 展示了 No-RM 与 RM-Corrected 两种模式下手征磁化率随温度演化的全景对比曲线，并渲染了 $T \in [155.5, 160.5]\text{ MeV}$ 的交叉过渡带。
-图 \ref{fig:sucep_subfigures} 则分别展示了严格对标 \texttt{ana/ttest} 原始配色与样式的单图（红色 No-RM 与靛蓝色标度 RM-Corrected）。
+图 \ref{fig:sucep_subfigures} 展示了严格对标 \texttt{ana/ttest} 原始配色与样式的两类手征磁化率随温度演化图谱：左图为四维时空体积标度量 $N_s^3 N_t \chi$（红色标准配色），右图为乘算连续标度因子后的物理量 $(16T)^2 \times a^2\chi$ [$\text{MeV}^2$]（渲染了 $T \in [155.5, 160.5]\text{ MeV}$ 的交叉过渡带，峰值位于 $\beta=4.18, T=157.0\text{ MeV}$）。
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.85\textwidth]{docs/figures/sucep_comparison.pdf}
-    \caption{手征磁化率 No-RM（红色虚线方块）与 RM 修正（靛蓝色实线圆点）全量对比图。阴影区域标示交叉过渡带。峰值清晰定位于 $\beta=4.18, T=157.0\text{ MeV}$，精确对应手征相变赝临界温度 $T_{\text{pc}}$。}
-    \label{fig:sucep_comparison}
-\end{figure}
 
 \begin{figure}[H]
     \centering
@@ -413,7 +406,7 @@ $\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM 标度值 [$
 \noindent
 \textbf{磁化率物理峰位与相变特征剖析}：
 \begin{enumerate}
-    \item \textbf{峰值精准吻合拐点}：比较图 \ref{fig:sucep_comparison} 与图 \ref{fig:conden_re_plot} 可以发现，手征磁化率的极大值峰顶出现在 $T = 157.0\text{ MeV}$（对应 $\beta=4.18$），该温度与重整化手征凝聚 $\Delta_{\ell, s}(T)$ 曲线的一阶导数极大值（拐点）完全重合，确凿印证了 QCD 热相变为热力学光滑交叉转变（Crossover）；
+    \item \textbf{峰值精准吻合拐点}：比较图 \ref{fig:sucep_subfigures} 与图 \ref{fig:conden_re_plot} 可以发现，手征磁化率的极大值峰顶出现在 $T = 157.0\text{ MeV}$（对应 $\beta=4.18$），该温度与重整化手征凝聚 $\Delta_{\ell, s}(T)$ 曲线的一阶导数极大值（拐点）完全重合，确凿印证了 QCD 热相变为热力学光滑交叉转变（Crossover）；
     \item \textbf{减除效应与连续行为}：对比 No-RM 与 RM-Corrected 曲线可见，扣除 $\frac{m_\ell}{m_s}\bar{s}s$ 贡献后，曲线微观形状高度保持了临界涨落主导特征，而在极高温对称区（$T > 200\text{ MeV}$），磁化率从峰值的 $\sim 9.1 \times 10^5\text{ MeV}^2$ 剧烈衰减至 $86\text{ MeV}^2$（跌落逾 4 个数量级），生动展现了热夸克-胶子等离子体（QGP）相中手征对称性的完全恢复；
     \item \textbf{统计显著度与误差控制}：在峰值点 $T=157.0\text{ MeV}$ 处，标度磁化率测量值为 $(9.105 \pm 0.322) \times 10^5\text{ MeV}^2$，信噪比高达 28 倍，为高精度热力学相图标定提供了极佳的数据统计确定性。
 \end{enumerate}
