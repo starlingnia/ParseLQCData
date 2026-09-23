@@ -1,0 +1,22 @@
+\contentsline {section}{\numberline {1}引言与物理背景 (Introduction \& Physical Context)}{2}{section.1}%
+\contentsline {section}{\numberline {2}理论方法与数学公式 (Theoretical Formulations)}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}裸标量凝聚的随机源反演 (Bare Condensates via Stochastic Noise)}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}残余质量与 $Z_m$ 质量重整化因子}{3}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}扣除与重整化手征凝聚 ($\Delta _{\ell , s}$)}{3}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}有限温度与时空几何关系 (Finite Temperature Lattice Geometry)}{3}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Jackknife 无偏重采样统计误差分析}{3}{subsection.2.5}%
+\contentsline {section}{\numberline {3}全量格点数据集与计算结果 (Complete Data Tables)}{4}{section.3}%
+\contentsline {subsection}{\numberline {3.1}标准 $48^3 \times 16$ 温度扫描序列 (8 组物理基准点)}{4}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}外部计算节点分布式格点数据提取 (\texttt {output/condensate/})}{4}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}ParseLQCData 与 ana 基准数值回归一致性验证}{4}{subsection.3.3}%
+\contentsline {section}{\numberline {4}物理图表展示与对比分析 (Visualizations \& In-depth Physics Analysis)}{5}{section.4}%
+\contentsline {subsection}{\numberline {4.1}重整化手征凝聚随温度演化 ($\Delta _{\ell , s}$ vs $T$)}{5}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}裸光夸克与裸奇夸克标量凝聚对比}{6}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}按 \texttt {ana} 原型标准定义的标度量 ($16 \times T \times \Delta _{\ell , s}$)}{6}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}外部计算机分布式计算数据：$\beta =4.17$ 有限温度与体积标度系列}{7}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}固定温度下的空间体积标度效应 ($T=153.31\text { MeV}$)}{8}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}全量 13 组格点全景对比 (Physical Scan vs Distributed Runs)}{8}{subsection.4.6}%
+\contentsline {section}{\numberline {5}工程实现架构与数据管道 (Software Architecture \& Pipeline)}{9}{section.5}%
+\contentsline {subsection}{\numberline {5.1}双核计算架构设计}{9}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}独立隔离落盘与无损增量合并机制}{10}{subsection.5.2}%
+\contentsline {section}{\numberline {6}结论 (Conclusion)}{10}{section.6}%
