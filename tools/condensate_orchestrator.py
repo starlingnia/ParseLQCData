@@ -25,6 +25,9 @@ class CondensateOrchestrator:
         candidates = [
             project_root / "build" / "libparselqcdata.dylib",
             project_root / "lib" / "libparselqcdata.dylib",
+            project_root / "lib" / "liblqcd_condensate.dylib",
+            project_root / "build" / "libparselqcdata.so",
+            project_root / "lib" / "libparselqcdata.so",
             project_root / "lib" / "liblqcd_condensate.so",
         ]
         for c in candidates:
@@ -34,6 +37,12 @@ class CondensateOrchestrator:
             "Condensate shared library not found. Checked:\n"
             + "\n".join(f"  - {c}" for c in candidates)
         )
+
+    def is_available(self) -> bool:
+        return self._lib is not None
+
+    def has_susceptibility(self) -> bool:
+        return hasattr(self._lib, "run_chiral_susceptibility_c_api")
     
     def _setup_bindings(self) -> None:
         # int run_chiral_condensate_c_api(...)
@@ -66,8 +75,25 @@ class CondensateOrchestrator:
                 ctypes.POINTER(ctypes.c_int),    # out_num_cfgs
             ]
             self._lib.run_chiral_condensate_full_c_api.restype = ctypes.c_int
+
+        if hasattr(self._lib, "run_chiral_susceptibility_c_api"):
+            self._lib.run_chiral_susceptibility_c_api.argtypes = [
+                ctypes.c_char_p,                 # base_dir
+                ctypes.c_int,                    # ns
+                ctypes.c_int,                    # nt
+                ctypes.c_double,                 # temp_mev
+                ctypes.POINTER(ctypes.c_double), # out_mean_unscaled
+                ctypes.POINTER(ctypes.c_double), # out_error_unscaled
+                ctypes.POINTER(ctypes.c_double), # out_mean_vol_scaled
+                ctypes.POINTER(ctypes.c_double), # out_error_vol_scaled
+                ctypes.POINTER(ctypes.c_double), # out_mean_scaled
+                ctypes.POINTER(ctypes.c_double), # out_error_scaled
+                ctypes.POINTER(ctypes.c_int),    # out_num_cfgs
+            ]
+            self._lib.run_chiral_susceptibility_c_api.restype = ctypes.c_int
     
     def process_condensate(
+
         self,
         base_dir: str,
         m_light: float = 0.001,
@@ -154,3 +180,62 @@ class CondensateOrchestrator:
             "pbp_s_error": float(out_s_error.value),
             "num_cfgs": int(out_num_cfgs.value),
         }
+
+    def process_susceptibility(
+        self,
+        base_dir: str,
+        ns: int = 48,
+        nt: int = 16,
+        temp_mev: float = 157.0,
+    ) -> dict:
+        """
+        通过 C++ 高性能多线程引擎提取纯轻夸克手征磁化率并进行物理标度计算。
+        """
+        if not hasattr(self._lib, "run_chiral_susceptibility_c_api"):
+            raise NotImplementedError("Dynamic library does not export run_chiral_susceptibility_c_api")
+
+        out_mean_unscaled = ctypes.c_double(0.0)
+        out_error_unscaled = ctypes.c_double(0.0)
+        out_mean_vol_scaled = ctypes.c_double(0.0)
+        out_error_vol_scaled = ctypes.c_double(0.0)
+        out_mean_scaled = ctypes.c_double(0.0)
+        out_error_scaled = ctypes.c_double(0.0)
+        out_num_cfgs = ctypes.c_int(0)
+
+        base_dir_bytes = str(base_dir).encode('utf-8')
+
+        ret = self._lib.run_chiral_susceptibility_c_api(
+            base_dir_bytes,
+            ctypes.c_int(ns),
+            ctypes.c_int(nt),
+            ctypes.c_double(temp_mev),
+            ctypes.byref(out_mean_unscaled),
+            ctypes.byref(out_error_unscaled),
+            ctypes.byref(out_mean_vol_scaled),
+            ctypes.byref(out_error_vol_scaled),
+            ctypes.byref(out_mean_scaled),
+            ctypes.byref(out_error_scaled),
+            ctypes.byref(out_num_cfgs)
+        )
+
+        if ret != 0:
+            raise RuntimeError(f"run_chiral_susceptibility_c_api failed with code {ret}")
+
+        f_vol = float((ns**3) * nt)
+        f_scaled = float((ns**3) * (nt**3) * (temp_mev**2))
+
+        return {
+            "mean_unscaled": float(out_mean_unscaled.value),
+            "error_unscaled": float(out_error_unscaled.value),
+            "factor_vol": f_vol,
+            "mean_vol_scaled": float(out_mean_vol_scaled.value),
+            "error_vol_scaled": float(out_error_vol_scaled.value),
+            "factor_scaled": f_scaled,
+            "mean_scaled": float(out_mean_scaled.value),
+            "error_scaled": float(out_error_scaled.value),
+            "num_configs": int(out_num_cfgs.value),
+            "ns": ns,
+            "nt": nt,
+            "temp": temp_mev,
+        }
+

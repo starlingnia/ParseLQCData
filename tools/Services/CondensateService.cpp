@@ -68,4 +68,44 @@ int run_chiral_condensate_full_c_api(
     return 0;
 }
 
+/**
+ * @brief 手征磁化率快速提取与物理标度 C ABI 导出接口
+ */
+int run_chiral_susceptibility_c_api(
+    const char* base_dir,
+    int ns,
+    int nt,
+    double temp_mev,
+    double* out_mean_unscaled,
+    double* out_error_unscaled,
+    double* out_mean_vol_scaled,
+    double* out_error_vol_scaled,
+    double* out_mean_scaled,
+    double* out_error_scaled,
+    int* out_num_cfgs) {
+
+    if (!base_dir || !out_mean_unscaled || !out_error_unscaled) {
+        return -1;
+    }
+
+    const auto res = lqcd::condensate::process_chiral_susceptibility(
+        base_dir, ns, nt, temp_mev
+    );
+
+    *out_mean_unscaled = res.mean_unscaled;
+    *out_error_unscaled = res.error_unscaled;
+
+    if (out_mean_vol_scaled) *out_mean_vol_scaled = res.mean_vol_scaled;
+    if (out_error_vol_scaled) *out_error_vol_scaled = res.error_vol_scaled;
+
+    if (out_mean_scaled) *out_mean_scaled = res.mean_scaled;
+    if (out_error_scaled) *out_error_scaled = res.error_scaled;
+
+    if (out_num_cfgs) {
+        *out_num_cfgs = static_cast<int>(res.num_cfgs);
+    }
+    return 0;
+}
+
 } // extern "C"
+
