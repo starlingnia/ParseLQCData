@@ -386,11 +386,11 @@ target_link_libraries(ParseLQCData PRIVATE
     statistics
     iodata
 )
-add_library(target_objectfiles_ParseLQCData_0b552d4805932d33 INTERFACE)
-target_link_libraries(target_objectfiles_ParseLQCData_0b552d4805932d33 INTERFACE
+add_library(target_objectfiles_ParseLQCData_7163dc64bf541cc4 INTERFACE)
+target_link_libraries(target_objectfiles_ParseLQCData_7163dc64bf541cc4 INTERFACE
     task_components
 )
-target_link_libraries(ParseLQCData PRIVATE target_objectfiles_ParseLQCData_0b552d4805932d33)
+target_link_libraries(ParseLQCData PRIVATE target_objectfiles_ParseLQCData_7163dc64bf541cc4)
 target_link_directories(ParseLQCData PRIVATE
     build/macosx/arm64/release
 )
