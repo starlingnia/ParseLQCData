@@ -119,26 +119,45 @@ namespace lqcd::condensate {
         f.get();
     }
 
+    // 过滤掉无效或未包含实际测量 XML 的空构型目录
+    std::vector<double> clean_l;
+    std::vector<double> clean_s;
+    clean_l.reserve(num_cfgs);
+    clean_s.reserve(num_cfgs);
+
+    for (size_t i = 0; i < num_cfgs; ++i) {
+        if (vals_l[i] > 0.0 && vals_s[i] > 0.0) {
+            clean_l.push_back(vals_l[i]);
+            clean_s.push_back(vals_s[i]);
+        }
+    }
+
+    const size_t n_valid = clean_l.size();
+    if (n_valid <= 1) {
+        return res;
+    }
+    res.num_cfgs = n_valid;
+
     // Jackknife 留一重采样
-    const double sum_l = std::accumulate(vals_l.begin(), vals_l.end(), 0.0);
-    const double sum_s = std::accumulate(vals_s.begin(), vals_s.end(), 0.0);
-    const double inv_n_minus_one = 1.0 / static_cast<double>(num_cfgs - 1);
+    const double sum_l = std::accumulate(clean_l.begin(), clean_l.end(), 0.0);
+    const double sum_s = std::accumulate(clean_s.begin(), clean_s.end(), 0.0);
+    const double inv_n_minus_one = 1.0 / static_cast<double>(n_valid - 1);
 
     const double ml_eff = m_light + m_residual;
     const double ms_eff = m_strange + m_residual;
     const double mass_ratio = (ms_eff > 1e-15) ? (ml_eff / ms_eff) : 0.0;
     const double inv_zm = (std::abs(zm_factor) > 1e-15) ? (1.0 / zm_factor) : 1.0;
 
-    res.jackknife_samples.resize(num_cfgs, 0.0);
+    res.jackknife_samples.resize(n_valid, 0.0);
     double jk_sum = 0.0;
     double jk_l_sum = 0.0;
     double jk_s_sum = 0.0;
-    std::vector<double> jk_l_samples(num_cfgs, 0.0);
-    std::vector<double> jk_s_samples(num_cfgs, 0.0);
+    std::vector<double> jk_l_samples(n_valid, 0.0);
+    std::vector<double> jk_s_samples(n_valid, 0.0);
 
-    for (size_t i = 0; i < num_cfgs; ++i) {
-        const double jk_l = (sum_l - vals_l[i]) * inv_n_minus_one;
-        const double jk_s = (sum_s - vals_s[i]) * inv_n_minus_one;
+    for (size_t i = 0; i < n_valid; ++i) {
+        const double jk_l = (sum_l - clean_l[i]) * inv_n_minus_one;
+        const double jk_s = (sum_s - clean_s[i]) * inv_n_minus_one;
         const double jk_sub = (jk_l - mass_ratio * jk_s) * inv_zm;
         res.jackknife_samples[i] = jk_sub;
         jk_sum += jk_sub;
@@ -150,37 +169,37 @@ namespace lqcd::condensate {
         jk_s_sum += jk_s;
     }
 
-    const double mean = jk_sum / static_cast<double>(num_cfgs);
+    const double mean = jk_sum / static_cast<double>(n_valid);
     res.mean = mean;
 
     double sq_diff_sum = 0.0;
-    for (size_t i = 0; i < num_cfgs; ++i) {
+    for (size_t i = 0; i < n_valid; ++i) {
         const double diff = res.jackknife_samples[i] - mean;
         sq_diff_sum += diff * diff;
     }
 
-    const double var_ddof0 = sq_diff_sum / static_cast<double>(num_cfgs);
-    res.error = std::sqrt(var_ddof0) * std::sqrt(static_cast<double>(num_cfgs - 1));
+    const double var_ddof0 = sq_diff_sum / static_cast<double>(n_valid);
+    res.error = std::sqrt(var_ddof0) * std::sqrt(static_cast<double>(n_valid - 1));
 
     // Bare light condensate mean & Jackknife error
-    const double mean_l = jk_l_sum / static_cast<double>(num_cfgs);
+    const double mean_l = jk_l_sum / static_cast<double>(n_valid);
     res.pbp_l_mean = mean_l;
     double sq_diff_l = 0.0;
-    for (size_t i = 0; i < num_cfgs; ++i) {
+    for (size_t i = 0; i < n_valid; ++i) {
         const double diff_l = jk_l_samples[i] - mean_l;
         sq_diff_l += diff_l * diff_l;
     }
-    res.pbp_l_error = std::sqrt(sq_diff_l / static_cast<double>(num_cfgs)) * std::sqrt(static_cast<double>(num_cfgs - 1));
+    res.pbp_l_error = std::sqrt(sq_diff_l / static_cast<double>(n_valid)) * std::sqrt(static_cast<double>(n_valid - 1));
 
     // Bare strange condensate mean & Jackknife error
-    const double mean_s = jk_s_sum / static_cast<double>(num_cfgs);
+    const double mean_s = jk_s_sum / static_cast<double>(n_valid);
     res.pbp_s_mean = mean_s;
     double sq_diff_s = 0.0;
-    for (size_t i = 0; i < num_cfgs; ++i) {
+    for (size_t i = 0; i < n_valid; ++i) {
         const double diff_s = jk_s_samples[i] - mean_s;
         sq_diff_s += diff_s * diff_s;
     }
-    res.pbp_s_error = std::sqrt(sq_diff_s / static_cast<double>(num_cfgs)) * std::sqrt(static_cast<double>(num_cfgs - 1));
+    res.pbp_s_error = std::sqrt(sq_diff_s / static_cast<double>(n_valid)) * std::sqrt(static_cast<double>(n_valid - 1));
 
     return res;
 }
