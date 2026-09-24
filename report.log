@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.10.23)  24 SEP 2026 08:50
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.10.23)  24 SEP 2026 09:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -864,15 +864,14 @@ Overfull \hbox (53.90353pt too wide) in paragraph at lines 236--250
  [][] 
  []
 
-
-Overfull \hbox (12.24323pt too wide) in alignment at lines 277--277
+[5]
+Overfull \hbox (12.24323pt too wide) in alignment at lines 296--296
 [][][][][] 
  []
 
-[5]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 285.
+(hyperref)                removing `subscript' on input line 304.
 
 File: docs/figures/conden_re_plot.pdf Graphic file (type pdf)
 <use docs/figures/conden_re_plot.pdf>
@@ -882,7 +881,7 @@ File: docs/figures/conden_plot.pdf Graphic file (type pdf)
  [7]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 319.
+(hyperref)                removing `subscript' on input line 338.
 
 File: docs/figures/pbp_temperature_plot.pdf Graphic file (type pdf)
 <use docs/figures/pbp_temperature_plot.pdf>
@@ -899,7 +898,10 @@ File: docs/figures/sucep_plot.pdf Graphic file (type pdf)
 <use docs/figures/sucep_plot.pdf>
 File: docs/figures/pbpchisce.pdf Graphic file (type pdf)
 <use docs/figures/pbpchisce.pdf>
- [11] [12] [13] (./report.aux)
+ [11]
+File: docs/figures/pbpchisce_scaling_beta4.17.pdf Graphic file (type pdf)
+<use docs/figures/pbpchisce_scaling_beta4.17.pdf>
+ [12] [13] [14] (./report.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2022/07/14>
@@ -908,12 +910,12 @@ Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: 1A3106D14BA57A97E41CDC3D8CAB015C;6179.
  ) 
 Here is how much of TeX's memory you used:
- 20695 strings out of 474773
- 444604 string characters out of 5757723
- 1959839 words of memory out of 5000000
- 42499 multiletter control sequences out of 15000+600000
- 569948 words of font info for 132 fonts, out of 8000000 for 9000
+ 20709 strings out of 474773
+ 445170 string characters out of 5757723
+ 1955839 words of memory out of 5000000
+ 42511 multiletter control sequences out of 15000+600000
+ 569956 words of font info for 133 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
  93i,14n,97p,1193b,652s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on report.pdf (13 pages).
+Output written on report.pdf (14 pages).

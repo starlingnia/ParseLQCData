@@ -249,6 +249,25 @@ $\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM 标度值 [$
 \end{tabular}
 \end{table}
 
+\begin{table}[H]
+\centering
+\small
+\setlength{\tabcolsep}{8pt}
+\caption{分布式标度格点数据集手征磁化率计算结果（$\beta=4.17, m_\ell=0.0020, m_s=0.0400$）}
+\label{tab:distributed_susceptibility}
+\begin{tabular}{lcccc}
+\toprule
+数据集标识 (Tag) & 晶格时空几何 & $T\text{ [MeV]}$ & $N_{\text{cfg}}$ & 标度磁化率 $(16T)^2 a^2 \chi\text{ [MeV}^2\text{]}$ \\
+\midrule
+\texttt{L48T18 (流1)} & $48^3 \times 18$ & 136.28 & 79  & $(3.1489 \pm 0.4487) \times 10^5$ \\
+\texttt{L48T18 (流2)} & $48^3 \times 18$ & 136.28 & 72  & $(3.0177 \pm 0.5562) \times 10^5$ \\
+\texttt{L40T16}       & $40^3 \times 16$ & 153.31 & 17  & $(2.8070 \pm 0.8693) \times 10^5$ \\
+\texttt{L32T14}       & $32^3 \times 14$ & 175.21 & 282 & $(4.2497 \pm 0.6065) \times 10^5$ \\
+\texttt{L32T12}       & $32^3 \times 12$ & 204.41 & 79  & $(8.9135 \pm 4.9052) \times 10^4$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{ParseLQCData 与 ana 基准数值回归一致性验证}
 
 本项目的核心计算引擎经过严格对齐校验。表 \ref{tab:verification_summary} 总结了与 \texttt{ana} 基准系统逐点浮点比对的结果。
@@ -401,6 +420,13 @@ $\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM 标度值 [$
     \end{subfigure}
     \caption{严格对标 \texttt{ana/ttest} 格式输出的手征磁化率高清学术图谱。误差棒、线型、空心圆/方块及 $\beta$ 标签排布完全与原设计一致。}
     \label{fig:sucep_subfigures}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{docs/figures/pbpchisce_scaling_beta4.17.pdf}
+    \caption{有限时间延展标度系综（$\beta=4.17, m_\ell=0.0020, m_s=0.0400$）连续标度手征磁化率 $(16T)^2 a^2 \chi\text{ [MeV}^2\text{]}$ 随温度演化图谱。}
+    \label{fig:sucep_scaling}
 \end{figure}
 
 \noindent

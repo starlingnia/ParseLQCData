@@ -123,16 +123,17 @@ def plot_scaled_pbpchisce(df: pl.DataFrame) -> None:
         zorder=1,
     )
 
-    # 2. 绘制连续标度磁化率 (使用 ana/ttest/plot_chisce.py 经典配色)
+    # 2. 绘制连续标度磁化率 (严格使用 ana/ttest/plot_chisce.py 配色与规范)
+    color_indigo = "#4f46e5"
     ax.errorbar(
         temps,
         scaled_means,
         yerr=scaled_errs,
         fmt="o-",
-        color="#ef4444",
-        ecolor="#fca5a5",
-        mfc="#f87171",
-        mec="#ef4444",
+        color=color_indigo,
+        ecolor="#a5b4fc",
+        mfc="#6366f1",
+        mec=color_indigo,
         mew=1.5,
         ms=7,
         capsize=4,
@@ -150,8 +151,8 @@ def plot_scaled_pbpchisce(df: pl.DataFrame) -> None:
         xytext=(25, -5),
         fontsize=10,
         fontweight="bold",
-        color="#991b1b",
-        arrowprops=dict(arrowstyle="->", color="#991b1b", lw=1.5),
+        color="#312e81",
+        arrowprops=dict(arrowstyle="->", color="#312e81", lw=1.5),
     )
 
     for i, beta in enumerate(betas):
@@ -169,10 +170,92 @@ def plot_scaled_pbpchisce(df: pl.DataFrame) -> None:
     ax.set_ylabel(r"Scaled Susceptibility ($(16T)^2 \times a^2\chi$) [$\mathrm{MeV}^2$]", fontsize=12, fontweight="bold", labelpad=10)
     ax.set_title("Chiral Susceptibility vs Temperature (Scaled)", fontsize=13, fontweight="bold", pad=15)
     ax.grid(True, linestyle="--", alpha=0.6)
-    ax.legend(loc="upper left", framealpha=0.9)
+    ax.legend(loc="upper right", framealpha=0.9)
     plt.tight_layout()
 
     save_plot_multiformat(fig, "pbpchisce")
+    plt.close(fig)
+
+
+def plot_scaling_susceptibility(df: pl.DataFrame) -> None:
+    """绘制有限时间延展标度系综 (beta=4.17, ml=0.0020, ms=0.0400) 的连续标度化磁化率 (pbpchisce_scaling_beta4.17)"""
+    print("\n--- 绘制标度系综 (beta=4.17) 手征磁化率 (pbpchisce_scaling_beta4.17) ---")
+    df_scaling = df.filter(pl.col("Ensemble").str.contains("m0.0020")).sort("Temp")
+    if df_scaling.height == 0:
+        return
+
+    temps = np.array(df_scaling["Temp"])
+    scaled_means = np.array(df_scaling["Mean_scaled"])
+    scaled_errs = np.array(df_scaling["Error_scaled"])
+    ensembles = df_scaling["Ensemble"].to_list()
+    ns_list = df_scaling["Ns"].to_list()
+    nt_list = df_scaling["Nt"].to_list()
+
+    fig, ax = plt.subplots(figsize=(8.5, 6), dpi=150)
+
+    # 1. 渲染相变过渡温带 [155.5, 160.5] MeV
+    ax.axvspan(
+        TRANSITION_REGION[0],
+        TRANSITION_REGION[1],
+        color="crimson",
+        alpha=0.12,
+        label=f"Crossover Band ({TRANSITION_REGION[0]}-{TRANSITION_REGION[1]} MeV)",
+        zorder=1,
+    )
+
+    # 2. 绘制连续标度磁化率 (ana/ttest/plot_chisce.py 配色与规范)
+    color_indigo = "#4f46e5"
+    ax.errorbar(
+        temps,
+        scaled_means,
+        yerr=scaled_errs,
+        fmt="o-",
+        color=color_indigo,
+        ecolor="#a5b4fc",
+        mfc="#6366f1",
+        mec=color_indigo,
+        mew=1.5,
+        ms=7,
+        capsize=4,
+        elinewidth=1.5,
+        label=r"Chiral Susceptibility (Scaled, $\beta=4.17$)",
+        zorder=3,
+    )
+
+    # 标注时空尺寸标签
+    for i in range(len(ensembles)):
+        tag = f"${ns_list[i]}^3 \\times {nt_list[i]}$"
+        if "_2" in ensembles[i]:
+            tag += " (str 2)"
+            offset = (28, -12)
+        elif nt_list[i] == 18:
+            tag += " (str 1)"
+            offset = (-28, 10)
+        elif nt_list[i] == 16:
+            offset = (0, -18)
+        elif nt_list[i] == 14:
+            offset = (0, 10)
+        else:
+            offset = (0, 10)
+
+        ax.annotate(
+            tag,
+            (temps[i], scaled_means[i]),
+            textcoords="offset points",
+            xytext=offset,
+            ha="center",
+            fontsize=9,
+            fontweight="semibold",
+        )
+
+    ax.set_xlabel("Temperature (T) [MeV]", fontsize=12, fontweight="bold", labelpad=10)
+    ax.set_ylabel(r"Scaled Susceptibility ($(16T)^2 \times a^2\chi$) [$\mathrm{MeV}^2$]", fontsize=12, fontweight="bold", labelpad=10)
+    ax.set_title("Chiral Susceptibility vs Temperature (Scaled)", fontsize=13, fontweight="bold", pad=15)
+    ax.grid(True, linestyle="--", alpha=0.6)
+    ax.legend(loc="upper right", framealpha=0.9)
+    plt.tight_layout()
+
+    save_plot_multiformat(fig, "pbpchisce_scaling_beta4.17")
     plt.close(fig)
 
 
@@ -187,10 +270,12 @@ def main():
         print("[ERROR] 缺少磁化率输入数据，请先运行 scripts/reproduce_susceptibility.py")
         sys.exit(1)
 
-    df = pl.read_csv(csv_path).sort("Temp")
+    df = pl.read_csv(csv_path)
+    df_48 = df.filter((pl.col("Ns") == 48) & (pl.col("Nt") == 16)).sort("Temp")
 
-    plot_sucep(df)
-    plot_scaled_pbpchisce(df)
+    plot_sucep(df_48)
+    plot_scaled_pbpchisce(df_48)
+    plot_scaling_susceptibility(df)
 
     print("\n所有磁化率图表已成功生成并同步至:")
     for d in TARGET_DIRS:

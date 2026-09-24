@@ -19,7 +19,7 @@
 \contentsline {subsection}{\numberline {4.5}固定温度下的空间体积标度效应 ($T=153.31\text { MeV}$)}{10}{subsection.4.5}%
 \contentsline {subsection}{\numberline {4.6}全量 13 组格点全景对比 (Physical Scan vs Distributed Runs)}{10}{subsection.4.6}%
 \contentsline {subsection}{\numberline {4.7}手征磁化率与赝临界相变峰分析 (Chiral Susceptibility Analysis)}{11}{subsection.4.7}%
-\contentsline {section}{\numberline {5}工程实现架构与数据管道 (Software Architecture \& Pipeline)}{12}{section.5}%
-\contentsline {subsection}{\numberline {5.1}双核计算架构设计}{12}{subsection.5.1}%
+\contentsline {section}{\numberline {5}工程实现架构与数据管道 (Software Architecture \& Pipeline)}{13}{section.5}%
+\contentsline {subsection}{\numberline {5.1}双核计算架构设计}{13}{subsection.5.1}%
 \contentsline {subsection}{\numberline {5.2}独立隔离落盘与无损增量合并机制}{13}{subsection.5.2}%
 \contentsline {section}{\numberline {6}结论 (Conclusion)}{13}{section.6}%

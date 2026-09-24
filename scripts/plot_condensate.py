@@ -341,7 +341,7 @@ def plot_distributed_scaling_beta417() -> None:
         capthick=1.5,
         elinewidth=1.5,
         markersize=7,
-        label=r'Distributed Scaling Ensembles ($\beta=4.17$)',
+        label=r'Scaling Ensembles ($\beta=4.17$)',
         zorder=5
     )
 
@@ -372,7 +372,7 @@ def plot_distributed_scaling_beta417() -> None:
     ax.axhline(0, color="black", linestyle="--", linewidth=0.8, alpha=0.7)
     ax.set_xlabel("Temperature (T) [MeV]", fontsize=14)
     ax.set_ylabel(r"Renormalized Condensate $\Delta_{\ell, s}$", fontsize=14)
-    ax.set_title(r"Finite Volume & Temporal Scaling at $\beta=4.17$ (Distributed Runs)", fontsize=14)
+    ax.set_title(r"Finite Temporal Scaling Condensate at $\beta=4.17$", fontsize=14)
     ax.tick_params(axis="both", which="major", labelsize=12)
     ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend(loc="upper right", frameon=True, fontsize=10)
