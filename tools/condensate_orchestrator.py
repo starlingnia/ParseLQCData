@@ -23,19 +23,30 @@ class CondensateOrchestrator:
         current_dir = Path(__file__).resolve().parent
         project_root = current_dir.parent
         candidates = [
-            project_root / "build" / "libparselqcdata.dylib",
             project_root / "lib" / "libparselqcdata.dylib",
             project_root / "lib" / "liblqcd_condensate.dylib",
-            project_root / "build" / "libparselqcdata.so",
+            project_root / "build" / "libparselqcdata.dylib",
             project_root / "lib" / "libparselqcdata.so",
             project_root / "lib" / "liblqcd_condensate.so",
+            project_root / "build" / "libparselqcdata.so",
         ]
+        errors = []
+        for c in candidates:
+            if c.exists():
+                try:
+                    test_lib = ctypes.CDLL(str(c))
+                    if hasattr(test_lib, "run_chiral_condensate_c_api"):
+                        return c
+                except OSError as e:
+                    errors.append(f"{c.name}: {e}")
+        # Fallback to first existing if test loading did not identify one
         for c in candidates:
             if c.exists():
                 return c
         raise FileNotFoundError(
             "Condensate shared library not found. Checked:\n"
             + "\n".join(f"  - {c}" for c in candidates)
+            + (f"\nLoad errors:\n" + "\n".join(f"  - {e}" for e in errors) if errors else "")
         )
 
     def is_available(self) -> bool:

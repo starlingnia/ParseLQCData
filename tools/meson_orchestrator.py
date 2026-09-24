@@ -15,14 +15,29 @@ class MesonOrchestrator:
         current_dir = Path(__file__).resolve().parent
         project_root = current_dir.parent
         candidates = [
+            project_root / "lib" / "libparselqcdata.dylib",
+            project_root / "lib" / "liblqcd_meson.dylib",
+            project_root / "build" / "libparselqcdata.dylib",
+            project_root / "lib" / "libparselqcdata.so",
             project_root / "lib" / "liblqcd_meson.so",
+            project_root / "build" / "libparselqcdata.so",
         ]
+        errors = []
+        for c in candidates:
+            if c.exists():
+                try:
+                    test_lib = ctypes.CDLL(str(c))
+                    if hasattr(test_lib, "run_meson_pipeline_c_api"):
+                        return c
+                except OSError as e:
+                    errors.append(f"{c.name}: {e}")
         for c in candidates:
             if c.exists():
                 return c
         raise FileNotFoundError(
             "Meson shared library not found. Checked:\n"
             + "\n".join(f"  - {c}" for c in candidates)
+            + (f"\nLoad errors:\n" + "\n".join(f"  - {e}" for e in errors) if errors else "")
         )
     
     def _setup_bindings(self) -> None:

@@ -114,7 +114,7 @@ SusceptibilityMeta parse_meta(const std::filesystem::path& p) {
         meta.temp = it->second * (16.0 / static_cast<double>(meta.nt));
     } else {
         double beta_val = 4.17;
-        iodata::parse_double(meta.beta, beta_val);
+        (void)iodata::parse_double(meta.beta, beta_val);
         meta.temp = 153.31 * (16.0 / static_cast<double>(meta.nt));
     }
 
