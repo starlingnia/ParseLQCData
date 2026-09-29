@@ -1,0 +1,620 @@
+{
+  "task": "b4.17_nt_scan_meson",
+  "generated_at": "2026-09-29T13:29:54",
+  "beta": 4.17,
+  "beta_key": "17",
+  "ms": 0.04,
+  "channels": [
+    "AV",
+    "S",
+    "Tt",
+    "PS",
+    "Xt",
+    "Vec"
+  ],
+  "source_tags": [
+    "multisrc",
+    "singlesrc"
+  ],
+  "cases": [
+    {
+      "order": 0,
+      "ns": 32,
+      "nt": 12,
+      "ms": 0.04,
+      "mls": [
+        0.002,
+        0.0035,
+        0.007,
+        0.012
+      ],
+      "temperature_mev": 204.413,
+      "temp_ref_mev": 204.0,
+      "dirs": [
+        "32x12_b4.17_ms0.040m0.0020",
+        "32x12_b4.17_ms0.040m0.0035",
+        "32x12_b4.17_ms0.040m0.0070",
+        "32x12_b4.17_ms0.040m0.0120"
+      ]
+    },
+    {
+      "order": 1,
+      "ns": 32,
+      "nt": 14,
+      "ms": 0.04,
+      "mls": [
+        0.002,
+        0.0035,
+        0.007,
+        0.012
+      ],
+      "temperature_mev": 175.211,
+      "temp_ref_mev": 174.86,
+      "dirs": [
+        "32x14_b4.17_ms0.040m0.0020",
+        "32x14_b4.17_ms0.040m0.0035",
+        "32x14_b4.17_ms0.040m0.0070",
+        "32x14_b4.17_ms0.040m0.0120"
+      ]
+    },
+    {
+      "order": 2,
+      "ns": 32,
+      "nt": 16,
+      "ms": 0.04,
+      "mls": [
+        0.002,
+        0.0035,
+        0.007,
+        0.012
+      ],
+      "temperature_mev": 153.31,
+      "temp_ref_mev": 153.0,
+      "dirs": [
+        "32x16_b4.17_ms0.040m0.0020",
+        "32x16_b4.17_ms0.040m0.0035",
+        "32x16_b4.17_ms0.040m0.0070",
+        "32x16_b4.17_ms0.040m0.0120"
+      ]
+    },
+    {
+      "order": 3,
+      "ns": 36,
+      "nt": 18,
+      "ms": 0.04,
+      "mls": [
+        0.002,
+        0.0035,
+        0.007,
+        0.012
+      ],
+      "temperature_mev": 136.276,
+      "temp_ref_mev": 136.0,
+      "dirs": [
+        "36x18_b4.17_ms0.040m0.0020",
+        "36x18_b4.17_ms0.040m0.0035",
+        "36x18_b4.17_ms0.040m0.0070",
+        "36x18_b4.17_ms0.040m0.0120"
+      ]
+    },
+    {
+      "order": 4,
+      "ns": 40,
+      "nt": 16,
+      "ms": 0.04,
+      "mls": [
+        0.002,
+        0.0035,
+        0.007,
+        0.012
+      ],
+      "temperature_mev": 153.31,
+      "temp_ref_mev": 153.0,
+      "dirs": [
+        "40x16_b4.17_ms0.040m0.0020",
+        "40x16_b4.17_ms0.040m0.0035",
+        "40x16_b4.17_ms0.040m0.0070",
+        "40x16_b4.17_ms0.040m0.0120"
+      ]
+    },
+    {
+      "order": 5,
+      "ns": 48,
+      "nt": 18,
+      "ms": 0.04,
+      "mls": [
+        0.002,
+        0.0035,
+        0.007,
+        0.012
+      ],
+      "temperature_mev": 136.276,
+      "temp_ref_mev": 136.0,
+      "dirs": [
+        "48x18_b4.17_ms0.040m0.0020",
+        "48x18_b4.17_ms0.040m0.0035",
+        "48x18_b4.17_ms0.040m0.0070",
+        "48x18_b4.17_ms0.040m0.0120"
+      ]
+    }
+  ],
+  "readin_dirs_used": [
+    "32x12_b4.17_ms0.040m0.0020",
+    "32x12_b4.17_ms0.040m0.0035",
+    "32x12_b4.17_ms0.040m0.0070",
+    "32x12_b4.17_ms0.040m0.0120",
+    "32x14_b4.17_ms0.040m0.0020",
+    "32x14_b4.17_ms0.040m0.0035",
+    "32x14_b4.17_ms0.040m0.0070",
+    "32x14_b4.17_ms0.040m0.0120",
+    "32x16_b4.17_ms0.040m0.0020",
+    "32x16_b4.17_ms0.040m0.0035",
+    "32x16_b4.17_ms0.040m0.0070",
+    "32x16_b4.17_ms0.040m0.0120",
+    "36x18_b4.17_ms0.040m0.0020",
+    "36x18_b4.17_ms0.040m0.0035",
+    "36x18_b4.17_ms0.040m0.0070",
+    "36x18_b4.17_ms0.040m0.0120",
+    "40x16_b4.17_ms0.040m0.0020",
+    "40x16_b4.17_ms0.040m0.0035",
+    "40x16_b4.17_ms0.040m0.0070",
+    "40x16_b4.17_ms0.040m0.0120",
+    "48x18_b4.17_ms0.040m0.0020",
+    "48x18_b4.17_ms0.040m0.0035",
+    "48x18_b4.17_ms0.040m0.0070",
+    "48x18_b4.17_ms0.040m0.0120"
+  ],
+  "readin_dirs_b417_not_in_task": [
+    "16-z-32x12_b4.17_ms0.040m0.0020",
+    "48x16b4.17"
+  ],
+  "conventions": {
+    "num_lines": "Ns (每信道 spatial:DIR* block 行数)",
+    "correlator": "空间关联函数 C(x), x = 0 .. Ns-1 (16 个源位置环形移位平均)",
+    "cosh_center": "Ns/2 (32->16, 36->18, 40->20, 48->24)",
+    "jackknife_error": "sqrt((J-1) * sum((m_j - mean)^2) / J), J = bins 数",
+    "reference_window": "由 4.17 @ 48^3x16 的 slice 表平移得到 (保持距对称点距离)"
+  },
+  "runtime": {
+    "threads_per_task": 2,
+    "elapsed_sec": 113.14
+  },
+  "results": {
+    "multisrc": [
+      {
+        "order": 0,
+        "case": "32x12",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 52,
+        "n_raw_cfgs": 210,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/00_32x12_ms0.040_m0.0070"
+      },
+      {
+        "order": 0,
+        "case": "32x12",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 51,
+        "n_raw_cfgs": 204,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/00_32x12_ms0.040_m0.0035"
+      },
+      {
+        "order": 0,
+        "case": "32x12",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 51,
+        "n_raw_cfgs": 204,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/00_32x12_ms0.040_m0.0120"
+      },
+      {
+        "order": 0,
+        "case": "32x12",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 52,
+        "n_raw_cfgs": 210,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/00_32x12_ms0.040_m0.0020"
+      },
+      {
+        "order": 1,
+        "case": "32x14",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 70,
+        "n_raw_cfgs": 281,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/01_32x14_ms0.040_m0.0020"
+      },
+      {
+        "order": 1,
+        "case": "32x14",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 72,
+        "n_raw_cfgs": 290,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/01_32x14_ms0.040_m0.0035"
+      },
+      {
+        "order": 1,
+        "case": "32x14",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 73,
+        "n_raw_cfgs": 293,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/01_32x14_ms0.040_m0.0070"
+      },
+      {
+        "order": 1,
+        "case": "32x14",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 74,
+        "n_raw_cfgs": 296,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/01_32x14_ms0.040_m0.0120"
+      },
+      {
+        "order": 2,
+        "case": "32x16",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 53,
+        "n_raw_cfgs": 214,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/02_32x16_ms0.040_m0.0020"
+      },
+      {
+        "order": 2,
+        "case": "32x16",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 45,
+        "n_raw_cfgs": 183,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/02_32x16_ms0.040_m0.0070"
+      },
+      {
+        "order": 2,
+        "case": "32x16",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 48,
+        "n_raw_cfgs": 194,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/02_32x16_ms0.040_m0.0035"
+      },
+      {
+        "order": 2,
+        "case": "32x16",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 54,
+        "n_raw_cfgs": 219,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/02_32x16_ms0.040_m0.0120"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 23,
+        "n_raw_cfgs": 94,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/03_36x18_ms0.040_m0.0020"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 25,
+        "n_raw_cfgs": 100,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/03_36x18_ms0.040_m0.0070"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 24,
+        "n_raw_cfgs": 97,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/03_36x18_ms0.040_m0.0035"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 28,
+        "n_raw_cfgs": 114,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/03_36x18_ms0.040_m0.0120"
+      },
+      {
+        "order": 4,
+        "case": "40x16",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 30,
+        "n_raw_cfgs": 122,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/04_40x16_ms0.040_m0.0020"
+      },
+      {
+        "order": 4,
+        "case": "40x16",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 36,
+        "n_raw_cfgs": 144,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/04_40x16_ms0.040_m0.0035"
+      },
+      {
+        "order": 4,
+        "case": "40x16",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 41,
+        "n_raw_cfgs": 166,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/04_40x16_ms0.040_m0.0070"
+      },
+      {
+        "order": 4,
+        "case": "40x16",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 58,
+        "n_raw_cfgs": 232,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/04_40x16_ms0.040_m0.0120"
+      },
+      {
+        "order": 5,
+        "case": "48x18",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 35,
+        "n_raw_cfgs": 143,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/05_48x18_ms0.040_m0.0020"
+      },
+      {
+        "order": 5,
+        "case": "48x18",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 30,
+        "n_raw_cfgs": 120,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/05_48x18_ms0.040_m0.0035"
+      },
+      {
+        "order": 5,
+        "case": "48x18",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 37,
+        "n_raw_cfgs": 149,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/05_48x18_ms0.040_m0.0070"
+      },
+      {
+        "order": 5,
+        "case": "48x18",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 46,
+        "n_raw_cfgs": 186,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/05_48x18_ms0.040_m0.0120"
+      }
+    ],
+    "singlesrc": [
+      {
+        "order": 0,
+        "case": "32x12",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 51,
+        "n_raw_cfgs": 204,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/00_32x12_ms0.040_m0.0035"
+      },
+      {
+        "order": 0,
+        "case": "32x12",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 52,
+        "n_raw_cfgs": 210,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/00_32x12_ms0.040_m0.0020"
+      },
+      {
+        "order": 0,
+        "case": "32x12",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 51,
+        "n_raw_cfgs": 204,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/00_32x12_ms0.040_m0.0120"
+      },
+      {
+        "order": 0,
+        "case": "32x12",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 52,
+        "n_raw_cfgs": 210,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/00_32x12_ms0.040_m0.0070"
+      },
+      {
+        "order": 1,
+        "case": "32x14",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 70,
+        "n_raw_cfgs": 281,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/01_32x14_ms0.040_m0.0020"
+      },
+      {
+        "order": 1,
+        "case": "32x14",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 72,
+        "n_raw_cfgs": 290,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/01_32x14_ms0.040_m0.0035"
+      },
+      {
+        "order": 1,
+        "case": "32x14",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 73,
+        "n_raw_cfgs": 293,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/01_32x14_ms0.040_m0.0070"
+      },
+      {
+        "order": 1,
+        "case": "32x14",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 74,
+        "n_raw_cfgs": 296,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/01_32x14_ms0.040_m0.0120"
+      },
+      {
+        "order": 2,
+        "case": "32x16",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 45,
+        "n_raw_cfgs": 183,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/02_32x16_ms0.040_m0.0070"
+      },
+      {
+        "order": 2,
+        "case": "32x16",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 53,
+        "n_raw_cfgs": 214,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/02_32x16_ms0.040_m0.0020"
+      },
+      {
+        "order": 2,
+        "case": "32x16",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 48,
+        "n_raw_cfgs": 194,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/02_32x16_ms0.040_m0.0035"
+      },
+      {
+        "order": 2,
+        "case": "32x16",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 54,
+        "n_raw_cfgs": 219,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/02_32x16_ms0.040_m0.0120"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 24,
+        "n_raw_cfgs": 97,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/03_36x18_ms0.040_m0.0035"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 23,
+        "n_raw_cfgs": 94,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/03_36x18_ms0.040_m0.0020"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 28,
+        "n_raw_cfgs": 114,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/03_36x18_ms0.040_m0.0120"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 25,
+        "n_raw_cfgs": 100,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/03_36x18_ms0.040_m0.0070"
+      },
+      {
+        "order": 4,
+        "case": "40x16",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 30,
+        "n_raw_cfgs": 122,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/04_40x16_ms0.040_m0.0020"
+      },
+      {
+        "order": 4,
+        "case": "40x16",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 36,
+        "n_raw_cfgs": 144,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/04_40x16_ms0.040_m0.0035"
+      },
+      {
+        "order": 4,
+        "case": "40x16",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 41,
+        "n_raw_cfgs": 166,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/04_40x16_ms0.040_m0.0070"
+      },
+      {
+        "order": 4,
+        "case": "40x16",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 58,
+        "n_raw_cfgs": 232,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/04_40x16_ms0.040_m0.0120"
+      },
+      {
+        "order": 5,
+        "case": "48x18",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 30,
+        "n_raw_cfgs": 120,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/05_48x18_ms0.040_m0.0035"
+      },
+      {
+        "order": 5,
+        "case": "48x18",
+        "ml": 0.002,
+        "status": "ok",
+        "n_bins": 35,
+        "n_raw_cfgs": 143,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/05_48x18_ms0.040_m0.0020"
+      },
+      {
+        "order": 5,
+        "case": "48x18",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 37,
+        "n_raw_cfgs": 149,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/05_48x18_ms0.040_m0.0070"
+      },
+      {
+        "order": 5,
+        "case": "48x18",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 46,
+        "n_raw_cfgs": 186,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/05_48x18_ms0.040_m0.0120"
+      }
+    ]
+  }
+}
