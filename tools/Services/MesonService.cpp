@@ -28,6 +28,9 @@ int run_meson_pipeline_c_api(
     if (!input_dir || !channel_types_csv || !channel_dirs_csv || !out_means || !out_errors) {
         return -1;
     }
+    if (num_lines <= 0) {
+        return -3;
+    }
 
     // 解析逗号分隔的信道配置
     std::vector<std::string> types;
@@ -58,7 +61,7 @@ int run_meson_pipeline_c_api(
         input_dir,
         channels,
         static_cast<size_t>(binsize > 0 ? binsize : 4),
-        static_cast<size_t>(num_lines > 0 ? num_lines : 48),
+        static_cast<size_t>(num_lines),
         static_cast<size_t>(thread_count > 0 ? thread_count : 0),
         is_single_source != 0
     );
@@ -67,8 +70,9 @@ int run_meson_pipeline_c_api(
         return -3;
     }
 
-    std::memcpy(out_means, result.means.data(), num_lines * sizeof(double));
-    std::memcpy(out_errors, result.errors.data(), num_lines * sizeof(double));
+    const size_t output_num_lines = static_cast<size_t>(num_lines);
+    std::memcpy(out_means, result.means.data(), output_num_lines * sizeof(double));
+    std::memcpy(out_errors, result.errors.data(), output_num_lines * sizeof(double));
 
     if (out_n_bins) {
         *out_n_bins = static_cast<int>(result.n_bins);
@@ -78,7 +82,7 @@ int run_meson_pipeline_c_api(
     }
 
     if (out_folded_jk && result.n_bins > 0) {
-        const size_t matrix_size = static_cast<size_t>(num_lines) * result.n_bins;
+        const size_t matrix_size = output_num_lines * result.n_bins;
         double* buffer = new double[matrix_size];
         std::memcpy(buffer, result.folded_jk_matrix.data(), matrix_size * sizeof(double));
         *out_folded_jk = buffer;

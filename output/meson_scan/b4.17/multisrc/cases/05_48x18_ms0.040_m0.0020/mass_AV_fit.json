@@ -1,0 +1,18 @@
+{
+  "ensemble": "48x18_b4.17_ms0.040m0.0020",
+  "channel": "AV",
+  "fit_window": [
+    12,
+    24
+  ],
+  "plateau_chi2_dof": 1.125122263471087,
+  "mass_parameter_lattice_units": 0.33649755558245337,
+  "mass_parameter_error_lattice_units": 0.02949820590721128,
+  "inverse_lattice_spacing_mev": 2452.96,
+  "meson_mass_mev": 825.4150439415348,
+  "meson_mass_error_mev": 72.35791916215298,
+  "n_bins": 35,
+  "n_raw_cfgs": 143,
+  "n_fitted_jackknife_samples": 35,
+  "fit_data_csv": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/05_48x18_ms0.040_m0.0020/fit_data_AV.csv"
+}

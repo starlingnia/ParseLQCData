@@ -1,7 +1,20 @@
 import ctypes
+import re
 from pathlib import Path
 from typing import List, Optional, Tuple
 import numpy as np
+
+
+def _infer_spatial_extent(input_dir: str) -> int:
+    lattice_size_pattern = re.compile(r"(?<![A-Za-z0-9])L?(\d+)(?:x|X|T|t)(\d+)")
+    for path in (Path(input_dir), *Path(input_dir).parents):
+        match = lattice_size_pattern.search(path.name)
+        if match:
+            spatial_extent = int(match.group(1))
+            if spatial_extent > 0:
+                return spatial_extent
+    raise ValueError(f"Cannot infer spatial extent (Ns) from input directory: {input_dir}")
+
 
 class MesonOrchestrator:
     def __init__(self, library_path: Optional[str] = None) -> None:
@@ -67,10 +80,13 @@ class MesonOrchestrator:
         input_dir: str,
         channel_configs: List[dict],
         binsize: int = 4,
-        num_lines: int = 48,
+        num_lines: int = 0,
         thread_count: int = 0,
         is_single_source: bool = False
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, int, int]:
+        if num_lines <= 0:
+            num_lines = _infer_spatial_extent(input_dir)
+
         types = [c['type'] for c in channel_configs]
         dirs = [c['dir'] for c in channel_configs]
     
@@ -121,7 +137,7 @@ class MesonOrchestrator:
         input_dir: str,
         channel_configs: List[dict],
         binsize: int = 4,
-        num_lines: int = 48,
+        num_lines: int = 0,
         thread_count: int = 0
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, int, int]:
         """专门用于多源（16点源空间循环平移平均）信道抽取"""
@@ -139,7 +155,7 @@ class MesonOrchestrator:
         input_dir: str,
         channel_configs: List[dict],
         binsize: int = 4,
-        num_lines: int = 48,
+        num_lines: int = 0,
         thread_count: int = 0
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, int, int]:
         """专门用于单源（原点 0/0/0/0 单点源）信道抽取"""
@@ -158,7 +174,7 @@ class MesonOrchestrator:
         channel_mappings: Optional[List[dict]] = None,
         channel_configs: Optional[List[dict]] = None,
         binsize: int = 4,
-        num_lines: int = 48,
+        num_lines: int = 0,
         thread_count: int = 0,
         is_single_source: bool = False,
         return_folded_jk: bool = True

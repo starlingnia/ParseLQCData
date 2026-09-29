@@ -89,7 +89,7 @@ int execute_meson_measurement(
 
     const auto t0 = std::chrono::steady_clock::now();
     const auto result = lqcd::meson::run_meson_pipeline(
-        input_dir, it->second, binsize, 48, 0, is_single_source
+        input_dir, it->second, binsize, 0, 0, is_single_source
     );
     const auto t1 = std::chrono::steady_clock::now();
 

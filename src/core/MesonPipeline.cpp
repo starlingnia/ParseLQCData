@@ -5,8 +5,11 @@
 #include <IOdata/FileReader.h>
 
 #include <algorithm>
+#include <charconv>
 #include <future>
 #include <map>
+#include <regex>
+#include <stdexcept>
 #include <thread>
 #include <vector>
 
@@ -18,6 +21,25 @@ struct ChannelMeta {
     std::string direction;
     std::string start_tag;
 };
+
+[[nodiscard]] size_t infer_num_lines_from_directory(const std::filesystem::path& input_dir) {
+    static const std::regex lattice_size_pattern(R"((?:^|[^[:alnum:]])L?([0-9]+)(?:x|X|T|t)([0-9]+))");
+    for (auto path = input_dir; !path.empty(); path = path.parent_path()) {
+        const auto name = path.filename().string();
+        std::smatch match;
+        if (std::regex_search(name, match, lattice_size_pattern)) {
+            size_t spatial_extent = 0;
+            const auto value = match[1].str();
+            const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), spatial_extent);
+            if (error == std::errc{} && end == value.data() + value.size() && spatial_extent > 0) {
+                return spatial_extent;
+            }
+        }
+        const auto parent = path.parent_path();
+        if (parent == path) break;
+    }
+    throw std::invalid_argument("Cannot infer spatial extent (Ns) from input directory: " + input_dir.string());
+}
 
 [[nodiscard]] MesonAnalysisResult summarize_channel_matrix(
     const std::vector<double>& combined_matrix,
@@ -83,6 +105,8 @@ struct ChannelMeta {
         return result;
     }
 
+    const size_t resolved_num_lines = num_lines == 0 ? infer_num_lines_from_directory(input_dir) : num_lines;
+
     // 1. 自然排序扫描所有强子关联函数文件
     const auto files = iodata::scan_natural_sorted(input_dir, "test1_lhadrons_", "_mesons_multi_src");
     const size_t num_cfgs = files.size();
@@ -95,8 +119,8 @@ struct ChannelMeta {
         thread_count = std::max(1u, std::thread::hardware_concurrency());
     }
 
-    // 矩阵数据：48 行 x N 列 (num_lines x num_cfgs)
-    std::vector<double> combined_matrix(num_lines * num_cfgs, 0.0);
+    // 矩阵数据：num_lines 行 x N 列 (num_lines x num_cfgs)
+    std::vector<double> combined_matrix(resolved_num_lines * num_cfgs, 0.0);
 
     const auto metas = build_channel_metas(channels, is_single_source);
 
@@ -120,12 +144,12 @@ struct ChannelMeta {
                 for (const auto& meta : metas) {
                     std::vector<double> blk;
                     if (is_single_source) {
-                        blk = extract_single_file_singlesrc_block(content, meta.start_tag, num_lines);
+                        blk = extract_single_file_singlesrc_block(content, meta.start_tag, resolved_num_lines);
                     } else {
-                        blk = extract_single_file_averaged_block(content, meta.direction, meta.start_tag, num_lines);
+                        blk = extract_single_file_averaged_block(content, meta.direction, meta.start_tag, resolved_num_lines);
                     }
-                    if (blk.size() == num_lines) {
-                        for (size_t r = 0; r < num_lines; ++r) {
+                    if (blk.size() == resolved_num_lines) {
+                        for (size_t r = 0; r < resolved_num_lines; ++r) {
                             combined_matrix[r * num_cfgs + cfg_i] += blk[r];
                         }
                     }
@@ -144,7 +168,7 @@ struct ChannelMeta {
         combined_matrix[i] *= inv_num_channels;
     }
 
-    return summarize_channel_matrix(combined_matrix, num_lines, num_cfgs, binsize);
+    return summarize_channel_matrix(combined_matrix, resolved_num_lines, num_cfgs, binsize);
 }
 
 [[nodiscard]] std::map<std::string, MesonAnalysisResult> run_meson_pipeline_batch(
@@ -160,6 +184,8 @@ struct ChannelMeta {
         return results;
     }
 
+    const size_t resolved_num_lines = num_lines == 0 ? infer_num_lines_from_directory(input_dir) : num_lines;
+
     const auto files = iodata::scan_natural_sorted(input_dir, "test1_lhadrons_", "_mesons_multi_src");
     const size_t num_cfgs = files.size();
     if (num_cfgs == 0) {
@@ -173,7 +199,7 @@ struct ChannelMeta {
     std::map<std::string, std::vector<double>> matrices;
     for (const auto& [ch, mappings] : channel_defs) {
         if (!mappings.empty()) {
-            matrices[ch] = std::vector<double>(num_lines * num_cfgs, 0.0);
+            matrices[ch] = std::vector<double>(resolved_num_lines * num_cfgs, 0.0);
         }
     }
 
@@ -199,12 +225,12 @@ struct ChannelMeta {
                     for (const auto& meta : metas) {
                         std::vector<double> blk;
                         if (is_single_source) {
-                            blk = extract_single_file_singlesrc_block(content, meta.start_tag, num_lines);
+                            blk = extract_single_file_singlesrc_block(content, meta.start_tag, resolved_num_lines);
                         } else {
-                            blk = extract_single_file_averaged_block(content, meta.direction, meta.start_tag, num_lines);
+                            blk = extract_single_file_averaged_block(content, meta.direction, meta.start_tag, resolved_num_lines);
                         }
-                        if (blk.size() != num_lines) continue;
-                        for (size_t r = 0; r < num_lines; ++r) {
+                        if (blk.size() != resolved_num_lines) continue;
+                        for (size_t r = 0; r < resolved_num_lines; ++r) {
                             it->second[r * num_cfgs + cfg_i] += blk[r];
                         }
                     }
@@ -225,7 +251,7 @@ struct ChannelMeta {
         for (auto& value : matrix) {
             value *= inv_num_channels;
         }
-        results[ch] = summarize_channel_matrix(matrix, num_lines, num_cfgs, binsize);
+        results[ch] = summarize_channel_matrix(matrix, resolved_num_lines, num_cfgs, binsize);
         results[ch].n_raw_cfgs = num_cfgs;
     }
 

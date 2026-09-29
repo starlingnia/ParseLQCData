@@ -53,7 +53,7 @@ int measure_channel_single(std::string beta_str, std::string ch, size_t binsize)
     const std::filesystem::path output_file = "output/pickdata-singlesrc/b4." + beta_str + "/save_" + ch + "_cpp.csv";
 
     const auto t0 = std::chrono::steady_clock::now();
-    const auto res = lqcd::meson::run_meson_pipeline(input_dir, it->second, binsize, 48, 0, true);
+    const auto res = lqcd::meson::run_meson_pipeline(input_dir, it->second, binsize, 0, 0, true);
     const auto t1 = std::chrono::steady_clock::now();
 
     const double elapsed_s = std::chrono::duration<double>(t1 - t0).count();

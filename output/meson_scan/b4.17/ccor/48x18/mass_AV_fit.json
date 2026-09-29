@@ -1,0 +1,23 @@
+{
+  "ensemble": "48x18_b4.17_ms0.040m0.0020",
+  "channel": "AV",
+  "fit_model": "a*cosh(m*(x-Ns/2))",
+  "fit_method": "per_jackknife_correlator_chi2_least_squares",
+  "fitter": "scipy_least_squares",
+  "fit_window": [
+    12,
+    24
+  ],
+  "plateau_chi2_dof": 1.125122263471087,
+  "mass_parameter_lattice_units": 0.33649755558245337,
+  "mass_parameter_error_lattice_units": 0.02949820590721128,
+  "inverse_lattice_spacing_mev": 2452.96,
+  "meson_mass_mev": 825.4150439415348,
+  "meson_mass_error_mev": 72.35791916215298,
+  "n_bins": 35,
+  "n_raw_cfgs": 143,
+  "n_fitted_jackknife_samples": 35,
+  "symmetrized_jackknife_csv": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/ccor/48x18/symdatasample0.0020.csv",
+  "jackknife_error_csv": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/ccor/48x18/dferr10.0020.csv",
+  "per_sample_fit_csv": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/ccor/48x18/binnedresult0.0020.csv"
+}

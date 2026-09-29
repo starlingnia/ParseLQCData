@@ -55,7 +55,7 @@ class MesonPipeline:
             input_dir=str(input_dir),
             channel_mappings=mappings,
             binsize=binsize,
-            num_lines=48,
+            num_lines=0,
             return_folded_jk=True,
             is_single_source=is_single_source
         )
