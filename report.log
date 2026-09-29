@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.10.2)  24 SEP 2026 10:29
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.10.2)  25 SEP 2026 10:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -855,23 +855,23 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <12> not available
 (Font)              Font shape `TU/lmtt/b/n' tried instead on input line 200.
 
-Overfull \hbox (8.94913pt too wide) in paragraph at lines 211--222
+Overfull \hbox (8.94913pt too wide) in paragraph at lines 211--221
  [][] 
  []
 
 
-Overfull \hbox (53.90353pt too wide) in paragraph at lines 236--250
+Overfull \hbox (4.8615pt too wide) in paragraph at lines 235--249
  [][] 
  []
 
 [5]
-Overfull \hbox (12.24323pt too wide) in alignment at lines 296--296
+Overfull \hbox (12.24323pt too wide) in alignment at lines 294--294
 [][][][][] 
  []
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 304.
+(hyperref)                removing `subscript' on input line 302.
 
 File: docs/figures/conden_re_plot.pdf Graphic file (type pdf)
 <use docs/figures/conden_re_plot.pdf>
@@ -881,7 +881,7 @@ File: docs/figures/conden_plot.pdf Graphic file (type pdf)
  [7]
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `subscript' on input line 338.
+(hyperref)                removing `subscript' on input line 336.
 
 File: docs/figures/pbp_temperature_plot.pdf Graphic file (type pdf)
 <use docs/figures/pbp_temperature_plot.pdf>
@@ -910,12 +910,12 @@ Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: 1A3106D14BA57A97E41CDC3D8CAB015C;6179.
  ) 
 Here is how much of TeX's memory you used:
- 20709 strings out of 474773
- 445170 string characters out of 5757724
- 1955839 words of memory out of 5000000
- 42511 multiletter control sequences out of 15000+600000
- 569956 words of font info for 133 fonts, out of 8000000 for 9000
+ 20667 strings out of 474773
+ 444106 string characters out of 5757724
+ 1954839 words of memory out of 5000000
+ 42485 multiletter control sequences out of 15000+600000
+ 569852 words of font info for 120 fonts, out of 8000000 for 9000
  1348 hyphenation exceptions out of 8191
- 93i,14n,97p,1193b,652s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 93i,13n,97p,1193b,652s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on report.pdf (14 pages).

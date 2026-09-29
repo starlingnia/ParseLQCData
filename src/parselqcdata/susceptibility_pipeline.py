@@ -4,7 +4,7 @@ src/parselqcdata/susceptibility_pipeline.py
 Python 整合层：手征磁化率 (Chiral Susceptibility, \\chi) 端到端分析管道
 严格复现 ana/ttest/sucep_calc.py 与 plot_chisce.py 的算法标准：
 
-1. 物理理论定义 (Continuous Definition):
+1. 物理理论定义:
    \\chi_{\\text{disc}} = (V_3 / T) * [ \\langle (\\bar{\\psi}\\psi)^2 \\rangle - \\langle \\bar{\\psi}\\psi \\rangle^2 ]
    其中 V_3 = (Ns * a)^3, T = 1 / (Nt * a), 故 V_3 / T = Ns^3 * Nt * a^4 = V_4。
 
@@ -23,9 +23,9 @@ Python 整合层：手征磁化率 (Chiral Susceptibility, \\chi) 端到端分�
 4. 物理标度因子 (Scaling Factors with Ns, Nt, Temperature T):
    - 四维格点体积因子: F_vol = Ns^3 * Nt
      \\chi_{vol} = F_vol * \\chi_{unscaled}
-   - 连续温度标度因子: F_scaled = Ns^3 * Nt^3 * T^2 = F_vol * (Nt * T)^2
+   - 标度因子: F_scaled = Ns^3 * Nt^3 * T^2 = F_vol * (Nt * T)^2
      \\chi_{scaled} = F_scaled * \\chi_{unscaled}  (单位: MeV^2)
-     对应 plot_chisce.py 中的 (16T)^2 * a^2 * \\chi 标准。
+     对应 plot_chisce.py 中的 $(N_t T)^2 a^2 \chi$ 标准。
 
 5. 跨机器移植性:
    既支持在包含全量原始构型向量的集群计算机上全自动遍历提取，
@@ -103,7 +103,7 @@ def parse_ensemble_meta_from_dir(dir_name: str) -> Dict[str, Union[int, float, s
 
 def compute_scaling_factors(ns: int, nt: int, temp_mev: float) -> Tuple[float, float]:
     """
-    计算磁化率所需的体积因子与连续标度因子：
+    计算磁化率所需的体积因子与标度因子：
     - factor_vol = Ns^3 * Nt
     - factor_scaled = Ns^3 * Nt^3 * T^2 = factor_vol * (Nt * T)^2
     """
@@ -426,7 +426,7 @@ class SusceptibilityPipeline:
         else:
             raise FileNotFoundError(f"未找到基准数据: {ana_csv}")
 
-        # 标准化添加 Ns=48, Nt=16, 体积因子与连续标度因子
+        # 标准化添加 Ns=48, Nt=16, 体积因子与标度因子
         rows = []
         for r in df_norm.iter_rows(named=True):
             b = r["Beta"]

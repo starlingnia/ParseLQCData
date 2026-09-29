@@ -14,4 +14,10 @@ uv run python tests/benchmark_stress_test.py
 echo "[TEST] Running binsize autocorrelation and error saturation test..."
 uv run python tests/test_binsize_autocorr.py
 
+echo "[TEST] Running b4.17 Nt-scan task tests (correlators + meson masses)..."
+uv run python tests/test_meson_b417_scan.py
+
+echo "[TEST] Running ccor flow reproduction tests (vs ana/dat/ccor)..."
+uv run python tests/test_ccor_flow.py
+
 echo "[TEST] All tests completed."

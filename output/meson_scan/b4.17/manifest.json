@@ -1,6 +1,6 @@
 {
   "task": "b4.17_nt_scan_meson",
-  "generated_at": "2026-09-29T13:29:54",
+  "generated_at": "2026-09-29T16:35:33",
   "beta": 4.17,
   "beta_key": "17",
   "ms": 0.04,
@@ -172,24 +172,16 @@
     "num_lines": "Ns (每信道 spatial:DIR* block 行数)",
     "correlator": "空间关联函数 C(x), x = 0 .. Ns-1 (16 个源位置环形移位平均)",
     "cosh_center": "Ns/2 (32->16, 36->18, 40->20, 48->24)",
+    "fitter": "scipy_least_squares (强制 chi2 最小二乘, 不用 lsqfit 环境默认)",
     "jackknife_error": "sqrt((J-1) * sum((m_j - mean)^2) / J), J = bins 数",
     "reference_window": "由 4.17 @ 48^3x16 的 slice 表平移得到 (保持距对称点距离)"
   },
   "runtime": {
     "threads_per_task": 2,
-    "elapsed_sec": 113.14
+    "elapsed_sec": 101.32
   },
   "results": {
     "multisrc": [
-      {
-        "order": 0,
-        "case": "32x12",
-        "ml": 0.007,
-        "status": "ok",
-        "n_bins": 52,
-        "n_raw_cfgs": 210,
-        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/00_32x12_ms0.040_m0.0070"
-      },
       {
         "order": 0,
         "case": "32x12",
@@ -207,6 +199,15 @@
         "n_bins": 51,
         "n_raw_cfgs": 204,
         "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/00_32x12_ms0.040_m0.0120"
+      },
+      {
+        "order": 0,
+        "case": "32x12",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 52,
+        "n_raw_cfgs": 210,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/00_32x12_ms0.040_m0.0070"
       },
       {
         "order": 0,
@@ -229,15 +230,6 @@
       {
         "order": 1,
         "case": "32x14",
-        "ml": 0.0035,
-        "status": "ok",
-        "n_bins": 72,
-        "n_raw_cfgs": 290,
-        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/01_32x14_ms0.040_m0.0035"
-      },
-      {
-        "order": 1,
-        "case": "32x14",
         "ml": 0.007,
         "status": "ok",
         "n_bins": 73,
@@ -252,6 +244,15 @@
         "n_bins": 74,
         "n_raw_cfgs": 296,
         "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/01_32x14_ms0.040_m0.0120"
+      },
+      {
+        "order": 1,
+        "case": "32x14",
+        "ml": 0.0035,
+        "status": "ok",
+        "n_bins": 72,
+        "n_raw_cfgs": 290,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/01_32x14_ms0.040_m0.0035"
       },
       {
         "order": 2,
@@ -301,20 +302,20 @@
       {
         "order": 3,
         "case": "36x18",
-        "ml": 0.007,
-        "status": "ok",
-        "n_bins": 25,
-        "n_raw_cfgs": 100,
-        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/03_36x18_ms0.040_m0.0070"
-      },
-      {
-        "order": 3,
-        "case": "36x18",
         "ml": 0.0035,
         "status": "ok",
         "n_bins": 24,
         "n_raw_cfgs": 97,
         "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/03_36x18_ms0.040_m0.0035"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 25,
+        "n_raw_cfgs": 100,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/multisrc/cases/03_36x18_ms0.040_m0.0070"
       },
       {
         "order": 3,
@@ -402,6 +403,15 @@
       {
         "order": 0,
         "case": "32x12",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 51,
+        "n_raw_cfgs": 204,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/00_32x12_ms0.040_m0.0120"
+      },
+      {
+        "order": 0,
+        "case": "32x12",
         "ml": 0.0035,
         "status": "ok",
         "n_bins": 51,
@@ -416,15 +426,6 @@
         "n_bins": 52,
         "n_raw_cfgs": 210,
         "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/00_32x12_ms0.040_m0.0020"
-      },
-      {
-        "order": 0,
-        "case": "32x12",
-        "ml": 0.012,
-        "status": "ok",
-        "n_bins": 51,
-        "n_raw_cfgs": 204,
-        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/00_32x12_ms0.040_m0.0120"
       },
       {
         "order": 0,
@@ -474,20 +475,20 @@
       {
         "order": 2,
         "case": "32x16",
-        "ml": 0.007,
-        "status": "ok",
-        "n_bins": 45,
-        "n_raw_cfgs": 183,
-        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/02_32x16_ms0.040_m0.0070"
-      },
-      {
-        "order": 2,
-        "case": "32x16",
         "ml": 0.002,
         "status": "ok",
         "n_bins": 53,
         "n_raw_cfgs": 214,
         "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/02_32x16_ms0.040_m0.0020"
+      },
+      {
+        "order": 2,
+        "case": "32x16",
+        "ml": 0.007,
+        "status": "ok",
+        "n_bins": 45,
+        "n_raw_cfgs": 183,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/02_32x16_ms0.040_m0.0070"
       },
       {
         "order": 2,
@@ -510,15 +511,6 @@
       {
         "order": 3,
         "case": "36x18",
-        "ml": 0.0035,
-        "status": "ok",
-        "n_bins": 24,
-        "n_raw_cfgs": 97,
-        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/03_36x18_ms0.040_m0.0035"
-      },
-      {
-        "order": 3,
-        "case": "36x18",
         "ml": 0.002,
         "status": "ok",
         "n_bins": 23,
@@ -528,11 +520,11 @@
       {
         "order": 3,
         "case": "36x18",
-        "ml": 0.012,
+        "ml": 0.0035,
         "status": "ok",
-        "n_bins": 28,
-        "n_raw_cfgs": 114,
-        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/03_36x18_ms0.040_m0.0120"
+        "n_bins": 24,
+        "n_raw_cfgs": 97,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/03_36x18_ms0.040_m0.0035"
       },
       {
         "order": 3,
@@ -542,6 +534,15 @@
         "n_bins": 25,
         "n_raw_cfgs": 100,
         "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/03_36x18_ms0.040_m0.0070"
+      },
+      {
+        "order": 3,
+        "case": "36x18",
+        "ml": 0.012,
+        "status": "ok",
+        "n_bins": 28,
+        "n_raw_cfgs": 114,
+        "out_dir": "/Users/junxiongnie/code/algo/ParseLQCData/output/meson_scan/b4.17/singlesrc/cases/03_36x18_ms0.040_m0.0120"
       },
       {
         "order": 4,

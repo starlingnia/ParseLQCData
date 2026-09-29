@@ -13,7 +13,6 @@ Strictly adheres to ana/ formatting conventions (colors, markers, error bars, an
 --------------------------------------------------------------------------------
 """
 
-import os
 import sys
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -80,7 +79,7 @@ def plot_renormalized_condensate() -> None:
     - fmt: 'o'
     - capsize=5, capthick=1.5, elinewidth=1.5, markersize=6
     - Point annotations: beta={beta}
-    - Transition Region: [155.5, 160.5] MeV gray span
+    - Transition Region: [155, 158] MeV gray span (156.5 ± 1.5 MeV)
     """
     if not CONDENSATE_RM_FILE.exists():
         print(f"[WARN] File not found: {CONDENSATE_RM_FILE}")
@@ -323,17 +322,21 @@ def plot_distributed_scaling_beta417() -> None:
     t_low, t_high = TRANSITION_REGION
     ax.axvspan(t_low, t_high, color="gray", alpha=0.2, label="Transition Region")
 
-    # Plot each ensemble using ana formatting
+    # Plot each ensemble using physical units [MeV^3]
     temps = df["temperature"].to_numpy()
     pbp_rm = df["pbp_rm"].to_numpy()
     pbp_rm_err = df["pbp_rm_err"].to_numpy()
     names = df["dataset_name"].to_list()
     ns_list = df["ns"].to_list()
-    nt_list = df["nt"].to_list()
+    nt_list = np.array(df["nt"].to_list(), dtype=float)
 
-    # Differentiate streams or geometries
+    # 乘以连续物理因子 a^-3 = (Nt * T)^3 [MeV^3]
+    scale_factor_3 = (nt_list * temps) ** 3
+    pbp_phys = pbp_rm * scale_factor_3
+    pbp_phys_err = pbp_rm_err * scale_factor_3
+
     ax.errorbar(
-        temps, pbp_rm, yerr=pbp_rm_err,
+        temps, pbp_phys, yerr=pbp_phys_err,
         fmt=MARKER_PRIMARY,
         color=COLOR_PRIMARY,
         ecolor=COLOR_PRIMARY,
@@ -341,38 +344,38 @@ def plot_distributed_scaling_beta417() -> None:
         capthick=1.5,
         elinewidth=1.5,
         markersize=7,
-        label=r'Scaling Ensembles ($\beta=4.17$)',
+        label=r'$\langle\bar{\psi}\psi\rangle_{\mathrm{phys}} = (N_t T)^3 \Delta_{\ell, s}$',
         zorder=5
     )
 
     for i in range(len(names)):
-        tag = f"${ns_list[i]}^3 \\times {nt_list[i]}$"
-        if "_2" in names[i]:
-            tag += " (str2)"
-            offset = (28, 6)
-        elif nt_list[i] == 18:
+        tag = f"${ns_list[i]}^3 \\times {int(nt_list[i])}$"
+        if int(nt_list[i]) == 18:
             offset = (0, 12)
-        elif nt_list[i] == 16:
-            offset = (22, 8)
-        elif nt_list[i] == 14:
+        elif int(nt_list[i]) == 16:
+            if ns_list[i] == 40:
+                offset = (-24, 10)
+            else:
+                offset = (24, -14)
+        elif int(nt_list[i]) == 14:
             offset = (0, 12)
         else:
             offset = (0, -18)
 
         ax.annotate(
             tag,
-            (temps[i], pbp_rm[i]),
+            (temps[i], pbp_phys[i]),
             textcoords="offset points",
             xytext=offset,
             ha="center",
-            fontsize=8,
+            fontsize=9,
             fontweight="semibold"
         )
 
     ax.axhline(0, color="black", linestyle="--", linewidth=0.8, alpha=0.7)
     ax.set_xlabel("Temperature (T) [MeV]", fontsize=14)
-    ax.set_ylabel(r"Renormalized Condensate $\Delta_{\ell, s}$", fontsize=14)
-    ax.set_title(r"Finite Temporal Scaling Condensate at $\beta=4.17$", fontsize=14)
+    ax.set_ylabel(r"Physical Condensate $\langle\bar{\psi}\psi\rangle_{\mathrm{phys}}$ [$\mathrm{MeV}^3$]", fontsize=14)
+    ax.set_title(r"Physical Chiral Condensate vs Temperature ($\beta=4.17$ Series)", fontsize=14)
     ax.tick_params(axis="both", which="major", labelsize=12)
     ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend(loc="upper right", frameon=True, fontsize=10)
@@ -473,7 +476,7 @@ def plot_all_ensembles_overview() -> None:
     fig, ax = plt.subplots(figsize=(10, 6.5), dpi=100)
 
     t_low, t_high = TRANSITION_REGION
-    ax.axvspan(t_low, t_high, color="gray", alpha=0.2, label="Transition Region ($155.5-160.5$ MeV)")
+    ax.axvspan(t_low, t_high, color="gray", alpha=0.2, label="Transition Region ($155-158$ MeV)")
 
     # Standard temperature scan
     ax.errorbar(

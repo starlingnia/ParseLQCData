@@ -1,0 +1,20 @@
+{
+  "datasets": [
+    "reference",
+    "multisrc",
+    "singlesrc"
+  ],
+  "cases": [
+    "32x12",
+    "32x14",
+    "32x16",
+    "36x18"
+  ],
+  "fitter": "scipy_least_squares",
+  "fitter_note": "强制 chi2 最小二乘, 不使用 lsqfit 的环境默认 fitter",
+  "cosh_center": "Ns/2 (我的数据源) / 16 与 32 行 (ana reference 数据源)",
+  "window": "[center-7, center+7]",
+  "chi2_dof_max": 100.0,
+  "scale_mev": 2640.0,
+  "jackknife_error": "sqrt((n-1)*mean((x-mean)^2))"
+}

@@ -15,10 +15,10 @@ scripts/plot_susceptibility.py
      - 标题: Disconnected Chiral Susceptibility \\chi vs Temperature
 
 2. pbpchisce.png / .pdf:
-   - 连续温度标度磁化率: F_scaled * chi (F_scaled = Ns^3 * Nt^3 * T^2)
-   - 纵轴为 Scaled Susceptibility ($(16T)^2 \\times a^2\\chi$) [MeV^2]
+   - 温度标度磁化率: F_scaled * chi (F_scaled = Ns^3 * Nt^3 * T^2)
+   - 纵轴为 Scaled Susceptibility ($(N_t T)^2 \\times a^2\\chi$) [MeV^2]
    - 严格对应 ana/ttest/plot_chisce.py
-   - 渲染相变过渡带 [155.5, 160.5] MeV 与 T_pc ≈ 157.0 MeV 极大值峰位
+   - 渲染相变过渡带 [155, 158] MeV（156.5 ± 1.5 MeV）与 T_pc ≈ 157.0 MeV 极大值峰位
 --------------------------------------------------------------------------------
 """
 
@@ -104,16 +104,17 @@ def plot_sucep(df: pl.DataFrame) -> None:
 
 
 def plot_scaled_pbpchisce(df: pl.DataFrame) -> None:
-    """严格按照 ana/ttest/plot_chisce.py 格式绘制连续标度化磁化率 (pbpchisce)"""
-    print("\n--- 绘制标度化手征磁化率 (pbpchisce) ---")
+    """严格按照规范绘制非连通手征磁化率 (pbpchisce) [GeV^2]"""
+    print("\n--- 绘制非连通手征磁化率 (pbpchisce) [GeV^2] ---")
     temps = np.array(df["Temp"])
     betas = df["Beta"].to_list()
-    scaled_means = np.array(df["Mean_scaled"])
-    scaled_errs = np.array(df["Error_scaled"])
+    # 转换为物理量纲 [GeV^2]
+    disc_means = np.array(df["Mean_scaled"]) / 1e6
+    disc_errs = np.array(df["Error_scaled"]) / 1e6
 
     fig, ax = plt.subplots(figsize=(8.5, 6), dpi=150)
 
-    # 1. 渲染相变过渡温带 [155.5, 160.5] MeV
+    # 1. 渲染相变过渡温带 [155, 158] MeV (156.5 ± 1.5 MeV)
     ax.axvspan(
         TRANSITION_REGION[0],
         TRANSITION_REGION[1],
@@ -123,12 +124,12 @@ def plot_scaled_pbpchisce(df: pl.DataFrame) -> None:
         zorder=1,
     )
 
-    # 2. 绘制连续标度磁化率 (严格使用 ana/ttest/plot_chisce.py 配色与规范)
+    # 2. 绘制非连通手征磁化率 (严格使用 ana/ttest/plot_chisce.py 配色与规范)
     color_indigo = "#4f46e5"
     ax.errorbar(
         temps,
-        scaled_means,
-        yerr=scaled_errs,
+        disc_means,
+        yerr=disc_errs,
         fmt="o-",
         color=color_indigo,
         ecolor="#a5b4fc",
@@ -138,27 +139,14 @@ def plot_scaled_pbpchisce(df: pl.DataFrame) -> None:
         ms=7,
         capsize=4,
         elinewidth=1.5,
-        label="Chiral Susceptibility (Scaled)",
+        label=r"Disconnected Susceptibility $\chi_{\mathrm{disc}}$",
         zorder=3,
-    )
-
-    # 标注峰值点与各温度点
-    peak_idx = int(np.argmax(scaled_means))
-    ax.annotate(
-        f"Peak at T={temps[peak_idx]:.1f} MeV\n(β={betas[peak_idx]}, $T_{{pc}}$)",
-        (temps[peak_idx], scaled_means[peak_idx]),
-        textcoords="offset points",
-        xytext=(25, -5),
-        fontsize=10,
-        fontweight="bold",
-        color="#312e81",
-        arrowprops=dict(arrowstyle="->", color="#312e81", lw=1.5),
     )
 
     for i, beta in enumerate(betas):
         ax.annotate(
             f"β={beta}",
-            (temps[i], scaled_means[i]),
+            (temps[i], disc_means[i]),
             textcoords="offset points",
             xytext=(0, 10),
             ha="center",
@@ -167,8 +155,8 @@ def plot_scaled_pbpchisce(df: pl.DataFrame) -> None:
         )
 
     ax.set_xlabel("Temperature (T) [MeV]", fontsize=12, fontweight="bold", labelpad=10)
-    ax.set_ylabel(r"Scaled Susceptibility ($(16T)^2 \times a^2\chi$) [$\mathrm{MeV}^2$]", fontsize=12, fontweight="bold", labelpad=10)
-    ax.set_title("Chiral Susceptibility vs Temperature (Scaled)", fontsize=13, fontweight="bold", pad=15)
+    ax.set_ylabel(r"Disconnected Susceptibility $\chi_{\mathrm{disc}}$ [$\mathrm{GeV}^2$]", fontsize=12, fontweight="bold", labelpad=10)
+    ax.set_title(r"Disconnected Chiral Susceptibility $\chi_{\mathrm{disc}}$ vs Temperature", fontsize=13, fontweight="bold", pad=15)
     ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend(loc="upper right", framealpha=0.9)
     plt.tight_layout()
@@ -178,22 +166,34 @@ def plot_scaled_pbpchisce(df: pl.DataFrame) -> None:
 
 
 def plot_scaling_susceptibility(df: pl.DataFrame) -> None:
-    """绘制有限时间延展标度系综 (beta=4.17, ml=0.0020, ms=0.0400) 的连续标度化磁化率 (pbpchisce_scaling_beta4.17)"""
-    print("\n--- 绘制标度系综 (beta=4.17) 手征磁化率 (pbpchisce_scaling_beta4.17) ---")
-    df_scaling = df.filter(pl.col("Ensemble").str.contains("m0.0020")).sort("Temp")
+    """绘制固定 beta=4.17 的有限时间延展系综非连通磁化率 (pbpchisce_scaling_beta4.17) [GeV^2]"""
+    print("\n--- 绘制标度系综 (beta=4.17) 非连通手征磁化率 (pbpchisce_scaling_beta4.17) [GeV^2] ---")
+    if "Ensemble" in df.columns:
+        df_scaling = (
+            df.filter(pl.col("Ensemble").str.contains(r"4\.17|m0\.0020|beta4\.17"))
+              .filter(~((pl.col("Ns") == 48) & (pl.col("Nt") == 16)))
+              .sort("Temp")
+        )
+    else:
+        df_scaling = (
+            df.filter(pl.col("Beta").cast(pl.String).str.contains(r"4\.17"))
+              .filter(~((pl.col("Ns") == 48) & (pl.col("Nt") == 16)))
+              .sort("Temp")
+        )
+
     if df_scaling.height == 0:
         return
 
     temps = np.array(df_scaling["Temp"])
-    scaled_means = np.array(df_scaling["Mean_scaled"])
-    scaled_errs = np.array(df_scaling["Error_scaled"])
+    disc_means = np.array(df_scaling["Mean_scaled"]) / 1e6
+    disc_errs = np.array(df_scaling["Error_scaled"]) / 1e6
     ensembles = df_scaling["Ensemble"].to_list()
     ns_list = df_scaling["Ns"].to_list()
     nt_list = df_scaling["Nt"].to_list()
 
     fig, ax = plt.subplots(figsize=(8.5, 6), dpi=150)
 
-    # 1. 渲染相变过渡温带 [155.5, 160.5] MeV
+    # 1. 渲染相变过渡温带 [155, 158] MeV (156.5 ± 1.5 MeV)
     ax.axvspan(
         TRANSITION_REGION[0],
         TRANSITION_REGION[1],
@@ -203,12 +203,12 @@ def plot_scaling_susceptibility(df: pl.DataFrame) -> None:
         zorder=1,
     )
 
-    # 2. 绘制连续标度磁化率 (ana/ttest/plot_chisce.py 配色与规范)
+    # 2. 绘制非连通手征磁化率
     color_indigo = "#4f46e5"
     ax.errorbar(
         temps,
-        scaled_means,
-        yerr=scaled_errs,
+        disc_means,
+        yerr=disc_errs,
         fmt="o-",
         color=color_indigo,
         ecolor="#a5b4fc",
@@ -218,20 +218,14 @@ def plot_scaling_susceptibility(df: pl.DataFrame) -> None:
         ms=7,
         capsize=4,
         elinewidth=1.5,
-        label=r"Chiral Susceptibility (Scaled, $\beta=4.17$)",
+        label=r"$\chi_{\mathrm{disc}}$ ($\beta=4.17$ series)",
         zorder=3,
     )
 
     # 标注时空尺寸标签
     for i in range(len(ensembles)):
         tag = f"${ns_list[i]}^3 \\times {nt_list[i]}$"
-        if "_2" in ensembles[i]:
-            tag += " (str 2)"
-            offset = (28, -12)
-        elif nt_list[i] == 18:
-            tag += " (str 1)"
-            offset = (-28, 10)
-        elif nt_list[i] == 16:
+        if nt_list[i] == 16:
             offset = (0, -18)
         elif nt_list[i] == 14:
             offset = (0, 10)
@@ -240,7 +234,7 @@ def plot_scaling_susceptibility(df: pl.DataFrame) -> None:
 
         ax.annotate(
             tag,
-            (temps[i], scaled_means[i]),
+            (temps[i], disc_means[i]),
             textcoords="offset points",
             xytext=offset,
             ha="center",
@@ -249,8 +243,8 @@ def plot_scaling_susceptibility(df: pl.DataFrame) -> None:
         )
 
     ax.set_xlabel("Temperature (T) [MeV]", fontsize=12, fontweight="bold", labelpad=10)
-    ax.set_ylabel(r"Scaled Susceptibility ($(16T)^2 \times a^2\chi$) [$\mathrm{MeV}^2$]", fontsize=12, fontweight="bold", labelpad=10)
-    ax.set_title("Chiral Susceptibility vs Temperature (Scaled)", fontsize=13, fontweight="bold", pad=15)
+    ax.set_ylabel(r"Disconnected Susceptibility $\chi_{\mathrm{disc}}$ [$\mathrm{GeV}^2$]", fontsize=12, fontweight="bold", labelpad=10)
+    ax.set_title(r"Disconnected Chiral Susceptibility vs Temperature ($\beta=4.17$)", fontsize=13, fontweight="bold", pad=15)
     ax.grid(True, linestyle="--", alpha=0.6)
     ax.legend(loc="upper right", framealpha=0.9)
     plt.tight_layout()
@@ -275,7 +269,13 @@ def main():
 
     plot_sucep(df_48)
     plot_scaled_pbpchisce(df_48)
-    plot_scaling_susceptibility(df)
+
+    ensemble_csv_path = OUTPUT_CONDENSATE_DIR / "all_ensembles_susceptibility.csv"
+    if ensemble_csv_path.exists():
+        fixed_beta_df = pl.read_csv(ensemble_csv_path)
+    else:
+        fixed_beta_df = df
+    plot_scaling_susceptibility(fixed_beta_df)
 
     print("\n所有磁化率图表已成功生成并同步至:")
     for d in TARGET_DIRS:

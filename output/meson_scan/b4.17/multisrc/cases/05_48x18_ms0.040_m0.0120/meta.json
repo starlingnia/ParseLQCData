@@ -1,6 +1,6 @@
 {
   "task": "b4.17 Nt-scan meson correlators & masses",
-  "generated_at": "2026-09-29T13:29:52",
+  "generated_at": "2026-09-29T16:35:30",
   "case_key": "48x18",
   "label": "48^3x18",
   "order": 5,
@@ -23,6 +23,7 @@
     "Xt": 4,
     "Vec": 4
   },
+  "fitter": "scipy_least_squares",
   "scan_windows": [
     [
       1,
@@ -134,7 +135,7 @@
     ]
   },
   "n_channels_done": 6,
-  "elapsed_sec": 9.489,
+  "elapsed_sec": 9.864,
   "rows": [
     {
       "order": 5,
@@ -172,9 +173,9 @@
       "chi2_dof_ref": 0.19204632085557993,
       "ref_x_start": 14,
       "ref_x_end": 25,
-      "mass_scan": 9.253959988911448e-08,
-      "mass_err_scan": 1.9770963325597498e-06,
-      "chi2_dof_scan": 0.11100034306545135,
+      "mass_scan": 1.0914927166408374e-07,
+      "mass_err_scan": 1.9556143123456443e-06,
+      "chi2_dof_scan": 0.10901602168449614,
       "scan_x_start": 20,
       "scan_x_end": 25,
       "scan_mode": "scan_best",
@@ -187,8 +188,8 @@
       "mass_auto_mev_err": 34.679412808002176,
       "mass_ref_mev": 1524.1317994869303,
       "mass_ref_mev_err": 196.6333672051429,
-      "mass_scan_mev": 0.00022699593694400225,
-      "mass_scan_mev_err": 0.004849738219915764
+      "mass_scan_mev": 0.00026773879742113087,
+      "mass_scan_mev_err": 0.0047970436836113715
     },
     {
       "order": 5,

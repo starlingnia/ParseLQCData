@@ -8,7 +8,7 @@ scripts/quick_plot_condensate_physical.py
 - royalblue 配色
 - 与 ana/ 一致的坐标轴格式与标题
 - 小方框图例指示栏位于右上角 (loc="upper right")
-- 渲染相变过渡温带 [155.5, 160.5] MeV
+- 渲染相变过渡温带 [155, 158] MeV (156.5 ± 1.5 MeV)
 --------------------------------------------------------------------------------
 """
 
@@ -40,7 +40,7 @@ TEMP_MAP = {
     "4.405": 241.60,
 }
 
-TRANSITION_REGION = (155.5, 160.5)
+TRANSITION_REGION = (155.0, 158.0)
 
 def main():
     if not CONDENSATE_FILE.exists():

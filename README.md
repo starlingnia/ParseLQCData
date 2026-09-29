@@ -222,8 +222,11 @@ ParseLQCData/
 │   ├── run_all.sh                       # 一键执行全项目端到端流水线
 │   ├── run_meson.sh                     # 一键执行介子全量抽取、求解、拟合与出图
 │   ├── run_condensate.sh                # 一键执行手征凝聚全量抽取、标度切分与出图
+│   ├── run_meson_b417_nt_scan.sh        # 一键执行 b4.17 Nt 扫描任务 (关联函数 + 介子质量)
 │   ├── reproduce_meson_multi.py         # 多源介子处理主程序
 │   ├── reproduce_meson_single.py        # 单源介子处理主程序
+│   ├── reproduce_meson_b417_nt_scan.py  # b4.17 Nt 扫描主程序 (24 ensemble × 多源/单源)
+│   ├── reproduce_ccor_flow.py           # 与 ana/dat/ccor 数据对照 + 同流程出图 (gnuplot)
 │   ├── reproduce_condensate.py          # 手征凝聚多格点批处理主程序
 │   ├── plot_meson.py                    # 介子物理图谱绘制程序
 │   └── plot_condensate.py               # 手征凝聚物理图谱绘制程序
@@ -336,7 +339,19 @@ uv run python scripts/reproduce_condensate.py
 # 3. 单独运行介子关联函数全量流水线
 bash scripts/run_meson.sh
 
-# 4. 单独重新生成出版级科学图表
+# 4. b4.17 有限温度扫描任务: 24 个 ensemble (32^3x12/14/16, 36^3x18, 40^3x16, 48^3x18) × 4 组 ml
+#    关联函数 + 有效质量 + 介子质量, 结果按任务表顺序落盘到 output/meson_scan/b4.17/
+bash scripts/run_meson_b417_nt_scan.sh            # 全量 (多源 + 单源)
+bash scripts/run_meson_b417_nt_scan.sh --dry-run  # 只列清单, 检查 24 个输入目录
+# 详见 docs/meson_b417_scan.md
+
+# 5. 与 ana/dat/ccor 保存的数据对照, 并按同一套流程 (gnuplot 模板原样) 出图
+.venv/bin/python scripts/reproduce_ccor_flow.py              # reference/multisrc/singlesrc 三源对照
+.venv/bin/python scripts/reproduce_ccor_flow.py --datasets reference ref_signed ref_allcomp multisrc singlesrc \
+    --out-root output/ccor_flow/attribution                  # 口径归因
+# 详见 docs/ccor_flow.md
+
+# 6. 单独重新生成出版级科学图表
 uv run python scripts/plot_condensate.py
 uv run python scripts/plot_meson.py
 ```

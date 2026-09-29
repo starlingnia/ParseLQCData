@@ -24,7 +24,7 @@
 | **4.23** | 176.43 | 高温退禁闭相 ($T > T_c$) | `data/readin/48x16b4.23/Output/` | 392 cfgs |
 | **4.30** | 202.52 | 高温退禁闭相 ($T \gg T_c$) | `data/readin/48x16b4.30/Output/` | 404 cfgs |
 
-> **相变过渡带 (Transition Region)** 标定为：$T \in [155.5, 160.5]\,\text{MeV}$（以 $\beta \approx 4.18$ 为对称中心）。
+> **相变过渡带 (Transition Region)** 标定为：$T \in [155, 158]\,\text{MeV}$（即 $156.5 \pm 1.5\,\text{MeV}$，以 $\beta \approx 4.18$ 为对称中心）。
 
 ---
 

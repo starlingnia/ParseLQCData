@@ -1,6 +1,6 @@
 {
   "task": "b4.17 Nt-scan meson correlators & masses",
-  "generated_at": "2026-09-29T13:29:42",
+  "generated_at": "2026-09-29T16:35:20",
   "case_key": "48x18",
   "label": "48^3x18",
   "order": 5,
@@ -23,6 +23,7 @@
     "Xt": 4,
     "Vec": 4
   },
+  "fitter": "scipy_least_squares",
   "scan_windows": [
     [
       1,
@@ -134,7 +135,7 @@
     ]
   },
   "n_channels_done": 6,
-  "elapsed_sec": 7.626,
+  "elapsed_sec": 7.75,
   "rows": [
     {
       "order": 5,

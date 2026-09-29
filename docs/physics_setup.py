@@ -50,7 +50,7 @@ BETAS: List[str] = ["13", "15", "17", "18", "20", "23", "30"]
 CHANNELS: List[str] = ["AV", "S", "Tt", "PS", "Xt", "Vec"]
 
 # 相变过渡带温度范围 (Transition Region, MeV)
-TRANSITION_REGION: Tuple[float, float] = (155.5, 160.5)
+TRANSITION_REGION: Tuple[float, float] = (155.0, 158.0)
 
 # 2. 介子流算子及其空间极化投影映射字典 (Channel Configurations)
 CHANNEL_CONFIGS: Dict[str, List[dict]] = {

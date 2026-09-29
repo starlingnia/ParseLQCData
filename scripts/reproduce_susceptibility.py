@@ -6,7 +6,7 @@ scripts/reproduce_susceptibility.py
 1. 具备完整的微观随机源抽取逻辑、单构型无偏二次交叉乘积估计器与 Jackknife 误差分析
 2. 精确计算格点几何与温度因子:
    - 4D 时空体积因子: F_vol = Ns^3 * Nt
-   - 连续温度标度因子: F_scaled = Ns^3 * Nt^3 * T^2 = F_vol * (Nt * T)^2
+   - 标度因子: F_scaled = Ns^3 * Nt^3 * T^2 = F_vol * (Nt * T)^2
 3. 支持两种工作模式:
    - 跨机器/集群模式: 指定 --readin-dir 遍历拥有真实构型向量的集群目录，全自动提取全量结果
    - 本地验证模式: 对本地现有小规模数据集进行端到端全真 XML 抽取，并与基准数据对齐
@@ -76,7 +76,7 @@ def main():
             print(f"  -> 构型数: {r['num_configs']}, Ns={r['ns']}, Nt={r['nt']}, T={r['temp']:.1f} MeV")
             print(f"     原始晶格量:  χ_unscaled = {r['mean_unscaled']:.8e} ± {r['error_unscaled']:.8e}")
             print(f"     4D体积标度:  χ_vol      = {r['mean_vol_scaled']:.6f} ± {r['error_vol_scaled']:.6f} (F_vol = {r['factor_vol']:.0f})")
-            print(f"     连续标度量:  χ_scaled   = {r['mean_scaled']:.2e} ± {r['error_scaled']:.2e} MeV² (F_scaled = {r['factor_scaled']:.2e})")
+            print(f"     标度量:  χ_scaled   = {r['mean_scaled']:.2e} ± {r['error_scaled']:.2e} MeV² (F_scaled = {r['factor_scaled']:.2e})")
 
         print(f"\n[数据同步] 正在载入并计算全量 8 组温度序列的标准标度因子 (Ns=48, Nt=16)...")
         df_res = pipeline.get_full_scan_results(force_recompute=True)

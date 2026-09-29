@@ -41,10 +41,10 @@ $$\mathbb{E}[O_i O_j] = [\mathrm{Tr}(D^{-1})]^2 + \sigma_{\text{noise}}^2 \delta
   $$\text{Mean}(\chi_{\text{unscaled}}) = \frac{1}{N} \sum_{r=1}^N \chi_r$$
   $$\text{Error}(\chi_{\text{unscaled}}) = \sqrt{N - 1} \cdot \sqrt{\frac{1}{N} \sum_{r=1}^N \left(\chi_r - \text{Mean}(\chi)\right)^2}$$
 
-#### Step 3: 几何体积与连续温度标度变换
+#### Step 3: 几何体积与温度标度变换
 - **4D 晶格体积标度因子**:
   $$F_{\text{vol}} = N_s^3 \cdot N_t, \quad \chi_{\text{vol}} = F_{\text{vol}} \cdot \chi_{\text{unscaled}}$$
-- **连续温度标度因子**（对应物理连续统量 $(16T)^2 a^2 \chi$，单位 $\mathrm{MeV}^2$）：
+- **温度标度因子**（对应物理量 $(N_t T)^2 a^2 \chi$，单位 $\mathrm{MeV}^2$）：
   $$F_{\text{scaled}} = N_s^3 \cdot N_t^3 \cdot T^2 = F_{\text{vol}} \cdot (N_t T)^2, \quad \chi_{\text{scaled}} = F_{\text{scaled}} \cdot \chi_{\text{unscaled}}$$
 
 ---
@@ -67,8 +67,8 @@ $$\mathbb{E}[O_i O_j] = [\mathrm{Tr}(D^{-1})]^2 + \sigma_{\text{noise}}^2 \delta
 | `Error_unscaled` | Float | 裸磁化率 Jackknife 统计误差 | 晶格无量纲 |
 | `Mean_vol_scaled` | Float | 4D 体积标度磁化率 $\chi_{\text{vol}} = F_{\text{vol}} \cdot \chi$ | 无量纲 |
 | `Error_vol_scaled` | Float | 4D 体积标度磁化率误差 | 无量纲 |
-| `Mean_scaled` | Float | 连续标度物理磁化率 $\chi_{\text{scaled}} = F_{\text{scaled}} \cdot \chi$ | $\mathrm{MeV}^2$ |
-| `Error_scaled` | Float | 连续标度物理磁化率误差 | $\mathrm{MeV}^2$ |
+| `Mean_scaled` | Float | 标度物理磁化率 $\chi_{\text{scaled}} = F_{\text{scaled}} \cdot \chi$ | $\mathrm{MeV}^2$ |
+| `Error_scaled` | Float | 标度物理磁化率误差 | $\mathrm{MeV}^2$ |
 
 ### 2. 产物存储位置
 
@@ -78,7 +78,7 @@ $$\mathbb{E}[O_i O_j] = [\mathrm{Tr}(D^{-1})]^2 + \sigma_{\text{noise}}^2 \delta
    - [`output/condensate/all_ensembles_susceptibility.csv`](file:///Users/junxiongnie/code/algo/ParseLQCData/output/condensate/all_ensembles_susceptibility.csv)：跨体积与多时空尺度全系综扫描结果。
 2. **矢量与高清物理图表**:
    - `sucep_plot.png` / `.pdf`：4D 体积标度磁化率随温度演化曲线（同步存至 `docs/figures/`、`output/condensate/`、`output/plots/ana_style/`）。
-   - `pbpchisce.png` / `.pdf`：连续温度标度物理磁化率曲线，标定相变带 $[155.5, 160.5]\,\mathrm{MeV}$ 与 $T_{pc} \approx 157.0\,\mathrm{MeV}$ 峰顶。
+   - `pbpchisce.png` / `.pdf`：温度标度物理磁化率曲线，标定相变带 $[155, 158]\,\mathrm{MeV}$（$156.5 \pm 1.5\,\mathrm{MeV}$）与 $T_{pc} \approx 157.0\,\mathrm{MeV}$ 峰顶。
 3. **学术论文/报告引用**:
    - 自动嵌入中英文学术报告 [`report.tex`](file:///Users/junxiongnie/code/algo/ParseLQCData/report.tex) 与 [`report_en.tex`](file:///Users/junxiongnie/code/algo/ParseLQCData/report_en.tex)。
 

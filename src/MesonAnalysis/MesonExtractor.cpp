@@ -10,6 +10,18 @@ namespace lqcd::meson {
 
 namespace {
 
+[[nodiscard]] inline bool line_has_start_tag(std::string_view line, std::string_view start_tag) noexcept {
+    if (start_tag.empty()) {
+        return false;
+    }
+
+    while (!line.empty() && (line.back() == ' ' || line.back() == '\t' || line.back() == '\r' || line.back() == '\n')) {
+        line.remove_suffix(1);
+    }
+
+    return line.find(start_tag) != std::string_view::npos;
+}
+
 // 快速从行尾解析 "x/y/z/t" 坐标 (例如 "0/0/0/0" 或 "12/0/0/0")
 [[nodiscard]] std::array<int, 4> parse_coords(std::string_view line) noexcept {
     std::array<int, 4> nums = {0, 0, 0, 0};
@@ -59,7 +71,7 @@ namespace {
             return;
         }
 
-        if (line.find(start_tag) != std::string_view::npos) {
+        if (line_has_start_tag(line, start_tag)) {
             nums = parse_coords(line);
             in_block = true;
             current_block.clear();

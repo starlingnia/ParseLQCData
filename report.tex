@@ -166,7 +166,7 @@ T(N_t) = 153.31 \times \frac{16}{N_t}\text{ [MeV]}
 \begin{equation}
 a_r = \text{JK}(\bar{O})_r, \quad b_r = \text{JK}(\overline{O^2})_r, \quad \chi_r = b_r - a_r^2
 \end{equation}
-统计提取全系综无偏均值 $\bar{\chi} = \text{mean}(\chi_r)$ 与统计标准误 $\sigma_\chi = \sqrt{N-1} \, \text{std}(\chi_r)$。最终按照 \texttt{ana/ttest/plot\_chisce.py} 的连续极限约定，乘以标度转换因子 $\text{scale}(T) = 48^3 \times 16^3 \times T^2$，折算为物理量纲标度量 $(16T)^2 \times a^2\chi$ [$\text{MeV}^2$]。
+统计提取全系综无偏均值 $\bar{\chi} = \text{mean}(\chi_r)$ 与统计标准误 $\sigma_\chi = \sqrt{N-1} \, \text{std}(\chi_r)$。最终按照 \texttt{ana/ttest/plot\_chisce.py} 的标度约定，乘以标度转换因子 $\text{scale}(T) = 48^3 \times 16^3 \times T^2$，折算为物理量纲标度量 $(N_t T)^2 \times a^2\chi$ [$\text{MeV}^2$]。
 
 
 \section{全量格点数据集与计算结果 (Complete Data Tables)}
@@ -212,11 +212,10 @@ $\beta$ & $T\text{ [MeV]}$ & $m_\ell$ & $m_s$ & $m_{\text{res}}$ & $Z_m$ & $N_{\
 \toprule
 数据集标识 (Tag) & 晶格时空几何 & $T\text{ [MeV]}$ & $m_\ell / m_s$ & $N_{\text{cfg}}$ & $\langle\bar{\psi}\psi\rangle_\ell$ & $\langle\bar{\psi}\psi\rangle_s$ & $\Delta_{\ell, s}$ \\
 \midrule
-\texttt{L48T18 (流1)} & $48^3 \times 18$ & 136.28 & 0.002/0.04 & 79  & $2.017(19) \times 10^{-3}$ & $1.763(6) \times 10^{-2}$ & $1.029(20) \times 10^{-3}$ \\
-\texttt{L48T18 (流2)} & $48^3 \times 18$ & 136.28 & 0.002/0.04 & 71  & $2.071(19) \times 10^{-3}$ & $1.764(7) \times 10^{-2}$ & $1.084(20) \times 10^{-3}$ \\
-\texttt{L40T16}       & $40^3 \times 16$ & 153.31 & 0.002/0.04 & 174 & $1.711(23) \times 10^{-3}$ & $1.755(5) \times 10^{-2}$ & $7.172(24) \times 10^{-4}$ \\
-\texttt{L32T14}       & $32^3 \times 14$ & 175.21 & 0.002/0.04 & 282 & $1.199(24) \times 10^{-3}$ & $1.728(7) \times 10^{-2}$ & $2.034(24) \times 10^{-4}$ \\
-\texttt{L32T12}       & $32^3 \times 12$ & 204.41 & 0.002/0.04 & 108 & $9.581(23) \times 10^{-4}$ & $1.687(11) \times 10^{-2}$ & $-2.101(24) \times 10^{-5}$ \\
+\texttt{L48T18} & $48^3 \times 18$ & 136.28 & 0.002/0.04 & 150 & $2.043(14) \times 10^{-3}$ & $1.764(4) \times 10^{-2}$ & $1.055(14) \times 10^{-3}$ \\
+\texttt{L40T16} & $40^3 \times 16$ & 153.31 & 0.002/0.04 & 62  & $1.644(36) \times 10^{-3}$ & $1.753(9) \times 10^{-2}$ & $6.491(38) \times 10^{-4}$ \\
+\texttt{L32T14} & $32^3 \times 14$ & 175.21 & 0.002/0.04 & 281 & $1.199(24) \times 10^{-3}$ & $1.728(7) \times 10^{-2}$ & $2.039(24) \times 10^{-4}$ \\
+\texttt{L32T12} & $32^3 \times 12$ & 204.41 & 0.002/0.04 & 108 & $9.581(23) \times 10^{-4}$ & $1.687(11) \times 10^{-2}$ & $-2.101(24) \times 10^{-5}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -224,7 +223,7 @@ $\beta$ & $T\text{ [MeV]}$ & $m_\ell$ & $m_s$ & $m_{\text{res}}$ & $Z_m$ & $N_{\
 \subsection{\texorpdfstring{手征磁化率数值汇总 (Chiral Susceptibility Data)}{手征磁化率数值汇总}}
 
 表 \ref{tab:susceptibility_data} 汇总了标准 $48^3 \times 16$ 温度扫描序列在 8 组温度下的手征磁化率计算结果。
-数据包含了未减除模式 (No-RM) 与质量修正模式 (RM-Corrected) 的原始无量纲晶格值 $\chi_{\text{unscaled}}$，以及按连续约定转换的物理标度量 $(16T)^2 \times a^2\chi$（单位 $10^5\text{ MeV}^2$）。
+数据包含了未减除模式 (No-RM) 与质量修正模式 (RM-Corrected) 的原始无量纲晶格值 $\chi_{\text{unscaled}}$，以及转换为物理量纲的非连通磁化率 $(N_t T)^2 \times a^2\chi$（单位 $\text{GeV}^2$）。
 从表中数值可以极为清晰地判定：系统在 $\beta=4.18, T=157.0\text{ MeV}$ 处达到全局极大峰值，直接标定了 QCD 手征交叉相变的赝临界温度 $T_{\text{pc}}$。
 
 \begin{table}[H]
@@ -235,16 +234,16 @@ $\beta$ & $T\text{ [MeV]}$ & $m_\ell$ & $m_s$ & $m_{\text{res}}$ & $Z_m$ & $N_{\
 \label{tab:susceptibility_data}
 \begin{tabular}{ccccccc}
 \toprule
-$\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM 标度值 [$10^5\text{ MeV}^2$] & RM $\chi_{\text{unscaled}}$ & RM 标度值 [$10^5\text{ MeV}^2$] & 物理相特征 \\
+$\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM $\chi_{\text{disc}}\text{ [GeV}^2\text{]}$ & RM $\chi_{\text{unscaled}}$ & RM $\chi_{\text{disc}}\text{ [GeV}^2\text{]}$ & 物理相特征 \\
 \midrule
-4.13  & 138.0 & $7.6502(266) \times 10^{-8}$ & $6.5995(230)$ & $7.6216(266) \times 10^{-8}$ & $6.5749(229)$ & 低温破缺相 \\
-4.15  & 145.0 & $8.1059(278) \times 10^{-8}$ & $7.7201(265)$ & $8.0764(277) \times 10^{-8}$ & $7.6920(264)$ & 涨落逐步增强 \\
-4.17  & 153.0 & $8.0613(242) \times 10^{-8}$ & $8.5481(257)$ & $8.0277(241) \times 10^{-8}$ & $8.5125(256)$ & 临界过渡带下沿 \\
-\textbf{4.18} & \textbf{157.0} & $\mathbf{8.1913(289) \times 10^{-8}}$ & $\mathbf{9.1460(323)}$ & $\mathbf{8.1545(288) \times 10^{-8}}$ & $\mathbf{9.1050(322)}$ & \textbf{极大相变峰 ($T_{\text{pc}}$)} \\
-4.20  & 164.5 & $6.2449(226) \times 10^{-8}$ & $7.6549(277)$ & $6.2150(225) \times 10^{-8}$ & $7.6183(276)$ & 临界过渡带上沿 \\
-4.23  & 176.0 & $2.9011(164) \times 10^{-8}$ & $4.0707(230)$ & $2.8875(164) \times 10^{-8}$ & $4.0517(230)$ & 对称性开始恢复 \\
-4.30  & 202.0 & $3.8711(809) \times 10^{-9}$ & $0.7155(149)$ & $3.8525(808) \times 10^{-9}$ & $0.7121(149)$ & 高温对称相 \\
-4.405 & 241.6 & $3.2713(641) \times 10^{-12}$ & $0.00086(17)$ & $2.3350(597) \times 10^{-12}$ & $0.00062(16)$ & 深度对称恢复相 \\
+4.13  & 138.0 & $7.6502(266) \times 10^{-8}$ & $0.6600(23)$ & $7.6216(266) \times 10^{-8}$ & $0.6575(23)$ & 低温破缺相 \\
+4.15  & 145.0 & $8.1059(278) \times 10^{-8}$ & $0.7720(27)$ & $8.0764(277) \times 10^{-8}$ & $0.7692(26)$ & 涨落逐步增强 \\
+4.17  & 153.0 & $8.0613(242) \times 10^{-8}$ & $0.8548(26)$ & $8.0277(241) \times 10^{-8}$ & $0.8513(26)$ & 临界过渡带下沿 \\
+4.18  & 157.0 & $8.1913(289) \times 10^{-8}$ & $0.9146(32)$ & $8.1545(288) \times 10^{-8}$ & $0.9105(32)$ & 极大相变峰 ($T_{\text{pc}}$) \\
+4.20  & 164.5 & $6.2449(226) \times 10^{-8}$ & $0.7655(28)$ & $6.2150(225) \times 10^{-8}$ & $0.7618(28)$ & 临界过渡带上沿 \\
+4.23  & 176.0 & $2.9011(164) \times 10^{-8}$ & $0.4071(23)$ & $2.8875(164) \times 10^{-8}$ & $0.4052(23)$ & 对称性开始恢复 \\
+4.30  & 202.0 & $3.8711(809) \times 10^{-9}$ & $0.0716(15)$ & $3.8525(808) \times 10^{-9}$ & $0.0712(15)$ & 高温对称相 \\
+4.405 & 241.6 & $3.2713(641) \times 10^{-12}$ & $(8.6 \pm 1.7) \times 10^{-5}$ & $2.3350(597) \times 10^{-12}$ & $(6.2 \pm 1.6) \times 10^{-5}$ & 深度对称恢复相 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -257,13 +256,12 @@ $\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM 标度值 [$
 \label{tab:distributed_susceptibility}
 \begin{tabular}{lcccc}
 \toprule
-数据集标识 (Tag) & 晶格时空几何 & $T\text{ [MeV]}$ & $N_{\text{cfg}}$ & 标度磁化率 $(16T)^2 a^2 \chi\text{ [MeV}^2\text{]}$ \\
+数据集标识 (Tag) & 晶格时空几何 & $T\text{ [MeV]}$ & $N_{\text{cfg}}$ & 非连通磁化率 $\chi_{\text{disc}}\text{ [GeV}^2\text{]}$ \\
 \midrule
-\texttt{L48T18 (流1)} & $48^3 \times 18$ & 136.28 & 79  & $(3.1489 \pm 0.4487) \times 10^5$ \\
-\texttt{L48T18 (流2)} & $48^3 \times 18$ & 136.28 & 72  & $(3.0177 \pm 0.5562) \times 10^5$ \\
-\texttt{L40T16}       & $40^3 \times 16$ & 153.31 & 174 & $(5.6276 \pm 0.6432) \times 10^5$ \\
-\texttt{L32T14}       & $32^3 \times 14$ & 175.21 & 282 & $(4.2497 \pm 0.6065) \times 10^5$ \\
-\texttt{L32T12}       & $32^3 \times 12$ & 204.41 & 108 & $(1.3605 \pm 0.5186) \times 10^5$ \\
+\texttt{L48T18} & $48^3 \times 18$ & 136.28 & 151 & $0.3173 \pm 0.0366$ \\
+\texttt{L40T16} & $40^3 \times 16$ & 153.31 & 62  & $0.4863 \pm 0.0803$ \\
+\texttt{L32T14} & $32^3 \times 14$ & 175.21 & 281 & $0.4263 \pm 0.0608$ \\
+\texttt{L32T12} & $32^3 \times 12$ & 204.41 & 108 & $0.1361 \pm 0.0523$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -401,7 +399,7 @@ $\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM 标度值 [$
 
 \subsection{\texorpdfstring{手征磁化率与赝临界相变峰分析 (Chiral Susceptibility Analysis)}{手征磁化率与赝临界相变峰分析}}
 
-图 \ref{fig:sucep_subfigures} 展示了严格对标 \texttt{ana/ttest} 原始配色与样式的两类手征磁化率随温度演化图谱：左图为四维时空体积标度量 $N_s^3 N_t \chi$（红色标准配色），右图为乘算连续标度因子后的物理量 $(16T)^2 \times a^2\chi$ [$\text{MeV}^2$]（渲染了 $T \in [155.5, 160.5]\text{ MeV}$ 的交叉过渡带，峰值位于 $\beta=4.18, T=157.0\text{ MeV}$）。
+图 \ref{fig:sucep_subfigures} 展示了严格对标 \texttt{ana/ttest} 原始配色与样式的两类手征磁化率随温度演化图谱：左图为四维时空体积标度量 $N_s^3 N_t \chi$（红色标准配色），右图为乘算标度因子后的物理量 $(N_t T)^2 \times a^2\chi$ [$\text{MeV}^2$]（渲染了 $T \in [155, 158]\text{ MeV}$ 的交叉过渡带，峰值位于 $\beta=4.18, T=157.0\text{ MeV}$）。
 
 
 \begin{figure}[H]
@@ -416,7 +414,7 @@ $\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM 标度值 [$
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{docs/figures/pbpchisce.pdf}
-        \caption{连续标度 RM 磁化率（对标 \texttt{plot\_chisce.py} 靛蓝配色）}
+        \caption{标度 RM 磁化率（对标 \texttt{plot\_chisce.py} 靛蓝配色）}
         \label{fig:sucep_pbpchisce}
     \end{subfigure}
     \caption{严格对标 \texttt{ana/ttest} 格式输出的手征磁化率高清学术图谱。误差棒、线型、空心圆/方块及 $\beta$ 标签排布完全与原设计一致。}
@@ -426,7 +424,7 @@ $\beta$ & $T\text{ [MeV]}$ & No-RM $\chi_{\text{unscaled}}$ & No-RM 标度值 [$
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.85\textwidth]{docs/figures/pbpchisce_scaling_beta4.17.pdf}
-    \caption{有限时间延展标度系综（$\beta=4.17, m_\ell=0.0020, m_s=0.0400$）连续标度手征磁化率 $(16T)^2 a^2 \chi\text{ [MeV}^2\text{]}$ 随温度演化图谱。}
+    \caption{有限时间延展标度系综（$\beta=4.17, m_\ell=0.0020, m_s=0.0400$）标度手征磁化率 $(N_t T)^2 a^2 \chi\text{ [MeV}^2\text{]}$ 随温度演化图谱。}
     \label{fig:sucep_scaling}
 \end{figure}
 

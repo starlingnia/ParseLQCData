@@ -23,12 +23,11 @@ class CondensateOrchestrator:
         current_dir = Path(__file__).resolve().parent
         project_root = current_dir.parent
         candidates = [
-            project_root / "lib" / "libparselqcdata.dylib",
+          
             project_root / "lib" / "liblqcd_condensate.dylib",
-            project_root / "build" / "libparselqcdata.dylib",
-            project_root / "lib" / "libparselqcdata.so",
+         
             project_root / "lib" / "liblqcd_condensate.so",
-            project_root / "build" / "libparselqcdata.so",
+       
         ]
         errors = []
         for c in candidates:

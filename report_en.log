@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.10.23)  24 SEP 2026 10:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.10.2)  25 SEP 2026 15:57
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -554,125 +554,67 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `cmtt' (encoding: OT1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 135.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `superscript' on input line 135.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\times' on input line 135.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 135.
-
-<docs/figures/conden_re_plot.pdf, id=79, 570.34645pt x 426.71811pt>
-File: docs/figures/conden_re_plot.pdf Graphic file (type pdf)
-<use docs/figures/conden_re_plot.pdf>
-Package pdftex.def Info: docs/figures/conden_re_plot.pdf  used on input line 13
-9.
-(pdftex.def)             Requested size: 411.14528pt x 307.60794pt.
-[2]
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 144.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\beta' on input line 144.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 144.
-
-<docs/figures/conden_scaling_beta4.17.pdf, id=89, 642.61644pt x 426.59767pt>
+<docs/figures/conden_physical_mev3.pdf, id=74, 572.07103pt x 426.959pt>
+File: docs/figures/conden_physical_mev3.pdf Graphic file (type pdf)
+<use docs/figures/conden_physical_mev3.pdf>
+Package pdftex.def Info: docs/figures/conden_physical_mev3.pdf  used on input l
+ine 132.
+(pdftex.def)             Requested size: 411.14528pt x 306.85648pt.
+ [2]
+<docs/figures/conden_scaling_beta4.17.pdf, id=85, 643.57878pt x 426.59767pt>
 File: docs/figures/conden_scaling_beta4.17.pdf Graphic file (type pdf)
 <use docs/figures/conden_scaling_beta4.17.pdf>
 Package pdftex.def Info: docs/figures/conden_scaling_beta4.17.pdf  used on inpu
-t line 148.
-(pdftex.def)             Requested size: 411.14528pt x 272.94345pt.
-[3 <./docs/figures/conden_re_plot.pdf>] [4 <./docs/figures/conden_scaling_beta4
-.17.pdf>]
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 201.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `superscript' on input line 201.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\times' on input line 201.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 201.
-
-<docs/figures/pbpchisce.pdf, id=271, 608.38638pt x 426.19421pt>
+t line 141.
+(pdftex.def)             Requested size: 411.14528pt x 272.53337pt.
+ [3 <./docs/figures/conden_physical_mev3.pdf>]
+<docs/figures/pbpchisce.pdf, id=167, 607.71825pt x 426.31772pt>
 File: docs/figures/pbpchisce.pdf Graphic file (type pdf)
 <use docs/figures/pbpchisce.pdf>
-Package pdftex.def Info: docs/figures/pbpchisce.pdf  used on input line 205.
-(pdftex.def)             Requested size: 411.14528pt x 288.01984pt.
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 210.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\beta' on input line 210.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `math shift' on input line 210.
-
-<docs/figures/pbpchisce_scaling_beta4.17.pdf, id=272, 608.38638pt x 426.19421pt
+Package pdftex.def Info: docs/figures/pbpchisce.pdf  used on input line 196.
+(pdftex.def)             Requested size: 411.14528pt x 288.42857pt.
+ [4 <./docs/figures/conden_scaling_beta4.17.pdf>]
+<docs/figures/pbpchisce_scaling_beta4.17.pdf, id=252, 607.71825pt x 426.31772pt
 >
 File: docs/figures/pbpchisce_scaling_beta4.17.pdf Graphic file (type pdf)
 <use docs/figures/pbpchisce_scaling_beta4.17.pdf>
 Package pdftex.def Info: docs/figures/pbpchisce_scaling_beta4.17.pdf  used on i
-nput line 214.
-(pdftex.def)             Requested size: 411.14528pt x 288.01984pt.
-[5 <./docs/figures/pbpchisce.pdf>] [6 <./docs/figures/pbpchisce_scaling_beta4.1
-7.pdf>] (./report_en.aux)
+nput line 205.
+(pdftex.def)             Requested size: 411.14528pt x 288.42857pt.
+ [5 <./docs/figures/pbpchisce.pdf>] [6 <./docs/figures/pbpchisce_scaling_beta4.
+17.pdf>] (./report_en.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
  ***********
 Package rerunfilecheck Info: File `report_en.out' has not changed.
-(rerunfilecheck)             Checksum: 2178F3ACAD68BCDE05CAEC325B1DAC82;2768.
+(rerunfilecheck)             Checksum: D5C929C1B3BB3EE24063EF54E64A744B;2782.
  ) 
 Here is how much of TeX's memory you used:
- 14456 strings out of 474116
- 229258 string characters out of 5743681
- 1949187 words of memory out of 5000000
- 36534 multiletter control sequences out of 15000+600000
- 571707 words of font info for 120 fonts, out of 8000000 for 9000
+ 14421 strings out of 474116
+ 228873 string characters out of 5743682
+ 1948187 words of memory out of 5000000
+ 36521 multiletter control sequences out of 15000+600000
+ 569590 words of font info for 106 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,13n,79p,1006b,459s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 ></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
-</usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.pfb></
-usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></u
-sr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></us
-r/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/
-local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/lo
-cal/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/loca
-l/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local/t
-exlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texl
-ive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texli
-ve/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texlive
-/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2
-024/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on report_en.pdf (6 pages, 269539 bytes).
+</usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><
+/usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></
+usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></us
+r/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/
+local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/lo
+cal/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/local
+/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/te
+xlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/tex
+live/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/texli
+ve/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive
+/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
+Output written on report_en.pdf (6 pages, 251454 bytes).
 PDF statistics:
- 554 PDF objects out of 1000 (max. 8388607)
- 222 compressed objects within 3 object streams
+ 507 PDF objects out of 1000 (max. 8388607)
+ 199 compressed objects within 2 object streams
  33 named destinations out of 1000 (max. 500000)
- 37501 words of extra memory for PDF output out of 42996 (max. 10000000)
+ 27261 words of extra memory for PDF output out of 29859 (max. 10000000)
 

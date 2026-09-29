@@ -199,7 +199,7 @@ def main():
     # 取 t=16 处各信道关联函数作为 Screening Mass 指标
     fig3, ax3 = plt.subplots(figsize=(9, 6), dpi=300)
     temps = [TEMP_MAP[b] for b in BETAS]
-    ax3.axvspan(155.5, 160.5, color="gray", alpha=0.2, label="QCD Chiral Transition Region")
+    ax3.axvspan(155.0, 158.0, color="gray", alpha=0.2, label="QCD Chiral Transition Region (155–158 MeV)")
 
     for ch in ["PS", "S", "AV", "Vec"]:
         vals_at_t = [abs(all_correlator_results[(b, ch)][0][16]) for b in BETAS]

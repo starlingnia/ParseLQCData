@@ -7,7 +7,7 @@ scripts/quick_plot_all_condensates.py
 - 5组 beta=4.17 有限时间标度系综 (m_l = 0.0020): 紫色正方形
 严格遵循 ana/ 风格：
 - 右上角小方框指示栏 (loc="upper right")
-- 相变过渡带阴影 [155.5, 160.5] MeV
+- 相变过渡带阴影 [155, 158] MeV (156.5 ± 1.5 MeV)
 - 坐标轴标签与字体标准
 --------------------------------------------------------------------------------
 """
@@ -25,7 +25,7 @@ DOCS_FIGURES_DIR = PROJECT_ROOT / "docs" / "figures"
 DOCS_FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 ALL_FILE = OUTPUT_CONDENSATE_DIR / "all_ensembles_condensate.csv"
-TRANSITION_REGION = (155.5, 160.5)
+TRANSITION_REGION = (155.0, 158.0)
 
 def main():
     if not ALL_FILE.exists():
@@ -44,7 +44,7 @@ def main():
 
     # 相变过渡带
     t_low, t_high = TRANSITION_REGION
-    ax.axvspan(t_low, t_high, color="gray", alpha=0.18, label="Transition Region (155.5–160.5 MeV)", zorder=1)
+    ax.axvspan(t_low, t_high, color="gray", alpha=0.18, label="Transition Region (155–158 MeV)", zorder=1)
 
     # 绘制标准温扫系综 (royalblue)
     ax.errorbar(
