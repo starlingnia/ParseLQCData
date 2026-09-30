@@ -3,9 +3,9 @@
 scripts/measure_meson_b417.py
 --------------------------------------------------------------------------------
 测量所有以数字开头且包含 beta4.17 的目录中的介子质量，并绘制介子质量随温度演化的图。
-物理量纲转换乘法常数: 153 * 16 (即 a^-1 = 2448 MeV).
-温度: T = 153 * 16 / Nt (MeV).
-介子质量: M = (a * M) * (153 * 16) (MeV).
+物理量纲转换乘法常数: a^-1 = 2453 MeV.
+温度: T = 2453 / Nt (MeV).
+介子质量: M = (a * M) * 2453 (MeV).
 
 为不同的轻夸克质量 (ml = 0.0020, 0.0035, 0.0070, 0.0120) 分别绘制独立的温度演化图，
 并保存到 docs/ 目录下。
@@ -53,8 +53,8 @@ from src.parselqcdata import (
 )
 from tools.meson_orchestrator import MesonOrchestrator
 
-# 物理量纲换算常数: 153 * 16 = 2448 MeV
-SCALE_UNIT: float = 153.0 * 16.0  # 2448.0 MeV
+# 物理量纲换算常数: a^-1 = 2453 MeV (旧稿的 153*16 = 2448 MeV 不对)
+SCALE_UNIT: float = 2453.0
 
 # 介子信道配色与标记样式
 CHANNEL_STYLES: Dict[str, dict] = {
@@ -249,7 +249,7 @@ def measure_or_load_meson_mass(
 def build_measurement_dataframe(readin_dir: Path, force: bool = False) -> pl.DataFrame:
     """
     收集所有目录的测量结果，并施加物理量纲转换。
-    单位比例: 153 * 16 (即 a^-1 = 2448 MeV)
+    单位比例: a^-1 = 2453 MeV
     """
     dirs = discover_b417_directories(readin_dir)
     print(f"[INFO] 共发现 {len(dirs)} 个符合条件的 beta4.17 构型目录。")
@@ -269,7 +269,7 @@ def build_measurement_dataframe(readin_dir: Path, force: bool = False) -> pl.Dat
         df = pl.DataFrame(all_rows)
 
     # 实施用户指定的物理量纲转换:
-    # 物理量纲需要乘的单位是 153 * 16 = 2448 MeV
+    # 物理量纲需要乘的单位是 a^-1 = 2453 MeV
     df = df.with_columns([
         (pl.col("mass") * SCALE_UNIT).alias("mass_mev_scaled"),
         (pl.col("mass_err") * SCALE_UNIT).alias("mass_mev_err_scaled"),

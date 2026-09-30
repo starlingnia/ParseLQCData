@@ -4,7 +4,6 @@ set xlabel "temperature(MeV)"
 set ylabel "mass(MeV)"
 set xrange [125:225]
 set yrange [0:1350]
-set key left top
 set grid
 # 1. 设置一个矩形对象
 #    'from 155, graph 0'  : 起始点 x=155, y=图表底部
@@ -16,6 +15,7 @@ set object 1 rectangle from 155, graph 0 to 158, graph 1 fillstyle solid noborde
 # 3. (重要) 把这个矩形放到 "后面"，防止它遮住你的数据线
 set object 1 behind
 set pointsize 0.6
+set key right bottom
 do for [mass in "0.002 0.0035 0.007 0.0120"] {
     set output sprintf("massvtem_%.4f.pdf", real(mass))
     set title sprintf("mass vs. temperature (mass=%.4f)", real(mass))
