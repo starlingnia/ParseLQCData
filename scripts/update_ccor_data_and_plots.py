@@ -394,6 +394,40 @@ def generate_mdoutputre_csv(delta_df: pl.DataFrame, target_file: Path) -> None:
     print(f"[WRITE] mdoutputre.csv -> {target_file}")
 
 
+#: 论文里 4 张固定 beta 表格 (T, am_l, aΔM, ΔM[MeV]) 的数据文件: 由本脚本生成并同步到 pos/ccor
+#: 对应 section/data_modi_analysis.tex 里 tab:su2_l_su2_r_asym_data / u1_a_tx / u1_s_ps / su2_cs_xa
+THESIS_TABLES: Dict[str, str] = {
+    "SU(2)XSU(2) V-A": "thesis_V-A.csv",
+    "U(1)A T-X": "thesis_T-X.csv",
+    "U(1) S-PS": "thesis_S-PS.csv",
+    "SU(2)spinxchiral X-A": "thesis_X-A.csv",
+}
+
+
+def generate_thesis_table_csvs(delta_df: pl.DataFrame, out_dir: Path) -> None:
+    r"""
+    写论文 4 张表格用的 CSV: 每行 = T_ref, am_l, aΔM ± err, ΔM ± err (MeV), 行尾 hline 标记
+    (标记列给每个温度组的最后一行加 \hline, 最后一组不加, 由 .tex 的 late after last line 收尾)
+    """
+    from docs.meson_scan_setup import SCAN_CASES
+
+    tref = {c.key: float(c.temp_ref_mev) for c in SCAN_CASES}
+    for pair, fname in THESIS_TABLES.items():
+        sub = delta_df.filter(pl.col("pair") == pair).sort(["nt", "ml"])
+        rows = list(sub.iter_rows(named=True))
+        lines = []
+        for i, r in enumerate(rows):
+            last_of_group = (i + 1 == len(rows)) or (rows[i + 1]["nt"] != r["nt"])
+            hline = "\\hline" if (last_of_group and i + 1 != len(rows)) else ""
+            lines.append("{:.2f},{:.4f},${:.5f} \\pm {:.5f}$,${:.2f} \\pm {:.2f}$,{}".format(
+                tref.get(r["case"], r["tem_mev"]), r["ml"],
+                r["delta_mass_lattice"], r["delta_mass_err_lattice"],
+                r["delta_mass_lattice"] * SCALE_UNIT, r["delta_mass_err_lattice"] * SCALE_UNIT,
+                hline))
+        (out_dir / fname).write_text("\n".join(lines) + "\n", encoding="utf-8")
+        print(f"[WRITE] {fname} ({len(lines)} 行)")
+
+
 #: 各图的图例位置: 对称性图 (ΔM) -> 右上角; 介子质量图 -> 右下角
 LEGEND_POSITIONS: Dict[str, str] = {
     "plotmd.gp": "right top",             # ΔM vs T (对称性)
@@ -626,12 +660,17 @@ def main():
         docs_dir / "dataSU(2)spinxchiral asym.txt",
         docs_dir / "dataSU(2)spinxchiral X-A.txt",
         docs_dir / "mdoutputre.csv",
+        docs_dir / "thesis_V-A.csv",
+        docs_dir / "thesis_T-X.csv",
+        docs_dir / "thesis_S-PS.csv",
+        docs_dir / "thesis_X-A.csv",
     ]
 
     generate_massvtem_csv(mass_df, docs_dir / "massvtem.csv")
     generate_deltamass_nt12_csv(delta_df, docs_dir / "deltamass_nt12.csv")
     generate_symmetry_txt_files(delta_df, docs_dir)
     generate_mdoutputre_csv(delta_df, docs_dir / "mdoutputre.csv")
+    generate_thesis_table_csvs(delta_df, docs_dir)
 
     # 4. 在 docs_dir 中执行 gnuplot 出图并转换为 PNG
     generated_plot_files = run_gnuplot_and_convert_png(docs_dir)
