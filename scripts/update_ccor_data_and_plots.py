@@ -79,6 +79,8 @@ SYMMETRY_SPECS = [
         "ch2": "A",
         "channel_id": 1,
         "ytle": " {/Symbol D}M_{V-A}(MeV)",
+        "key_pos": "right bottom",
+        "extra_cmd": "set yrange [*:40];",
     },
     {
         "pair": "U(1)A T-X",
@@ -88,6 +90,8 @@ SYMMETRY_SPECS = [
         "ch2": "Xt",
         "channel_id": 2,
         "ytle": " {/Symbol D}M_{T-X}(MeV)",
+        "key_pos": "right bottom",
+        "extra_cmd": "",
     },
     {
         "pair": "U(1) S-PS",
@@ -97,6 +101,8 @@ SYMMETRY_SPECS = [
         "ch2": "PS",
         "channel_id": 3,
         "ytle": " {/Symbol D}M_{S-PS}(MeV)",
+        "key_pos": "right top",
+        "extra_cmd": "",
     },
     {
         "pair": "SU(2)spinxchiral X-A",
@@ -106,6 +112,8 @@ SYMMETRY_SPECS = [
         "ch2": "Xt",
         "channel_id": 4,
         "ytle": " {/Symbol D}M_{X-A}(MeV)",
+        "key_pos": "right top",
+        "extra_cmd": "",
     },
 ]
 
@@ -485,12 +493,14 @@ def run_gnuplot_and_convert_png(work_dir: Path) -> List[Path]:
             output_name = f"data{spec['pair_title']}.pdf"
             symt = spec["pair_title"]
             ytle = spec["ytle"]
+            extra_cmd = spec.get("extra_cmd", "")
+            key_pos = spec.get("key_pos", "right top")
 
             cmd = [
                 gnuplot_bin,
                 "-e",
                 f'input_fname="{input_name}"; output_fname="{output_name}"; '
-                f'symt="{symt}"; ytle="{ytle}"',
+                f'symt="{symt}"; ytle="{ytle}"; set key {key_pos}; {extra_cmd}',
                 str(gp_md),
             ]
             res = subprocess.run(cmd, cwd=str(work_dir), capture_output=True, text=True)
@@ -588,16 +598,14 @@ def main():
     # 1. 确保 gnuplot 绘图模板存在于 docs_dir, 并把图例挪到指定位置
     gp_scripts = ["plotmdre.gp", "plotmd.gp", "plotmassdvsmass.gp"]
     for gp in gp_scripts:
-        src_gp = ccor_dir / gp
+        src_gp = PROJECT_ROOT / "scripts" / "gnuplot" / gp
         dst_gp = docs_dir / gp
         if src_gp.exists():
             shutil.copy2(src_gp, dst_gp)
-        elif not dst_gp.exists():
-            # 降级从 scripts/gnuplot 拷贝
-            fallback = PROJECT_ROOT / "scripts" / "gnuplot" / gp
-            if fallback.exists():
-                shutil.copy2(fallback, dst_gp)
-        apply_legend_position(dst_gp, LEGEND_POSITIONS.get(gp, "right top"))
+        elif (ccor_dir / gp).exists():
+            shutil.copy2(ccor_dir / gp, dst_gp)
+        if gp != "plotmd.gp":
+            apply_legend_position(dst_gp, LEGEND_POSITIONS.get(gp, "right top"))
         if gp == "plotmassdvsmass.gp":
             apply_unit_scale(dst_gp, SCALE_UNIT)
 

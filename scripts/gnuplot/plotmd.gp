@@ -1,19 +1,17 @@
-# 来源: /Users/junxiongnie/code/ana/dat/ccor/plotmd.gp (原样复制, 仅把硬编码输入文件名参数化)
+# 来源: /Users/junxiongnie/code/ana/dat/ccor/plotmd.gp (参数化输入文件名与对称性标题)
 set terminal pdfcairo enhanced font "Helvetica,12"
 set output output_fname
 set title symt
 set xlabel "temperature(MeV) "
 set ylabel ytle
-set xrange [140:225]
+set xrange [125:215]
 set grid
-# 1. 设置一个矩形对象
+# 1. 设置一个矩形对象 (相变过渡带 155~158 MeV)
 #    'from 155, graph 0'  : 起始点 x=155, y=图表底部
 #    'to 158, graph 1'    : 结束点 x=158, y=图表顶部
-set object 1 rectangle from 155, graph 0 to 158, graph 1  fillstyle solid noborder fillcolor "gray" 
+set object 1 rectangle from 155, graph 0 to 158, graph 1 fillstyle solid noborder fillcolor "gray" 
 
-
-
-# 3. (重要) 把这个矩形放到 "后面"，防止它遮住你的数据线
+# 3. 把这个矩形放到后面，防止它遮住数据线
 set object 1 behind
 set zeroaxis linetype 1 linecolor "black"
 plot \
