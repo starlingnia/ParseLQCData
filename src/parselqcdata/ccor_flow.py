@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import glob
 import re
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
@@ -72,7 +73,7 @@ ANA_SCALE_MEV: float = 2640.0
 
 #: simulate.py 的拟合窗口与选样阈值 (窗口中心 = 对称点, 半宽 = 7 -> [c-7, c+8))
 #: 说明: N=7 是**复刻旧 48^3x16 (ana) 口径**用的固定值, reference 数据源仍然照用它;
-#:       本仓库自己的 multisrc/singlesrc 数据源改用 half_window_for(Ns) (见下)。
+#:       本仓库自己的 multisrc/singlesrc 数据源改用 config/fit_windows.txt 里的窗口 (见下)。
 ANA_HALF_WINDOW: int = 7
 ANA_CHI2_DOF_MAX: float = 100.0
 
@@ -81,53 +82,58 @@ ANA_CHI2_DOF_MAX: float = 100.0
 ANA_MIN_MASS: float = 1.0e-3
 
 
-def half_window_for(ns: int, min_half_window: int = ANA_HALF_WINDOW) -> int:
+#: 拟合窗口的**唯一**来源: 独立文本文件 config/fit_windows.txt
+#: 格式 <ens> <x_start> <x_end> (半开区间, 格点切片); 代码里不再用公式/自动检测决定窗口。
+FIT_WINDOW_FILE: Path = Path(__file__).resolve().parents[2] / "config" / "fit_windows.txt"
+
+
+@dataclass(frozen=True)
+class FitWindows:
+    """拟合窗口表: defaults = 每个 ensemble 的默认窗口; per_channel = 按信道覆盖"""
+    defaults: Dict[str, Tuple[int, int]]
+    per_channel: Dict[Tuple[str, str], Tuple[int, int]]
+
+    def get(self, ens: str, channel: Optional[str] = None) -> Optional[Tuple[int, int]]:
+        """先找 (ens, channel) 专用窗口, 没有再退回 ens 的默认窗口"""
+        if channel is not None:
+            win = self.per_channel.get((ens, channel))
+            if win is not None:
+                return win
+        return self.defaults.get(ens)
+
+
+def load_fit_windows(path: Optional[Path] = None) -> FitWindows:
     """
-    拟合半宽随格子大小缩放: 窗口 = [center-N, center+N+1), N = round(Ns/3)。
-
-    用 scripts/try_fit_window.py --mode ana 扫过 N 的依赖: ΔM 在 N ≈ Ns/3 处进入平台
-    (Ns=32 -> 11, 40 -> 13, 48 -> 16), 而固定 N=7 在 Ns=40/48 上还没收敛
-    (48x18 的 Xt 甚至会退化成 m=0), 于是低温柔给出虚高的 ΔM 和巨大的误差。
-
-    注意: 这是"名义"半宽, 小格子上可能宽到拟合崩掉 (32^3 上 N=11 -> [5,28) 时
-    V/A 全部样本 chi2/dof 爆掉), 实际使用的半宽请用 choose_half_window()。
+    读取拟合窗口表 (唯一的窗口定义来源)。两种行:
+        <ens> <x_start> <x_end>                  # 该 ensemble 所有信道的默认窗口
+        <ens> <channel> <x_start> <x_end>        # 该信道的专用窗口 (噪声道用)
+    信道名用 ana 记号: V, A, Tt, Xt, S, PS。
     """
-    return max(int(min_half_window), int(round(ns / 3.0)))
+    fp = Path(path) if path is not None else FIT_WINDOW_FILE
+    if not fp.exists():
+        raise FileNotFoundError(f"找不到拟合窗口文件: {fp}")
+    defaults: Dict[str, Tuple[int, int]] = {}
+    per_channel: Dict[Tuple[str, str], Tuple[int, int]] = {}
+    for lineno, raw in enumerate(fp.read_text(encoding="utf-8").splitlines(), 1):
+        line = raw.split("#", 1)[0].strip()
+        if not line:
+            continue
+        parts = line.split()
+        if len(parts) == 3:
+            ens, lo, hi = parts[0], int(parts[1]), int(parts[2])
+        elif len(parts) == 4:
+            ens, ch, lo, hi = parts[0], parts[1], int(parts[2]), int(parts[3])
+            per_channel[(ens, ch)] = (lo, hi)
+            continue
+        else:
+            raise ValueError(
+                f"{fp}:{lineno} 需要 '<ens> <x_start> <x_end>' 或 "
+                f"'<ens> <channel> <x_start> <x_end>', 实际: {raw!r}")
+        if hi <= lo:
+            raise ValueError(f"{fp}:{lineno} 窗口非法: [{lo},{hi})")
+        defaults[ens] = (lo, hi)
+    return FitWindows(defaults, per_channel)
 
-
-def choose_half_window(
-    jk_by_channel: Dict[str, np.ndarray],
-    ns: int,
-    min_valid_samples: int = 2,
-    min_half_window: int = ANA_HALF_WINDOW,
-) -> int:
-    """
-    选该 ensemble 实际可用的半宽: 从名义值 half_window_for(ns) 往下退,
-    直到**每个信道**都至少有 min_valid_samples 个有效样本
-    (有效 = chi2/dof <= 100 且 m > ANA_MIN_MASS)。
-
-    为什么要"每个信道都有效": 6 个信道两两组成 4 组 ΔM (V-A / Tt-Xt / S-PS / A-Xt),
-    只要有一个信道全灭, 对应的 ΔM 就是 NaN。实测:
-      32^3 上名义 N=11 (窗口 [5,28)) 会让 V/A 全灭 -> 退到 N=10;
-      48^3x18 ml=0.0020 的 S 道本身报废, 但 N=16 时仍有 2 个样本 -> 保持 N=16
-      (若为救 S 而退到 N=10, T-X / X-A 的平台反而被破坏)。
-    """
-    keys = [ch for ch, jk in jk_by_channel.items() if jk is not None and np.asarray(jk).size]
-    if not keys:
-        return int(min_half_window)
-    for n in range(half_window_for(ns, min_half_window), int(min_half_window) - 1, -1):
-        ok = True
-        for ch in keys:
-            masses, _ = channel_masses_from_jk(
-                np.asarray(jk_by_channel[ch], dtype=np.float64),
-                center=ns // 2, half_window=n, min_mass=ANA_MIN_MASS,
-            )
-            if int(np.isfinite(masses).sum()) < int(min_valid_samples):
-                ok = False
-                break
-        if ok:
-            return n
-    return int(min_half_window)
 
 #: simulate.py 的粗略初值 (拟合失败时回退到自适应初值)
 ANA_P0: Dict[str, float] = {"a": 2.5e-5, "m": 0.43058515595986924}
@@ -278,6 +284,7 @@ def fit_sample_masses(
     abs_values: bool = True,
     p0: Optional[Dict[str, float]] = None,
     min_mass: Optional[float] = None,
+    window: Optional[Tuple[int, int]] = None,
 ) -> np.ndarray:
     """
     对 sym 的每一列 (Jackknife 样本) 做 cosh 拟合, 返回逐样本质量数组 (无效为 NaN)。
@@ -291,7 +298,10 @@ def fit_sample_masses(
     sym = np.asarray(sym, dtype=np.float64)
     ns, n_samples = sym.shape
     center = ns // 2 if center is None else int(center)
-    lo, hi = center - half_window, center + half_window + 1
+    if window is not None:                     # 显式窗口 (来自 config/fit_windows.txt)
+        lo, hi = int(window[0]), int(window[1])
+    else:                                      # 兼容旧口径: 以对称点为中心的对称窗口
+        lo, hi = center - half_window, center + half_window + 1
     if lo < 0 or hi > ns:
         raise ValueError(f"窗口 [{lo},{hi}) 超出 Ns={ns}")
 
@@ -350,6 +360,7 @@ def channel_masses_from_jk(
     chi2_dof_max: float = ANA_CHI2_DOF_MAX,
     abs_values: bool = True,
     min_mass: Optional[float] = None,
+    window: Optional[Tuple[int, int]] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     输入 Jackknife 样本矩阵 (Ns x n_samples), 先 fold 再逐样本 cosh 拟合。
@@ -359,7 +370,7 @@ def channel_masses_from_jk(
     sym = symmetrize_about_center(jk_matrix, center)
     err = sample_errors(sym)
     masses = fit_sample_masses(sym, err, center, half_window, chi2_dof_max, abs_values,
-                               min_mass=min_mass)
+                               min_mass=min_mass, window=window)
     return masses, sym
 
 

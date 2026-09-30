@@ -239,17 +239,17 @@ def scan_ana_half_window(case_key: str, ml: float, channels: Sequence[str], sour
     默认 N=7 (Ns=32 -> [9,24), Ns=40 -> [13,28), Ns=48 -> [17,32))。
     """
     from src.parselqcdata.ccor_flow import (  # 局部导入: 只在 ana 模式下需要
-        ANA_HALF_WINDOW,
         ANA_MIN_MASS,
         ANA_PAIRS,
         channel_masses_from_jk,
-        half_window_for,
         jackknife_mean_err,
+        load_fit_windows,
     )
 
     case = find_case(case_key)
     half = int(case.ns // 2)
-    prod_n = half_window_for(case.ns)   # 生产口径: N = max(7, round(Ns/3))
+    # 生产口径 = config/fit_windows.txt 里该 ensemble 的窗口 (唯一来源)
+    prod_wins = {c: load_fit_windows().get(case_key, c) for c in channels}
     cdir = case_dir(case_key, ml, source)
 
     #: meson_scan 的信道名 -> ana (ccor_flow) 的信道名
@@ -269,8 +269,8 @@ def scan_ana_half_window(case_key: str, ml: float, channels: Sequence[str], sour
     print()
     print("=" * 104)
     print(f" {case_key}  ml={ml:.4f}  [ccor_flow/ana 口径: 窗口 = [c-N, c+N+1), c={half}]  source={source}")
-    print(f" 生产默认半宽 N = {prod_n} (max(7, round(Ns/3)))  ->  窗口 "
-          f"[{half - prod_n},{half + prod_n + 1});   旧 ana 固定 N = {ANA_HALF_WINDOW}")
+    print(" 生产窗口 (config/fit_windows.txt): " + ", ".join(
+        f"{c}={list(w) if w else '未定义'}" for c, w in prod_wins.items()))
     print("=" * 104)
 
     for ch, per_n in per_channel.items():

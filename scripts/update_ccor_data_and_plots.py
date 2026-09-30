@@ -4,7 +4,7 @@ scripts/update_ccor_data_and_plots.py
 --------------------------------------------------------------------------------
 完全按照 ~/code/ths/pos/ccor/ 的画图格式与数据规格：
 1. 从 ParseLQCData 的最新多源 (multisrc) 测量结果中提取 6 信道介子质量与 4 组对称性破缺质量差；
-2. 物理量纲换算统一用 a^-1 = 2453 MeV (旧稿的 153*16 = 2448 MeV 已废弃):
+2. 物理量纲换算统一用 a^-1 = 2453 MeV 
      T = 2453 / Nt (MeV)
      M = aM * 2453 (MeV)
 3. 严格按照 ccor 格式输出:
@@ -19,18 +19,14 @@ scripts/update_ccor_data_and_plots.py
    生成所有 PDF 矢量图，并使用 pdftoppm 渲染高清 PNG 图像，
    完全替换掉 ccor 中的老旧数据和图片。
 --------------------------------------------------------------------------------
-对称性部分说明 (质量差 dM):
-  dM 依赖 ccor_flow 流程的中间表 output/ccor_flow/delta_mass_all.csv。
-  该表由 scripts/reproduce_ccor_flow.py 生成, 其默认 case 列表可能落后于本脚本的
-  CCOR_CASES (例如低温度点换成 40x16 / 48x18 之后)。因此这里会:
-    * 先检查 delta 表是否覆盖 CCOR_CASES;
-    * 缺 case 时自动重跑 ccor_flow (只重算 multisrc, 输出到临时目录再合并),
-      其它 dataset 的既有行原样保留 (--regen-delta auto/always/never 控制)。
+拟合窗口 (唯一来源):
+  config/fit_windows.txt —— 每个 ensemble 一行 "<ens> <x_start> <x_end>",
+  介子质量与对称性 ΔM 都用它, 代码里不再自动检测窗口、也没有窗口相关的开关。
+  改了窗口文件后直接重跑本脚本: 检测到文件比 delta 表新就会自动重跑 ccor_flow。
 --------------------------------------------------------------------------------
-图例位置:
-  默认把三张 gnuplot 模板的图例统一挪到右下角 (set key right bottom),
-  由 apply_legend_position() 在拷贝出来的模板副本上完成,
-  可用 --legend-position 覆盖 (例如 "left top")。
+图例位置 (按图定死, 见 LEGEND_POSITIONS):
+  对称性图 (plotmd.gp / plotmassdvsmass.gp) -> 右上角 (set key right top)
+  介子质量图 (plotmdre.gp)                  -> 右下角 (set key right bottom)
 --------------------------------------------------------------------------------
 """
 
@@ -49,6 +45,8 @@ import numpy as np
 import polars as pl
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:      # 让 docs.* / src.* 可导入
+    sys.path.insert(0, str(PROJECT_ROOT))
 CCOR_DIR = Path("/Users/junxiongnie/code/ths/pos/ccor")
 
 # 物理量纲换算标度: a^-1 = 2453 MeV (旧稿的 153*16 = 2448 MeV 不对, 已废弃)
@@ -60,23 +58,14 @@ CCOR_NTS: Tuple[int, ...] = (12, 14, 16, 18)
 CCOR_MLS: Tuple[float, ...] = (0.0020, 0.0035, 0.0070, 0.0120)
 
 # 上游数据来源
-MASS_SUMMARY_PATH: Path = (
-    PROJECT_ROOT / "output" / "meson_scan" / "b4.17" / "multisrc" / "meson_mass_summary.csv"
-)
+#: 介子质量从哪里现算 (与 ΔM 同一套 jk 关联函数)
+MASS_SOURCE: str = "multisrc"
+MESON_CASE_ROOT: Path = PROJECT_ROOT / "output" / "meson_scan" / "b4.17" / MASS_SOURCE / "cases"
 DELTA_PATH: Path = PROJECT_ROOT / "output" / "ccor_flow" / "delta_mass_all.csv"
+#: 拟合窗口的唯一来源 (独立文本文件)
+FIT_WINDOW_FILE: Path = PROJECT_ROOT / "config" / "fit_windows.txt"
 FLOW_SCRIPT: Path = PROJECT_ROOT / "scripts" / "reproduce_ccor_flow.py"
 FLOW_TMP_ROOT: Path = PROJECT_ROOT / "output" / "ccor_flow_regen"
-
-# 信道名称映射到 ccor 中的 type 编号
-# 1: V, 2: A, 3: Tt, 4: Xt, 5: S, 6: Ps
-TYPE_MAPPING: Dict[str, int] = {
-    "Vec": 1,
-    "AV": 2,
-    "Tt": 3,
-    "Xt": 4,
-    "S": 5,
-    "PS": 6,
-}
 
 # 4 组对称性破缺通道对与图名配置
 # pair: delta_mass_all.csv 里 pair 列的完整名字 (精确匹配, 不再依赖子串)
@@ -206,60 +195,88 @@ def repair_delta_mass_table(cases: Sequence[str]) -> None:
     )
 
 
-def ensure_delta_cases(cases: Sequence[str], mode: str = "auto") -> None:
-    """检查 delta 表覆盖情况, 按 mode (auto/always/never) 决定是否重跑上游流程"""
+def ensure_delta_cases(cases: Sequence[str]) -> None:
+    """
+    检查 delta 表是否需要刷新: 缺 case, 或者 config/fit_windows.txt 比它新
+    (改了窗口文件就直接重跑, 不需要任何额外开关)。
+    """
     have = _column_values(DELTA_PATH, "case")
     missing = [c for c in cases if c not in have]
+    stale = (DELTA_PATH.exists() and FIT_WINDOW_FILE.exists()
+             and FIT_WINDOW_FILE.stat().st_mtime > DELTA_PATH.stat().st_mtime)
 
-    if mode == "always" or (mode == "auto" and missing):
+    if missing or stale:
+        why = "缺 case {}".format(missing) if missing else "拟合窗口文件已更新"
+        print(f"[REGEN] {why} -> 重跑 ccor_flow 刷新 ΔM 数据")
         repair_delta_mass_table(cases)
         have = _column_values(DELTA_PATH, "case")
         missing = [c for c in cases if c not in have]
 
     if missing:
         raise RuntimeError(
-            "对称性数据源 {} 缺少 case: {}\n"
-            "        当前包含: {}\n"
+            "对称性数据源 {} 缺少 case: {}\n        当前包含: {}\n"
             "        请先运行: .venv/bin/python scripts/reproduce_ccor_flow.py "
             "--datasets multisrc --cases {}".format(
-                DELTA_PATH, missing, sorted(have), " ".join(cases)
-            )
+                DELTA_PATH, missing, sorted(have), " ".join(cases))
         )
 
 
 def load_mass_dataframe() -> pl.DataFrame:
-    """加载并转换介子质量数据"""
-    summary_path = MASS_SUMMARY_PATH
-    if not summary_path.exists():
-        raise FileNotFoundError(f"找不到介子拟合汇总表: {summary_path}")
+    """
+    介子质量表: 用 config/fit_windows.txt 里的统一窗口, 从落盘的 Jackknife 关联函数现算
+    —— 与 ΔM 用同一套窗口、同一套拟合代码, 不再读 meson_scan 的自动窗口结果。
+    """
+    from docs.meson_scan_setup import SCAN_CASES
+    from src.parselqcdata.ccor_flow import (
+        ANA_MIN_MASS,
+        ANA_TYPE_ID,
+        channel_masses_from_jk,
+        jackknife_mean_err,
+        load_fit_windows,
+        load_meson_scan_channel,
+    )
 
-    df = pl.read_csv(summary_path)
-    # 只取 ccor 对应的 4 组格点
-    df = df.filter(pl.col("case_key").is_in(list(CCOR_CASES)))
-
-    missing = [c for c in CCOR_CASES if c not in set(df["case_key"].to_list())]
-    if missing:
-        raise RuntimeError(
-            "介子质量汇总表 {} 缺少 case: {}\n"
-            "        当前包含: {}\n"
-            "        请先重跑 meson scan (scripts/run_meson_b417_nt_scan.sh) 生成新格点数据".format(
-                summary_path, missing, sorted(_column_values(summary_path, "case_key"))
-            )
-        )
-
-    # 计算 153*16 标度下的物理温度和物理质量
-    df = df.with_columns([
-        (SCALE_UNIT / pl.col("nt")).alias("tem_mev"),
-        (pl.col("mass") * SCALE_UNIT).alias("mass_mev"),
-        (pl.col("mass_err") * SCALE_UNIT).alias("mass_err_mev"),
-        pl.col("channel").replace(TYPE_MAPPING).cast(pl.Int32).alias("type_id"),
-    ])
+    windows = load_fit_windows()
+    rows: List[dict] = []
+    for key in CCOR_CASES:
+        case = next((c for c in SCAN_CASES if c.key == key), None)
+        if case is None:
+            raise RuntimeError(f"未知 ensemble: {key}")
+        for ml in CCOR_MLS:
+            case_dir = MESON_CASE_ROOT / case.output_name(float(ml))
+            for ch in ANA_TYPE_ID:
+                win = windows.get(key, ch)
+                if win is None:
+                    raise RuntimeError(f"{key}/{ch} 未在 {FIT_WINDOW_FILE} 中定义拟合窗口")
+                jk = load_meson_scan_channel(case_dir, ch)
+                if jk is None or jk.size == 0:
+                    continue
+                masses, _ = channel_masses_from_jk(
+                    jk, center=case.ns // 2, window=win, min_mass=ANA_MIN_MASS
+                )
+                mean, err = jackknife_mean_err(masses)
+                rows.append({
+                    "case_key": key, "ns": case.ns, "nt": case.nt, "ml": float(ml),
+                    "channel": ch, "type_id": int(ANA_TYPE_ID[ch]),
+                    "tem_mev": SCALE_UNIT / case.nt,
+                    "mass_mev": mean * SCALE_UNIT,
+                    "mass_err_mev": err * SCALE_UNIT,
+                    "x_start": int(win[0]), "x_end": int(win[1]),
+                })
+    df = pl.DataFrame(rows)
+    print("[DATA] 介子质量: {} 行; 窗口来自 {}: {}".format(
+        df.height, FIT_WINDOW_FILE.name,
+        ", ".join(f"{k}=[{v[0]},{v[1]})" for k, v in windows.defaults.items()
+                  if k in set(CCOR_CASES))
+        + (("; 信道覆盖: " + ", ".join(f"{k[0]}/{k[1]}=[{v[0]},{v[1]})"
+                                       for k, v in windows.per_channel.items()))
+           if windows.per_channel else "")))
     return df
 
 
-def load_delta_mass_dataframe(regen: str = "auto") -> pl.DataFrame:
-    """加载并转换质量差数据 (必要时自动补齐 ccor_flow 中间数据)"""
-    ensure_delta_cases(CCOR_CASES, mode=regen)
+def load_delta_mass_dataframe() -> pl.DataFrame:
+    """加载并转换质量差数据 (必要时自动重跑 ccor_flow)"""
+    ensure_delta_cases(CCOR_CASES)
 
     df = pl.read_csv(DELTA_PATH)
     df = df.filter((pl.col("dataset") == "multisrc") & pl.col("case").is_in(list(CCOR_CASES)))
@@ -367,6 +384,14 @@ def generate_mdoutputre_csv(delta_df: pl.DataFrame, target_file: Path) -> None:
         )
     target_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"[WRITE] mdoutputre.csv -> {target_file}")
+
+
+#: 各图的图例位置: 对称性图 (ΔM) -> 右上角; 介子质量图 -> 右下角
+LEGEND_POSITIONS: Dict[str, str] = {
+    "plotmd.gp": "right top",             # ΔM vs T (对称性)
+    "plotmassdvsmass.gp": "right top",    # ΔM vs quark mass (对称性)
+    "plotmdre.gp": "right bottom",        # 介子质量 vs T
+}
 
 
 def apply_legend_position(gp_path: Path, position: str = "right bottom") -> None:
@@ -541,17 +566,6 @@ def main():
         default=CCOR_DIR,
         help="外部 ccor 目录路径 (默认: ~/code/ths/pos/ccor)",
     )
-    parser.add_argument(
-        "--legend-position",
-        default="right bottom",
-        help='gnuplot 图例位置 (默认 "right bottom" = 右下角, 不挡曲线; 例: "left top")',
-    )
-    parser.add_argument(
-        "--regen-delta",
-        choices=("auto", "always", "never"),
-        default="auto",
-        help="delta_mass_all.csv 缺 case 时是否自动重跑 ccor_flow 补对称性数据 (默认 auto)",
-    )
     args = parser.parse_args()
     docs_dir = args.docs_dir.resolve()
     ccor_dir = args.ccor_dir.resolve()
@@ -566,8 +580,9 @@ def main():
     print(f"      1. 本地 docs 存储路径: {docs_dir}")
     print(f"      2. 同步目标 ccor 路径: {ccor_dir}")
     print(f"      3. 物理标度常量: a^-1 = {SCALE_UNIT:.0f} MeV (T = {SCALE_UNIT:.0f}/Nt, M = aM * {SCALE_UNIT:.0f})")
-    print(f"      4. 图例位置: set key {args.legend_position}")
-    print(f"      5. 对称性数据 case: {list(CCOR_CASES)}")
+    print(f"      4. 图例位置: {LEGEND_POSITIONS}")
+    print(f"      5. 拟合窗口文件: {FIT_WINDOW_FILE}")
+    print(f"      6. 对称性数据 case: {list(CCOR_CASES)}")
     print("================================================================================")
 
     # 1. 确保 gnuplot 绘图模板存在于 docs_dir, 并把图例挪到指定位置
@@ -582,13 +597,13 @@ def main():
             fallback = PROJECT_ROOT / "scripts" / "gnuplot" / gp
             if fallback.exists():
                 shutil.copy2(fallback, dst_gp)
-        apply_legend_position(dst_gp, args.legend_position)
+        apply_legend_position(dst_gp, LEGEND_POSITIONS.get(gp, "right top"))
         if gp == "plotmassdvsmass.gp":
             apply_unit_scale(dst_gp, SCALE_UNIT)
 
     # 2. 加载最新多源拟合数据 (对称性部分会自动补齐缺的 case)
     mass_df = load_mass_dataframe()
-    delta_df = load_delta_mass_dataframe(regen=args.regen_delta)
+    delta_df = load_delta_mass_dataframe()
 
     # 3. 在 docs_dir 生成全部数据文件
     generated_data_files: List[Path] = [

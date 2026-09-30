@@ -8,7 +8,7 @@ set grid
 set output "deltamassvsm.pdf"
 
 set zeroaxis linetype 1 linecolor "black"
-set key right bottom
+set key right top
 plot \
 "deltamass_nt12.csv" using (($1==1)?$2:1/0):($3*2453):($4*2453) with yerrorbars pt 6 lc rgb "#69b3a2" title "V-A (SU(2)_L × SU(2)_R)", \
 "deltamass_nt12.csv" using (($1==2)?$2:1/0):($3*2453):($4*2453) with yerrorbars pt 8 lc rgb "#64b5f6" title "T-X (U(1)_A)", \

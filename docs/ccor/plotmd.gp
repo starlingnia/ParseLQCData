@@ -15,7 +15,7 @@ set object 1 rectangle from 155, graph 0 to 158, graph 1  fillstyle solid nobord
 # 3. (重要) 把这个矩形放到 "后面"，防止它遮住你的数据线
 set object 1 behind
 set zeroaxis linetype 1 linecolor "black"
-set key right bottom
+set key right top
 plot \
 input_fname using ($2==7?$1:1/0):($2==7?$3:1/0):($2==7?$4:1/0) with yerrorbars pt 10 lc rgb "#808080" title "mass 0.0120", \
 input_fname using ($2==4?$1:1/0):($2==4?$3:1/0):($2==4?$4:1/0) with yerrorbars pt 8 lc rgb "#808080" title "mass 0.0070", \
