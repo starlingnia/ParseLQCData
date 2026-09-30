@@ -38,10 +38,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 CCOR_DIR = Path("/Users/junxiongnie/code/ths/pos/ccor")
 
 # 物理量纲换算标度: 153 * 16 = 2448 MeV
-SCALE_UNIT: float = 153.0 * 16.0  # 2448.0 MeV
+SCALE_UNIT: float = 2453  # 2448.0 MeV
 
 # 4 组扫描格点 (ccor 任务覆盖的 4 个有限温度点)
-CCOR_CASES: Tuple[str, ...] = ("32x12", "32x14", "32x16", "36x18")
+CCOR_CASES: Tuple[str, ...] = ("32x12", "32x14", "40x16", "48x18")
 CCOR_NTS: Tuple[int, ...] = (12, 14, 16, 18)
 CCOR_MLS: Tuple[float, ...] = (0.0020, 0.0035, 0.0070, 0.0120)
 
