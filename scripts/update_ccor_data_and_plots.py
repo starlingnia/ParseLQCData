@@ -144,14 +144,22 @@ def repair_delta_mass_table(cases: Sequence[str]) -> None:
     """
     保证 output/ccor_flow/delta_mass_all.csv 覆盖 cases (对称性部分的数据源)。
 
-    做法: 只重跑 ccor_flow 的 multisrc 数据集 (输出到临时目录), 然后
-      * multisrc 行          -> 用最新结果整体替换
-      * 其它 dataset 的旧行  -> 原样保留
-    这样既补齐了新 case, 又不会破坏 reference/singlesrc 的既有内容。
+    做法: 重跑 ccor_flow 里"本仓库自己的"数据源 (multisrc / singlesrc, 即除 ana 复刻用的
+    reference* 之外的全部), 输出到临时目录, 然后
+      * 这些数据源的行    -> 用最新结果整体替换 (拟合窗口口径变化时会被刷新)
+      * reference* 的旧行 -> 原样保留 (它复刻的是 ana 的固定 N=7 口径)
+    这样既补齐了新 case, 又不会破坏 reference 的既有内容。
     """
     old = pl.read_csv(DELTA_PATH) if DELTA_PATH.exists() else None
     have = set(old.filter(pl.col("dataset") == "multisrc")["case"].to_list()) if old is not None else set()
     need = sorted(have | set(cases))
+
+    regen_datasets = ["multisrc"]
+    if old is not None:
+        regen_datasets += sorted(
+            {str(d) for d in old["dataset"].to_list()
+             if not str(d).startswith("reference") and str(d) != "multisrc"}
+        )
 
     if FLOW_TMP_ROOT.exists():
         shutil.rmtree(FLOW_TMP_ROOT)
@@ -160,7 +168,7 @@ def repair_delta_mass_table(cases: Sequence[str]) -> None:
         sys.executable,
         str(FLOW_SCRIPT),
         "--datasets",
-        "multisrc",
+        *regen_datasets,
         "--cases",
         *need,
         "--out-root",
@@ -169,7 +177,7 @@ def repair_delta_mass_table(cases: Sequence[str]) -> None:
         "--no-figures",
         "--no-gnuplot",
     ]
-    print("[REGEN] delta_mass_all.csv 缺少 case, 自动重跑 ccor_flow (multisrc):")
+    print(f"[REGEN] delta_mass_all.csv 缺 case 或需刷新窗口口径, 自动重跑 ccor_flow: {regen_datasets}")
     print("        " + " ".join(cmd))
     res = subprocess.run(cmd, cwd=str(PROJECT_ROOT), capture_output=True, text=True)
     if res.returncode != 0:
@@ -183,7 +191,7 @@ def repair_delta_mass_table(cases: Sequence[str]) -> None:
     columns = list(old.columns) if old is not None else list(fresh.columns)
     parts = [fresh.select(columns)]
     if old is not None:
-        keep = old.filter(pl.col("dataset") != "multisrc")
+        keep = old.filter(~pl.col("dataset").is_in(regen_datasets))
         if keep.height:
             parts.append(keep.select(columns))
     merged = pl.concat(parts, how="vertical_relaxed")

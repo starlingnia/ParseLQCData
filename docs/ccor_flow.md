@@ -14,7 +14,8 @@
 |:---|:---|:---|
 | 1. 抽取 | `32x10_Beta4.70_m0.01_mesons.py` | 从 `<readin>/3*x{Nt}_b4.17_ms0.040m{ml}/Output/test1_lhadrons_*_mesons` 里按精确 tag 取 block，**取实部绝对值**，只取**前 32 行**，逐构型留一 Jackknife，再关于对称点 fold |
 | 2. 拟合 | `simulate.py` | 每个 Jackknife 样本做 `a·cosh(m(x−16))`，窗口 `x∈[9,24)`，丢掉 `chi2/dof > 100` 的样本 |
-| — | （本仓库实现） | **强制 `fitter='scipy_least_squares'`（chi2 最小二乘）**，见下 |
+| — | （本仓库实现） | **强制 `fitter='scipy_least_squares'`（chi2 最小二乘）**，见下；`reference` 数据源仍用 ana 的固定半宽 7（`Ns=32` 时即 `[9,24)`） |
+| — | （本仓库实现） | **`multisrc`/`singlesrc` 的拟合半宽随格子缩放** `N = max(7, round(Ns/3))`（32→11、40→13、48→16），并丢掉 `m ≤ 1e-3` 的退化解；固定 `N=7` 在 `Ns=40/48` 上尚未收敛（48³×18 的 `Xt` 会退化成 `m=0`），会给低温柔虚高的 ΔM。可用 `scripts/try_fit_window.py --mode ana` 复现这个 N 依赖 |
 | 3. 求差 | `dfiltered.py` | 两信道逐样本质量作差，`mean` 与 `sqrt((n−1)·mean((x−mean)²))` |
 | 4. 汇总 | `pplot.py` / `newdata.py` | `T = 2640/Nt`，`mass(MeV) = mass·2640`，写 `data<对称性>.txt`、`massvtem.csv`、`mdoutputre.csv` |
 | 5. 出图 | `plotmd.gp` / `plotmdre.gp` / `plotmassdvsmass.gp` | ΔM vs T（4 组 ml）、6 信道质量 vs T、ΔM vs ml |

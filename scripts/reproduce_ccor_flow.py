@@ -59,6 +59,7 @@ from src.parselqcdata.ccor_flow import (  # noqa: E402
     per_config_matrix_channels,
     ANA_CHI2_DOF_MAX,
     ANA_HALF_WINDOW,
+    ANA_MIN_MASS,
     ANA_MLS,
     ANA_PAIRS,
     ANA_SCALE_MEV,
@@ -66,7 +67,9 @@ from src.parselqcdata.ccor_flow import (  # noqa: E402
     ana_block_tag,
     ana_ensemble_dir,
     channel_masses_from_jk,
+    choose_half_window,
     fit_sample_masses,
+    half_window_for,
     jackknife_mean_err,
     load_meson_scan_channel,
     natural_sorted,
@@ -166,14 +169,24 @@ def channel_masses_for_task(task: dict) -> dict:
             masses = fit_sample_masses(sym, err, center=n_lines // 2)
             out[ch] = [float(v) for v in masses]
     else:
+        # 本仓库自己的数据源 (multisrc / singlesrc): 拟合半宽按格子大小缩放
+        # N = round(Ns/3) -> 32:11, 40:13, 48:16 (见 ccor_flow.half_window_for),
+        # 若小格子上宽窗口会让拟合崩掉, 自动退到实际可用的 N (choose_half_window),
+        # 并丢掉 m -> 0 的退化解 (ANA_MIN_MASS)。
         case_dir = ens.meson_case_dir(dataset, ml)
+        loaded = {ch: load_meson_scan_channel(case_dir, ch) for ch in ANA_TYPE_ID}
+        half_window = choose_half_window(loaded, ens.ns)
         for ch in ANA_TYPE_ID:
-            jk = load_meson_scan_channel(case_dir, ch)
+            jk = loaded.get(ch)
             if jk is None or jk.size == 0:
                 out[ch] = []
                 continue
-            masses, _ = channel_masses_from_jk(jk, center=ens.ns // 2)
+            masses, _ = channel_masses_from_jk(
+                jk, center=ens.ns // 2, half_window=half_window, min_mass=ANA_MIN_MASS
+            )
             out[ch] = [float(v) for v in masses]
+        return {"dataset": dataset, "case": ens.key, "ml": ml, "masses": out,
+                "half_window": int(half_window), "error": None}
 
     return {"dataset": dataset, "case": ens.key, "ml": ml, "masses": out, "error": None}
 
@@ -805,6 +818,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             records.append(rec)
             done += 1
             status = rec["error"] or f"{len([v for v in rec['masses'].values() if v])}/6 信道"
+            if rec.get("half_window"):
+                status += f" (N={rec['half_window']})"
             print(f"[{done:>3}/{len(tasks)}] {rec['dataset']:<10} {rec['case']:<7} ml={rec['ml']} -> {status}",
                   flush=True)
 
@@ -822,7 +837,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 "fitter": LEAST_SQUARES_FITTER,
                 "fitter_note": "强制 chi2 最小二乘, 不使用 lsqfit 的环境默认 fitter",
                 "cosh_center": "Ns/2 (我的数据源) / 16 与 32 行 (ana reference 数据源)",
-                "window": f"[center-{ANA_HALF_WINDOW}, center+{ANA_HALF_WINDOW}]",
+                "window": ("multisrc/singlesrc: [center-round(Ns/3), center+round(Ns/3)+1) "
+                           "(Ns=32 -> 11, 40 -> 13, 48 -> 16); "
+                           f"reference: [center-{ANA_HALF_WINDOW}, center+{ANA_HALF_WINDOW}+1)"),
+                "half_window_rule": "max(7, round(Ns/3))",
+                "min_mass": ANA_MIN_MASS,
                 "chi2_dof_max": ANA_CHI2_DOF_MAX,
                 "scale_mev": ANA_SCALE_MEV,
                 "jackknife_error": "sqrt((n-1)*mean((x-mean)^2))",

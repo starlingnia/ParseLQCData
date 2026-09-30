@@ -71,8 +71,63 @@ ANA_PAIRS: Tuple[Tuple[str, str, str], ...] = (
 ANA_SCALE_MEV: float = 2640.0
 
 #: simulate.py 的拟合窗口与选样阈值 (窗口中心 = 对称点, 半宽 = 7 -> [c-7, c+8))
+#: 说明: N=7 是**复刻旧 48^3x16 (ana) 口径**用的固定值, reference 数据源仍然照用它;
+#:       本仓库自己的 multisrc/singlesrc 数据源改用 half_window_for(Ns) (见下)。
 ANA_HALF_WINDOW: int = 7
 ANA_CHI2_DOF_MAX: float = 100.0
+
+#: 逐样本质量下限 (格点单位): 低于它的解基本是 m->0 的退化解 (cosh 退化成常数,
+#: 例如 48x18 的 Xt 在 N=7 下给出 m=0.000000), 只在非 reference 数据源上启用。
+ANA_MIN_MASS: float = 1.0e-3
+
+
+def half_window_for(ns: int, min_half_window: int = ANA_HALF_WINDOW) -> int:
+    """
+    拟合半宽随格子大小缩放: 窗口 = [center-N, center+N+1), N = round(Ns/3)。
+
+    用 scripts/try_fit_window.py --mode ana 扫过 N 的依赖: ΔM 在 N ≈ Ns/3 处进入平台
+    (Ns=32 -> 11, 40 -> 13, 48 -> 16), 而固定 N=7 在 Ns=40/48 上还没收敛
+    (48x18 的 Xt 甚至会退化成 m=0), 于是低温柔给出虚高的 ΔM 和巨大的误差。
+
+    注意: 这是"名义"半宽, 小格子上可能宽到拟合崩掉 (32^3 上 N=11 -> [5,28) 时
+    V/A 全部样本 chi2/dof 爆掉), 实际使用的半宽请用 choose_half_window()。
+    """
+    return max(int(min_half_window), int(round(ns / 3.0)))
+
+
+def choose_half_window(
+    jk_by_channel: Dict[str, np.ndarray],
+    ns: int,
+    min_valid_samples: int = 2,
+    min_half_window: int = ANA_HALF_WINDOW,
+) -> int:
+    """
+    选该 ensemble 实际可用的半宽: 从名义值 half_window_for(ns) 往下退,
+    直到**每个信道**都至少有 min_valid_samples 个有效样本
+    (有效 = chi2/dof <= 100 且 m > ANA_MIN_MASS)。
+
+    为什么要"每个信道都有效": 6 个信道两两组成 4 组 ΔM (V-A / Tt-Xt / S-PS / A-Xt),
+    只要有一个信道全灭, 对应的 ΔM 就是 NaN。实测:
+      32^3 上名义 N=11 (窗口 [5,28)) 会让 V/A 全灭 -> 退到 N=10;
+      48^3x18 ml=0.0020 的 S 道本身报废, 但 N=16 时仍有 2 个样本 -> 保持 N=16
+      (若为救 S 而退到 N=10, T-X / X-A 的平台反而被破坏)。
+    """
+    keys = [ch for ch, jk in jk_by_channel.items() if jk is not None and np.asarray(jk).size]
+    if not keys:
+        return int(min_half_window)
+    for n in range(half_window_for(ns, min_half_window), int(min_half_window) - 1, -1):
+        ok = True
+        for ch in keys:
+            masses, _ = channel_masses_from_jk(
+                np.asarray(jk_by_channel[ch], dtype=np.float64),
+                center=ns // 2, half_window=n, min_mass=ANA_MIN_MASS,
+            )
+            if int(np.isfinite(masses).sum()) < int(min_valid_samples):
+                ok = False
+                break
+        if ok:
+            return n
+    return int(min_half_window)
 
 #: simulate.py 的粗略初值 (拟合失败时回退到自适应初值)
 ANA_P0: Dict[str, float] = {"a": 2.5e-5, "m": 0.43058515595986924}
@@ -222,6 +277,7 @@ def fit_sample_masses(
     chi2_dof_max: float = ANA_CHI2_DOF_MAX,
     abs_values: bool = True,
     p0: Optional[Dict[str, float]] = None,
+    min_mass: Optional[float] = None,
 ) -> np.ndarray:
     """
     对 sym 的每一列 (Jackknife 样本) 做 cosh 拟合, 返回逐样本质量数组 (无效为 NaN)。
@@ -230,6 +286,7 @@ def fit_sample_masses(
     窗口 [center - half_window, center + half_window + 1)。
     ana 用固定初值 ANA_P0; 这里先用它, 失败/发散时回退到自适应初值,
     并同样用 chi2/dof <= chi2_dof_max 过滤。
+    min_mass 不为 None 时, 额外丢弃 m <= min_mass 的退化解 (m->0 时 cosh 退化成常数)。
     """
     sym = np.asarray(sym, dtype=np.float64)
     ns, n_samples = sym.shape
@@ -258,7 +315,8 @@ def fit_sample_masses(
                 )
                 chi2_dof = float(fit.chi2 / fit.dof) if fit.dof > 0 else np.inf
                 m = abs(float(fit.p["m"].mean))
-                if np.isfinite(m) and chi2_dof <= chi2_dof_max:
+                if (np.isfinite(m) and chi2_dof <= chi2_dof_max
+                        and (min_mass is None or m > float(min_mass))):
                     masses[j] = m
                 break
             except Exception:
@@ -291,6 +349,7 @@ def channel_masses_from_jk(
     half_window: int = ANA_HALF_WINDOW,
     chi2_dof_max: float = ANA_CHI2_DOF_MAX,
     abs_values: bool = True,
+    min_mass: Optional[float] = None,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """
     输入 Jackknife 样本矩阵 (Ns x n_samples), 先 fold 再逐样本 cosh 拟合。
@@ -299,7 +358,8 @@ def channel_masses_from_jk(
     jk_matrix = np.asarray(jk_matrix, dtype=np.float64)
     sym = symmetrize_about_center(jk_matrix, center)
     err = sample_errors(sym)
-    masses = fit_sample_masses(sym, err, center, half_window, chi2_dof_max, abs_values)
+    masses = fit_sample_masses(sym, err, center, half_window, chi2_dof_max, abs_values,
+                               min_mass=min_mass)
     return masses, sym
 
 
