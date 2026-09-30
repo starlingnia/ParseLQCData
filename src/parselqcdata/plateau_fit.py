@@ -27,14 +27,11 @@ LEAST_SQUARES_FITTER: str = "scipy_least_squares"
 
 
 def chi2_least_squares_fit(data, fcn, p0, **kwargs):
-    """
-    统一的 chi2 最小二乘拟合入口 (强制 fitter='scipy_least_squares')。
-
-    * 不接受调用方覆盖 fitter (传入也会被忽略), 避免个别调用点退化回环境默认值;
-    * 其余关键字参数 (eps / tol / maxit / prior ...) 原样透传。
-    """
+    """统一 chi2 拟合入口 (强制 fitter='scipy_least_squares', 高精度 tol=1e-15, maxit=10000)。"""
     kwargs.pop("fitter", None)
     kwargs.setdefault("debug", False)
+    kwargs.setdefault("tol", (1e-15, 1e-15, 1e-15))
+    kwargs.setdefault("maxit", 10000)
     return lsqfit.nonlinear_fit(
         data=data, fcn=fcn, p0=p0, fitter=LEAST_SQUARES_FITTER, **kwargs
     )

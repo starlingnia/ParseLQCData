@@ -77,9 +77,8 @@ ANA_SCALE_MEV: float = 2640.0
 ANA_HALF_WINDOW: int = 7
 ANA_CHI2_DOF_MAX: float = 100.0
 
-#: 逐样本质量下限 (格点单位): 低于它的解基本是 m->0 的退化解 (cosh 退化成常数,
-#: 例如 48x18 的 Xt 在 N=7 下给出 m=0.000000), 只在非 reference 数据源上启用。
-ANA_MIN_MASS: float = 1.0e-3
+#: 逐样本质量下限 (格点单位): 设为 0.0, 物理允许小质量标量介子基态, 绝不误杀小质量解
+ANA_MIN_MASS: float = 0.0
 
 
 #: 拟合窗口的**唯一**来源: 独立文本文件 config/fit_windows.txt
@@ -315,7 +314,14 @@ def fit_sample_masses(
             y = np.abs(y)
         if not np.all(np.isfinite(y)):
             continue
-        for guess in (prior, _adaptive_p0(x, y, center)):
+        adapt = _adaptive_p0(x, y, center)
+        guesses = [
+            prior,
+            adapt,
+            {"a": adapt["a"], "m": 0.1},
+            {"a": adapt["a"], "m": 0.02},
+        ]
+        for guess in guesses:
             try:
                 # 强制 chi2 最小二乘 (fitter 由 chi2_least_squares_fit 统一指定, 不可覆盖)
                 fit = chi2_least_squares_fit(
@@ -326,7 +332,7 @@ def fit_sample_masses(
                 chi2_dof = float(fit.chi2 / fit.dof) if fit.dof > 0 else np.inf
                 m = abs(float(fit.p["m"].mean))
                 if (np.isfinite(m) and chi2_dof <= chi2_dof_max
-                        and (min_mass is None or m > float(min_mass))):
+                        and (min_mass is None or m >= float(min_mass))):
                     masses[j] = m
                 break
             except Exception:
