@@ -3,8 +3,8 @@ set datafile separator ","
 set terminal pdfcairo enhanced font "Helvetica,12"
 set xlabel "temperature(MeV)"
 set ylabel "mass(MeV)"
-set xrange [145:250]
-set yrange [0:1350]
+set xrange [125:225]
+set yrange [0:1500]
 set grid
 # 1. 设置一个矩形对象
 #    'from 155, graph 0'  : 起始点 x=155, y=图表底部

@@ -15,7 +15,7 @@ set object 1 rectangle from 155, graph 0 to 158, graph 1 fillstyle solid noborde
 set object 1 behind
 set zeroaxis linetype 1 linecolor "black"
 plot \
-input_fname using ($2==7?$1:1/0):($2==7?$3:1/0):($2==7?$4:1/0) with yerrorbars pt 10 lc rgb "#ffb74d" title "mass 0.0120", \
-input_fname using ($2==4?$1:1/0):($2==4?$3:1/0):($2==4?$4:1/0) with yerrorbars pt 8 lc rgb "#64b5f6" title "mass 0.0070", \
-input_fname using ($2==2?$1:1/0):($2==2?$3:1/0):($2==2?$4:1/0) with yerrorbars pt 4 lc rgb "#ba68c8" title "mass 0.0035", \
-input_fname using ($2==1?$1:1/0):($2==1?$3:1/0):($2==1?$4:1/0) with yerrorbars pt 6 lc rgb "#69b3a2" title "mass 0.0020"
+input_fname using ($2==7?$1:1/0):($2==7?$3:1/0):($2==7?$4:1/0) with yerrorbars pt 10 lc rgb "#808080" title "mass 0.0120", \
+input_fname using ($2==4?$1:1/0):($2==4?$3:1/0):($2==4?$4:1/0) with yerrorbars pt 8 lc rgb "#808080" title "mass 0.0070", \
+input_fname using ($2==2?$1:1/0):($2==2?$3:1/0):($2==2?$4:1/0) with yerrorbars pt 4 lc rgb "#808080" title "mass 0.0035", \
+input_fname using ($2==1?$1:1/0):($2==1?$3:1/0):($2==1?$4:1/0) with yerrorbars pt 6 lc rgb "#9400D3" title "mass 0.0020"
