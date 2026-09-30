@@ -334,7 +334,7 @@ def fit_sample_masses(
                 if (np.isfinite(m) and chi2_dof <= chi2_dof_max
                         and (min_mass is None or m >= float(min_mass))):
                     masses[j] = m
-                break
+                    break
             except Exception:
                 continue
     return masses

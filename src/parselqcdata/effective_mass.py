@@ -25,7 +25,7 @@ def solve_effective_mass_one_point(y: float, x: int) -> float:
         return num / den - y
     try:
         sol = fsolve(equation, x0=0.1, xtol=1e-15, maxfev=5000)
-        return float(sol[0])
+        return abs(float(sol[0]))
     except Exception:
         return np.nan
 
@@ -42,9 +42,18 @@ def compute_effective_mass_matrix(dr_matrix: np.ndarray) -> Tuple[np.ndarray, np
         for j in range(ncol):
             meff[i, j] = solve_effective_mass_one_point(dr_matrix[i, j], i)
 
-    meff_mean = np.nanmean(meff, axis=1)
-    diffs2 = (meff - meff_mean[:, None]) ** 2
-    meff_err = np.sqrt((ncol - 1) * np.nansum(diffs2, axis=1) / ncol)
+    meff = np.abs(meff)
+    meff_mean = np.full(nrow, np.nan, dtype=np.float64)
+    meff_err = np.full(nrow, np.nan, dtype=np.float64)
+    min_k = max(2, int(ncol * 0.8))
+    for i in range(nrow):
+        finite = meff[i, np.isfinite(meff[i])]
+        k = len(finite)
+        if k >= min_k:
+            m = float(np.mean(finite))
+            e = float(np.sqrt((k - 1) * np.sum((finite - m) ** 2) / k))
+            meff_mean[i] = m
+            meff_err[i] = e
 
     return meff, meff_mean, meff_err
 
@@ -143,6 +152,9 @@ def solve_effective_mass_one_point_centered(y: float, x: int, half: float) -> fl
     if not np.isfinite(y):
         return np.nan
 
+    if x < half and y <= 1.0:
+        return 0.0 if y == 1.0 else np.nan
+
     a = float(x) - float(half)
     b = float(x) + 1.0 - float(half)
 
@@ -151,7 +163,7 @@ def solve_effective_mass_one_point_centered(y: float, x: int, half: float) -> fl
         return cosh_ratio(m * a, m * b) - y
 
     try:
-        sol = fsolve(equation, x0=0.1, xtol=1e-15, maxfev=5000)
+        sol = fsolve(equation, x0=0.1, xtol=1e-12, maxfev=2000)
         root = float(np.ravel(sol)[0])
     except Exception:
         return np.nan
@@ -162,7 +174,7 @@ def solve_effective_mass_one_point_centered(y: float, x: int, half: float) -> fl
     residual = abs(float(np.ravel(cosh_ratio(root * a, root * b))[0]) - y)
     if residual > 1e-8 * max(1.0, abs(y)):
         return np.nan
-    return root
+    return abs(root)
 
 
 def _newton_column(y_col: np.ndarray, x: int, half: float,
@@ -193,7 +205,7 @@ def _newton_column(y_col: np.ndarray, x: int, half: float,
         step[safe] = f[safe] / deriv[safe]
         step = np.clip(step, -5.0, 5.0)
         mm_new = np.clip(mm - step, -50.0, 50.0)
-        m[idx] = mm_new
+        m[idx] = np.abs(mm_new)
         resid = np.abs(cosh_ratio(mm_new * a, mm_new * b) - y_col[idx])
         done = (resid <= tol * np.maximum(1.0, np.abs(y_col[idx]))) & (np.abs(step) <= 1e-14)
         converged[idx[done]] = True
@@ -227,7 +239,7 @@ def compute_effective_mass_matrix_centered(
 
             if vectorized and np.any(np.isfinite(ratios)):
                 solved, ok = _newton_column(ratios, i, half)
-                meff[i, ok] = solved[ok]
+                meff[i, ok] = np.abs(solved[ok])
                 fallback = np.nonzero(np.isfinite(ratios) & ~ok)[0]
             else:
                 fallback = np.nonzero(np.isfinite(ratios))[0]
@@ -235,8 +247,17 @@ def compute_effective_mass_matrix_centered(
             for j in fallback:
                 meff[i, j] = solve_effective_mass_one_point_centered(ratios[j], i, half)
 
-    meff_mean = np.nanmean(meff, axis=1)
-    diffs2 = (meff - meff_mean[:, None]) ** 2
-    meff_err = np.sqrt((ncol - 1) * np.nansum(diffs2, axis=1) / ncol)
+    meff = np.abs(meff)
+    meff_mean = np.full(nrow, np.nan, dtype=np.float64)
+    meff_err = np.full(nrow, np.nan, dtype=np.float64)
+    min_k = max(2, int(ncol * 0.8))
+    for i in range(nrow):
+        finite = meff[i, np.isfinite(meff[i])]
+        k = len(finite)
+        if k >= min_k:
+            m = float(np.mean(finite))
+            e = float(np.sqrt((k - 1) * np.sum((finite - m) ** 2) / k))
+            meff_mean[i] = m
+            meff_err[i] = e
 
     return meff, meff_mean, meff_err
