@@ -30,6 +30,9 @@ OUTPUT_RATIO_SINGLE_DIR: Path = OUTPUT_ROOT / "ratio_results-singlesrc"
 OUTPUT_SIMULATE_DIR: Path = OUTPUT_ROOT / "simulateresult"
 OUTPUT_SIMULATE_SINGLE_DIR: Path = OUTPUT_ROOT / "simulateresult-singlesrc"
 OUTPUT_CONDENSATE_DIR: Path = OUTPUT_ROOT / "condensate"
+OUTPUTS_ROOT: Path = PROJECT_ROOT / "outputs"
+OUTPUTS_LCP_DIR: Path = OUTPUTS_ROOT / "LCP"
+OUTPUT_LCP_DIR: Path = OUTPUT_ROOT / "LCP"
 
 # 1. 耦合常数 (Beta) 与物理温度 (MeV) 对应字典
 TEMP_MAP: Dict[str, float] = {
@@ -501,6 +504,9 @@ def export_to_json(out_path: Path) -> None:
             "OUTPUT_SIMULATE_DIR": str(OUTPUT_SIMULATE_DIR),
             "OUTPUT_SIMULATE_SINGLE_DIR": str(OUTPUT_SIMULATE_SINGLE_DIR),
             "OUTPUT_CONDENSATE_DIR": str(OUTPUT_CONDENSATE_DIR),
+            "OUTPUTS_ROOT": str(OUTPUTS_ROOT),
+            "OUTPUTS_LCP_DIR": str(OUTPUTS_LCP_DIR),
+            "OUTPUT_LCP_DIR": str(OUTPUT_LCP_DIR),
         },
         "TEMP_MAP": TEMP_MAP,
         "BETAS": BETAS,

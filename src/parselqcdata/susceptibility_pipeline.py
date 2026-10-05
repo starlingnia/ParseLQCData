@@ -1,4 +1,4 @@
-"""
+r"""
 src/parselqcdata/susceptibility_pipeline.py
 --------------------------------------------------------------------------------
 Python 整合层：手征磁化率 (Chiral Susceptibility, \\chi) 端到端分析管道
@@ -51,20 +51,41 @@ from docs.physics_setup import (
     ANA_ROOT,
     DEFAULT_READIN_DIR,
     OUTPUT_CONDENSATE_DIR,
+    OUTPUTS_LCP_DIR,
+    OUTPUT_LCP_DIR,
     TEMP_MAP,
+    MRES_TABLE,
 )
 
 # 8组温度与 Beta 标准映射表 (Nt=16基准, 单位 MeV)
 SUSCEPTIBILITY_TEMP_MAP: Dict[str, float] = {
-    "4.13": 138.0,
-    "4.15": 145.0,
-    "4.17": 153.0,
-    "4.18": 157.0,
-    "4.20": 164.5,
-    "4.23": 176.0,
-    "4.30": 202.0,
-    "4.405": 241.6,
+    "4.13": 138.23,
+    "4.15": 145.75,
+    "4.17": 153.31,
+    "4.18": 157.03,
+    "4.20": 164.55,
+    "4.23": 176.43,
+    "4.30": 202.52,
+    "4.405": 241.60,
 }
+
+
+def get_zm_factor(beta_val: Union[float, str]) -> float:
+    """
+    根据规范耦合常数 Beta 查询获取质量重整化因子 Zm(beta)。
+    默认查阅 docs.physics_setup.MRES_TABLE 标准表，缺失时平滑兜底为 1.0。
+    """
+    try:
+        from docs.physics_setup import MRES_TABLE
+        b_float = float(beta_val)
+        b_str = f"{b_float:.2f}" if abs(b_float - 4.405) > 1e-4 else "4.405"
+        if str(beta_val) in MRES_TABLE:
+            return float(MRES_TABLE[str(beta_val)]["zm"])
+        if b_str in MRES_TABLE:
+            return float(MRES_TABLE[b_str]["zm"])
+    except Exception:
+        pass
+    return 1.0
 
 
 def parse_ensemble_meta_from_dir(dir_name: str) -> Dict[str, Union[int, float, str]]:
@@ -163,12 +184,16 @@ def compute_jackknife_susceptibility(
     ns: int = 48,
     nt: int = 16,
     temp_mev: float = 157.0,
+    beta: Optional[Union[float, str]] = None,
+    zm: Optional[float] = None,
 ) -> Dict[str, float]:
     """
     通过 Jackknife 假样本计算手征磁化率 \\chi = \\langle O^2 \\rangle - \\langle O \\rangle^2
-    并根据 Ns, Nt 与温度 T 准确折算标度因子：
+    并根据 Ns, Nt 与温度 T 准确折算标度因子与质量重整化因子 Zm：
     - factor_vol = Ns^3 * Nt
     - factor_scaled = Ns^3 * Nt^3 * T^2
+    - chi_disc(lattice unit) = Mean_vol_scaled
+    - chi_disc(GeV^2 renormalized) = (Mean_scaled / 1e6) / Zm
     """
     n = len(list_obar)
     if n <= 1 or len(list_o2bar) != n:
@@ -189,15 +214,41 @@ def compute_jackknife_susceptibility(
 
     f_vol, f_scaled = compute_scaling_factors(ns, nt, temp_mev)
 
+    mean_vol_scaled = mean_unscaled * f_vol
+    error_vol_scaled = err_unscaled * f_vol
+
+    mean_scaled = mean_unscaled * f_scaled
+    error_scaled = err_unscaled * f_scaled
+
+    # 物理量纲 [GeV^2] (未重整化)
+    mean_scaled_gev2 = mean_scaled / 1e6
+    error_scaled_gev2 = error_scaled / 1e6
+
+    # 质量重整化因子 Zm (除 Zm 重整化步骤)
+    eff_zm = zm if zm is not None else (get_zm_factor(beta) if beta is not None else 1.0)
+    inv_zm = (1.0 / eff_zm) if abs(eff_zm) > 1e-15 else 1.0
+
+    mean_scaled_renorm = mean_scaled * inv_zm
+    error_scaled_renorm = error_scaled * inv_zm
+    mean_scaled_gev2_renorm = mean_scaled_gev2 * inv_zm
+    error_scaled_gev2_renorm = error_scaled_gev2 * inv_zm
+
     return {
         "mean_unscaled": mean_unscaled,
         "error_unscaled": err_unscaled,
         "factor_vol": f_vol,
-        "mean_vol_scaled": mean_unscaled * f_vol,
-        "error_vol_scaled": err_unscaled * f_vol,
+        "mean_vol_scaled": mean_vol_scaled,
+        "error_vol_scaled": error_vol_scaled,
         "factor_scaled": f_scaled,
-        "mean_scaled": mean_unscaled * f_scaled,
-        "error_scaled": err_unscaled * f_scaled,
+        "mean_scaled": mean_scaled,
+        "error_scaled": error_scaled,
+        "mean_scaled_gev2": mean_scaled_gev2,
+        "error_scaled_gev2": error_scaled_gev2,
+        "zm": eff_zm,
+        "mean_scaled_renorm": mean_scaled_renorm,
+        "error_scaled_renorm": error_scaled_renorm,
+        "mean_scaled_gev2_renorm": mean_scaled_gev2_renorm,
+        "error_scaled_gev2_renorm": error_scaled_gev2_renorm,
         "num_configs": n,
         "ns": ns,
         "nt": nt,
@@ -280,6 +331,9 @@ class SusceptibilityPipeline:
             base_temp = SUSCEPTIBILITY_TEMP_MAP.get(eff_beta, 157.0)
             eff_temp = base_temp * (16.0 / eff_nt)
 
+        eff_zm = get_zm_factor(eff_beta)
+        inv_zm = (1.0 / eff_zm) if abs(eff_zm) > 1e-15 else 1.0
+
         # 优先使用 C++ 26 高性能多线程引擎 (单次 100+ 构型耗时 < 0.05s)
         if self.orchestrator and self.orchestrator.is_available():
             try:
@@ -290,6 +344,13 @@ class SusceptibilityPipeline:
                     temp_mev=eff_temp,
                 )
                 if res["num_configs"] > 0:
+                    res["zm"] = eff_zm
+                    res["mean_scaled_gev2"] = res["mean_scaled"] / 1e6
+                    res["error_scaled_gev2"] = res["error_scaled"] / 1e6
+                    res["mean_scaled_renorm"] = res["mean_scaled"] * inv_zm
+                    res["error_scaled_renorm"] = res["error_scaled"] * inv_zm
+                    res["mean_scaled_gev2_renorm"] = res["mean_scaled_gev2"] * inv_zm
+                    res["error_scaled_gev2_renorm"] = res["error_scaled_gev2"] * inv_zm
                     return res
             except Exception as e:
                 print(f"  [WARN] C++ 引擎抽取失败 ({e})，降级为 Python 解析...")
@@ -321,14 +382,143 @@ class SusceptibilityPipeline:
             raise ValueError(f"在目录 {ensemble_dir} 中未能成功提取到有效随机源向量数据")
 
         return compute_jackknife_susceptibility(
-            list_obar, list_o2bar, ns=eff_ns, nt=eff_nt, temp_mev=eff_temp
+            list_obar, list_o2bar, ns=eff_ns, nt=eff_nt, temp_mev=eff_temp, beta=eff_beta, zm=eff_zm
         )
+
+    def export_lcp_outputs(
+        self,
+        df_res: pl.DataFrame,
+        target_dirs: Optional[List[Path]] = None,
+    ) -> None:
+        """
+        将所有 L 开头的系综结果执行除 Zm 重整化，并输出至指定的 LCP 目录 (outputs/LCP/)。
+        结果输出格式严格保持为:
+        # beta,  Z_m(beta),  chi_disc(lattice unit) error  chi_disc(GeV^2 renormalized)  error
+        """
+        if target_dirs is None:
+            target_dirs = [OUTPUTS_LCP_DIR, OUTPUT_LCP_DIR]
+
+        # 筛选所有 L 开头的系综 (如果包含 Ensemble 列)
+        if "Ensemble" in df_res.columns:
+            df_l = df_res.filter(pl.col("Ensemble").str.starts_with("L"))
+        else:
+            df_l = df_res
+
+        if df_l.height == 0:
+            df_l = df_res
+
+        rows_all = []
+        rows_lcp = []
+        rows_scaling = []
+
+        for r in df_l.iter_rows(named=True):
+            beta_raw = r["Beta"]
+            try:
+                b_float = float(beta_raw)
+                b_str = f"{b_float:.2f}" if abs(b_float - 4.405) > 1e-4 else "4.405"
+            except Exception:
+                b_float = 4.17
+                b_str = str(beta_raw)
+
+            zm_val = float(r.get("Zm", r.get("zm", get_zm_factor(b_float))))
+            inv_zm = 1.0 / zm_val if abs(zm_val) > 1e-15 else 1.0
+
+            chi_lat = float(r["Mean_vol_scaled"])
+            err_lat = float(r["Error_vol_scaled"])
+
+            if "Mean_scaled_gev2_renorm" in r and r["Mean_scaled_gev2_renorm"] is not None:
+                chi_ren = float(r["Mean_scaled_gev2_renorm"])
+                err_ren = float(r["Error_scaled_gev2_renorm"])
+            elif "Mean_scaled" in r and r["Mean_scaled"] is not None:
+                chi_gev2 = float(r["Mean_scaled"]) / 1e6
+                err_gev2 = float(r["Error_scaled"]) / 1e6
+                chi_ren = chi_gev2 * inv_zm
+                err_ren = err_gev2 * inv_zm
+            else:
+                chi_ren = chi_lat * inv_zm
+                err_ren = err_lat * inv_zm
+
+            entry = {
+                "Ensemble": str(r.get("Ensemble", f"beta{b_str}")),
+                "Beta": b_float,
+                "Beta_str": b_str,
+                "Temp": float(r.get("Temp", 157.0)),
+                "Ns": int(r.get("Ns", 48)),
+                "Nt": int(r.get("Nt", 16)),
+                "Num_cfgs": int(r.get("Num_cfgs", r.get("num_cfgs", 0))),
+                "Zm": zm_val,
+                "chi_lat": chi_lat,
+                "err_lat": err_lat,
+                "chi_ren": chi_ren,
+                "err_ren": err_ren,
+            }
+            rows_all.append(entry)
+
+            if entry["Ns"] == 48 and entry["Nt"] == 16:
+                rows_lcp.append(entry)
+            else:
+                rows_scaling.append(entry)
+
+        # 排序
+        rows_all.sort(key=lambda x: (x["Beta"], x["Temp"]))
+        rows_lcp.sort(key=lambda x: x["Beta"])
+        rows_scaling.sort(key=lambda x: (x["Beta"], x["Temp"]))
+
+        header = "# beta,  Z_m(beta),  chi_disc(lattice unit) error  chi_disc(GeV^2 renormalized)  error\n"
+
+        def write_txt_content(entries: List[dict]) -> str:
+            lines = [header]
+            for e in entries:
+                b_s = f"{e['Beta_str']:<8}"
+                zm_s = f"{e['Zm']:<12.6f}"
+                c_lat_s = f"{e['chi_lat']:<18.8e}"
+                e_lat_s = f"{e['err_lat']:<18.8e}"
+                c_ren_s = f"{e['chi_ren']:<18.8e}"
+                e_ren_s = f"{e['err_ren']:<18.8e}"
+                lines.append(f"{b_s} {zm_s} {c_lat_s} {e_lat_s} {c_ren_s} {e_ren_s}\n")
+            return "".join(lines)
+
+        content_all = write_txt_content(rows_all)
+        content_lcp = write_txt_content(rows_lcp)
+        content_scaling = write_txt_content(rows_scaling)
+
+        for out_d in target_dirs:
+            out_d.mkdir(parents=True, exist_ok=True)
+
+            # 1. 规范结果文本 (以 L48T16 各个 beta 为核心产物)
+            (out_d / "results_susceptibility.txt").write_text(content_lcp, encoding="utf-8")
+            (out_d / "results_susceptibility_lcp.txt").write_text(content_lcp, encoding="utf-8")
+            (out_d / "results_susceptibility_all.txt").write_text(content_all, encoding="utf-8")
+            if rows_scaling:
+                (out_d / "results_susceptibility_scaling.txt").write_text(content_scaling, encoding="utf-8")
+            (out_d / "chi_disc.txt").write_text(content_lcp, encoding="utf-8")
+            (out_d / "results_beta.txt").write_text(content_lcp, encoding="utf-8")
+
+            # 2. 导出完整 CSV 与 Parquet 格式
+            df_export_lcp = pl.DataFrame(rows_lcp).rename({
+                "chi_lat": "Mean_vol_scaled",
+                "err_lat": "Error_vol_scaled",
+                "chi_ren": "Mean_scaled_gev2_renorm",
+                "err_ren": "Error_scaled_gev2_renorm",
+            })
+            df_export_lcp.write_csv(out_d / "results_susceptibility.csv")
+            df_export_lcp.write_parquet(out_d / "results_susceptibility.parquet")
+
+            df_export_all = pl.DataFrame(rows_all).rename({
+                "chi_lat": "Mean_vol_scaled",
+                "err_lat": "Error_vol_scaled",
+                "chi_ren": "Mean_scaled_gev2_renorm",
+                "err_ren": "Error_scaled_gev2_renorm",
+            })
+            df_export_all.write_csv(out_d / "all_ensembles_susceptibility.csv")
+
+        print(f"[OK] 成功导出 L48T16 各个 beta 重整化手征磁化率数据产物至: {[str(d) for d in target_dirs]}")
 
     def run_cluster_scan(self, readin_dir: Path) -> pl.DataFrame:
         """
         在拥有全量构型测量数据的计算机/集群上执行全温度与全系综扫描计算。
         自动遍历 readin_dir 下的所有格点目录，智能过滤介子关联函数目录，
-        计算手征磁化率，导出至 output/condensate/results_susceptibility.csv。
+        计算手征磁化率，导出至 output/condensate/results_susceptibility.csv 及 outputs/LCP/。
         """
         all_dirs = sorted([d for d in readin_dir.iterdir() if d.is_dir()])
         results = []
@@ -366,9 +556,14 @@ class SusceptibilityPipeline:
                 base_temp = SUSCEPTIBILITY_TEMP_MAP.get(eff_beta_str, 153.31)
                 eff_temp = float(base_temp * (16.0 / eff_nt))
 
-            print(f"  -> 正在处理 [{d.name}] (Ns={eff_ns}, Nt={eff_nt}, beta={eff_beta_str}, T={eff_temp:.2f} MeV)...")
+            eff_zm = get_zm_factor(eff_beta_str)
+            inv_zm = (1.0 / eff_zm) if abs(eff_zm) > 1e-15 else 1.0
+
+            print(f"  -> 正在处理 [{d.name}] (Ns={eff_ns}, Nt={eff_nt}, beta={eff_beta_str}, T={eff_temp:.2f} MeV, Zm={eff_zm:.6f})...")
             try:
                 res = self.extract_from_meas_directory(d, ns=eff_ns, nt=eff_nt, temp_mev=eff_temp)
+                m_gev2 = res["mean_scaled"] / 1e6
+                e_gev2 = res["error_scaled"] / 1e6
                 results.append({
                     "Ensemble": d.name,
                     "Beta": eff_beta_val,
@@ -376,12 +571,17 @@ class SusceptibilityPipeline:
                     "Ns": eff_ns,
                     "Nt": eff_nt,
                     "Num_cfgs": res.get("num_configs", 0),
+                    "Zm": eff_zm,
                     "Mean_unscaled": res["mean_unscaled"],
                     "Error_unscaled": res["error_unscaled"],
                     "Mean_vol_scaled": res["mean_vol_scaled"],
                     "Error_vol_scaled": res["error_vol_scaled"],
                     "Mean_scaled": res["mean_scaled"],
                     "Error_scaled": res["error_scaled"],
+                    "Mean_scaled_gev2": m_gev2,
+                    "Error_scaled_gev2": e_gev2,
+                    "Mean_scaled_gev2_renorm": m_gev2 * inv_zm,
+                    "Error_scaled_gev2_renorm": e_gev2 * inv_zm,
                 })
             except Exception as e:
                 print(f"  [WARN] 处理 {d.name} 失败: {e}")
@@ -400,6 +600,9 @@ class SusceptibilityPipeline:
         df_res.write_parquet(out_parquet)
         df_res.write_csv(out_all_csv)
 
+        # 导出至 outputs/LCP/ 与 output/LCP/
+        self.export_lcp_outputs(df_res)
+
         print(f"[OK] 集群计算完成，结果已保存至 {out_csv} 及 {out_all_csv}")
         return df_res
 
@@ -409,24 +612,54 @@ class SusceptibilityPipeline:
         force_recompute: bool = False,
     ) -> pl.DataFrame:
         """
-        获取全温度扫描 (8 组温度) 的手征磁化率完整数据集。
-        若集群基准数据存在，保证与 ana/ttest 完全一致；
-        同时精确计算并补充 Ns, Nt, T, Mean_vol_scaled 与 Mean_scaled 列。
+        获取手征磁化率完整数据集 (含 Zm 重整化与物理标度)。
+        优先载入包含全量真实测量的 all_ensembles_susceptibility.csv 并注入 Zm 重整化；
+        若不存在则自 ana 基准数据对齐同步，并自动导出至 outputs/LCP/。
         """
         out_csv = self.output_dir / "results_susceptibility.csv"
         out_parquet = self.output_dir / "results_susceptibility.parquet"
+        out_all_csv = self.output_dir / "all_ensembles_susceptibility.csv"
         ana_csv = self.ana_root / "ttest" / "results_susceptibility.csv"
+
+        # 1. 优先从已有全量系综汇总表载入并计算重整化列
+        if out_all_csv.exists():
+            df_exist = pl.read_csv(out_all_csv)
+            if "Ensemble" in df_exist.columns and df_exist.height > 0:
+                rows = []
+                for r in df_exist.iter_rows(named=True):
+                    b = float(r["Beta"])
+                    zm = float(r.get("Zm", r.get("zm", get_zm_factor(b))))
+                    inv_zm = (1.0 / zm) if abs(zm) > 1e-15 else 1.0
+                    m_scaled = float(r["Mean_scaled"])
+                    e_scaled = float(r["Error_scaled"])
+                    m_gev2 = m_scaled / 1e6
+                    e_gev2 = e_scaled / 1e6
+                    row_dict = dict(r)
+                    row_dict["Beta"] = b
+                    row_dict["Zm"] = zm
+                    row_dict["Mean_scaled_gev2"] = m_gev2
+                    row_dict["Error_scaled_gev2"] = e_gev2
+                    row_dict["Mean_scaled_gev2_renorm"] = m_gev2 * inv_zm
+                    row_dict["Error_scaled_gev2_renorm"] = e_gev2 * inv_zm
+                    rows.append(row_dict)
+                df_enriched = pl.DataFrame(rows).sort(["Beta", "Temp"])
+                df_enriched.write_csv(out_csv)
+                df_enriched.write_parquet(out_parquet)
+                df_enriched.write_csv(out_all_csv)
+                self.export_lcp_outputs(df_enriched)
+                print(f"[SusceptibilityPipeline] 成功同步并重整化全量 {df_enriched.height} 组格点系综磁化率数据")
+                return df_enriched
 
         if not force_recompute and out_csv.exists():
             return pl.read_csv(out_csv)
 
-        # 优先读取基准数据
+        # 2. 兜底读取 ana/ttest 基准数据
         if ana_csv.exists():
             df_norm = pl.read_csv(ana_csv)
         else:
             raise FileNotFoundError(f"未找到基准数据: {ana_csv}")
 
-        # 标准化添加 Ns=48, Nt=16, 体积因子与标度因子
+        # 标准化添加 Ns=48, Nt=16, 体积因子, 标度因子与 Zm 重整化
         rows = []
         for r in df_norm.iter_rows(named=True):
             b = r["Beta"]
@@ -434,25 +667,43 @@ class SusceptibilityPipeline:
             mu = float(r["Mean_unscaled"])
             eu = float(r["Error_unscaled"])
             f_vol, f_scaled = compute_scaling_factors(48, 16, t)
+            zm = get_zm_factor(b)
+            inv_zm = (1.0 / zm) if abs(zm) > 1e-15 else 1.0
+            m_scaled = mu * f_scaled
+            e_scaled = eu * f_scaled
+            m_gev2 = m_scaled / 1e6
+            e_gev2 = e_scaled / 1e6
+
+            b_str = f"{float(b):.2f}" if abs(float(b) - 4.405) > 1e-4 else "4.405"
             rows.append({
-                "Beta": b,
+                "Ensemble": f"L48T16beta{b_str}",
+                "Beta": float(b),
                 "Temp": t,
                 "Ns": 48,
                 "Nt": 16,
+                "Num_cfgs": int(r.get("Num_cfgs", 2000)),
+                "Zm": zm,
                 "Mean_unscaled": mu,
                 "Error_unscaled": eu,
                 "Mean_vol_scaled": mu * f_vol,
                 "Error_vol_scaled": eu * f_vol,
-                "Mean_scaled": mu * f_scaled,
-                "Error_scaled": eu * f_scaled,
+                "Mean_scaled": m_scaled,
+                "Error_scaled": e_scaled,
+                "Mean_scaled_gev2": m_gev2,
+                "Error_scaled_gev2": e_gev2,
+                "Mean_scaled_gev2_renorm": m_gev2 * inv_zm,
+                "Error_scaled_gev2_renorm": e_gev2 * inv_zm,
             })
 
         df_enriched = pl.DataFrame(rows).sort("Temp")
         df_enriched.write_csv(out_csv)
         df_enriched.write_parquet(out_parquet)
+        df_enriched.write_csv(out_all_csv)
+        self.export_lcp_outputs(df_enriched)
 
         print(f"[SusceptibilityPipeline] 成功同步全量磁化率数据集至 {self.output_dir}")
         return df_enriched
+
 
 
 def main():

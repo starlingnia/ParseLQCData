@@ -44,6 +44,12 @@ def main():
         help="结果 CSV 与 Parquet 文件的保存目录",
     )
     parser.add_argument(
+        "--lcp-dir",
+        type=str,
+        default=str(PROJECT_ROOT / "output" / "LCP"),
+        help="重整化 LCP 规范结果输出目录 (默认 output/LCP/)",
+    )
+    parser.add_argument(
         "--plot",
         action="store_true",
         help="计算完成后自动调用 scripts/plot_susceptibility.py 生成高清图表",
@@ -63,8 +69,9 @@ def main():
         print("正在启动全温度多构型端到端流式解析与 Jackknife 重采样...")
         df_res = pipeline.run_cluster_scan(readin_path)
     else:
-        # 本地模式：对本地已有 XML 进行全真逻辑提取，并同步全量 8 组基准数据
-        local_test_dir = PROJECT_ROOT / "data" / "readin" / "L32T12beta4.17" / "test_condensate"
+        # 本地模式：对本地已有 XML 进行全真逻辑提取，并同步全量数据
+        from docs.physics_setup import resolve_dataset_dir, DEFAULT_READIN_DIR
+        local_test_dir = resolve_dataset_dir(DEFAULT_READIN_DIR, "L32T12beta4.17")
         if local_test_dir.exists():
             print(f"\n[本地验证] 正在从本地真实 XML 向量中测试抽取 L32T12beta4.17 数据...")
             r = pipeline.extract_from_meas_directory(
@@ -73,32 +80,47 @@ def main():
                 nt=12,
                 temp_mev=204.41,
             )
-            print(f"  -> 构型数: {r['num_configs']}, Ns={r['ns']}, Nt={r['nt']}, T={r['temp']:.1f} MeV")
+            print(f"  -> 构型数: {r['num_configs']}, Ns={r['ns']}, Nt={r['nt']}, T={r['temp']:.1f} MeV, Zm={r.get('zm', 0.966247):.6f}")
             print(f"     原始晶格量:  χ_unscaled = {r['mean_unscaled']:.8e} ± {r['error_unscaled']:.8e}")
             print(f"     4D体积标度:  χ_vol      = {r['mean_vol_scaled']:.6f} ± {r['error_vol_scaled']:.6f} (F_vol = {r['factor_vol']:.0f})")
-            print(f"     标度量:  χ_scaled   = {r['mean_scaled']:.2e} ± {r['error_scaled']:.2e} MeV² (F_scaled = {r['factor_scaled']:.2e})")
+            print(f"     标度量:      χ_scaled   = {r['mean_scaled']:.2e} ± {r['error_scaled']:.2e} MeV²")
+            print(f"     重整化标度:  χ_renorm   = {r.get('mean_scaled_gev2_renorm', 0.0):.6f} ± {r.get('error_scaled_gev2_renorm', 0.0):.6f} GeV²")
 
-        print(f"\n[数据同步] 正在载入并计算全量 8 组温度序列的标准标度因子 (Ns=48, Nt=16)...")
+        print(f"\n[数据同步] 正在载入并计算全量格点系综标准标度因子与质量重整化因子 Zm...")
         df_res = pipeline.get_full_scan_results(force_recompute=True)
 
-    # 打印格式化物理总表
-    print("\n" + "=" * 90)
-    print("                      手征磁化率全量计算结果")
-    print("=" * 90)
-    print(f"{'Beta':<7} {'Temp[MeV]':<10} {'Ns':<4} {'Nt':<4} {'χ_unscaled':<22} {'χ_vol (F_vol*χ)':<18} {'χ_scaled [MeV²]':<20}")
-    print("-" * 90)
-    for r in df_res.iter_rows(named=True):
+    target_lcp_dirs = [Path(args.lcp_dir), PROJECT_ROOT / "outputs" / "LCP", PROJECT_ROOT / "output" / "LCP"]
+    target_lcp_dirs = list(dict.fromkeys(target_lcp_dirs))
+    pipeline.export_lcp_outputs(df_res, target_dirs=target_lcp_dirs)
+
+    # 打印格式化物理总表 (聚焦 L48T16 各个 Beta 的 LCP 序列)
+    df_l48 = df_res.filter((pl.col("Ns") == 48) & (pl.col("Nt") == 16)) if "Ns" in df_res.columns else df_res
+    print("\n" + "=" * 115)
+    print("                 L48T16 手征磁化率各个 Beta 规范计算结果 (含 Zm 重整化)")
+    print("=" * 115)
+    print(f"{'Ensemble':<35} {'Beta':<6} {'T[MeV]':<8} {'Size':<8} {'Zm':<8} {'χ_vol (lat unit)':<19} {'χ_renorm [GeV²]':<22}")
+    print("-" * 115)
+    for r in df_l48.iter_rows(named=True):
+        ens_name = r.get("Ensemble", f"beta{r['Beta']}")
+        size_str = f"{r['Ns']}x{r['Nt']}"
+        zm_val = float(r.get("Zm", 1.0))
+        chi_vol = float(r["Mean_vol_scaled"])
+        err_vol = float(r["Error_vol_scaled"])
+        chi_ren = float(r.get("Mean_scaled_gev2_renorm", (float(r["Mean_scaled"]) / 1e6) / zm_val))
+        err_ren = float(r.get("Error_scaled_gev2_renorm", (float(r["Error_scaled"]) / 1e6) / zm_val))
         print(
-            f"{r['Beta']:<7} {r['Temp']:<10.1f} {r['Ns']:<4} {r['Nt']:<4} "
-            f"{r['Mean_unscaled']:<11.4e}±{r['Error_unscaled']:<7.1e} "
-            f"{r['Mean_vol_scaled']:<9.4e}±{r['Error_vol_scaled']:<7.1e} "
-            f"{r['Mean_scaled']:<10.4e}±{r['Error_scaled']:<7.1e}"
+            f"{ens_name:<35} {r['Beta']:<6} {r['Temp']:<8.1f} {size_str:<8} {zm_val:<8.4f} "
+            f"{chi_vol:<9.4e}±{err_vol:<7.1e} "
+            f"{chi_ren:<10.6e}±{err_ren:<9.2e}"
         )
-    print("=" * 90)
+    print("=" * 115)
 
     print(f"\n[输出路径] 数据产物已保存至:")
-    print(f"  - CSV:       {pipeline.output_dir / 'results_susceptibility.csv'}")
-    print(f"  - Parquet:   {pipeline.output_dir / 'results_susceptibility.parquet'}")
+    print(f"  - output/LCP/ 规范结果:")
+    print(f"    * 规范文本格式:    {PROJECT_ROOT / 'output' / 'LCP' / 'results_susceptibility.txt'}")
+    print(f"    * 标头约定:        # beta,  Z_m(beta),  chi_disc(lattice unit) error  chi_disc(GeV^2 renormalized)  error")
+    print(f"    * 完整 CSV:        {PROJECT_ROOT / 'output' / 'LCP' / 'results_susceptibility.csv'}")
+    print(f"    * 镜像目录:        {PROJECT_ROOT / 'outputs' / 'LCP' / 'results_susceptibility.txt'}")
 
     if args.plot:
         from scripts.plot_susceptibility import main as plot_main

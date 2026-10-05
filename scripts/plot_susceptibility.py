@@ -38,11 +38,13 @@ from docs.physics_setup import (
     FIGURES_DIR,
     OUTPUT_CONDENSATE_DIR,
     OUTPUT_ROOT,
+    OUTPUTS_LCP_DIR,
+    OUTPUT_LCP_DIR,
     TRANSITION_REGION,
 )
 
 ANA_STYLE_DIR = OUTPUT_ROOT / "plots" / "ana_style"
-TARGET_DIRS = [FIGURES_DIR, ANA_STYLE_DIR, OUTPUT_CONDENSATE_DIR]
+TARGET_DIRS = [FIGURES_DIR, ANA_STYLE_DIR, OUTPUT_CONDENSATE_DIR, OUTPUTS_LCP_DIR, OUTPUT_LCP_DIR]
 
 
 def save_plot_multiformat(fig: plt.Figure, base_name: str) -> None:
@@ -253,6 +255,73 @@ def plot_scaling_susceptibility(df: pl.DataFrame) -> None:
     plt.close(fig)
 
 
+def plot_renormalized_pbpchisce(df: pl.DataFrame) -> None:
+    """绘制经 Zm 质量重整化后的非连通手征磁化率 (pbpchisce_renormalized) [GeV^2]"""
+    print("\n--- 绘制重整化非连通手征磁化率 (pbpchisce_renormalized) [GeV^2] ---")
+    temps = np.array(df["Temp"])
+    betas = df["Beta"].to_list()
+
+    if "Mean_scaled_gev2_renorm" in df.columns:
+        disc_means = np.array(df["Mean_scaled_gev2_renorm"])
+        disc_errs = np.array(df["Error_scaled_gev2_renorm"])
+    else:
+        from src.parselqcdata.susceptibility_pipeline import get_zm_factor
+        zms = np.array([get_zm_factor(b) for b in betas])
+        disc_means = (np.array(df["Mean_scaled"]) / 1e6) / zms
+        disc_errs = (np.array(df["Error_scaled"]) / 1e6) / zms
+
+    fig, ax = plt.subplots(figsize=(8.5, 6), dpi=150)
+
+    # 1. 渲染相变过渡温带 [155, 158] MeV
+    ax.axvspan(
+        TRANSITION_REGION[0],
+        TRANSITION_REGION[1],
+        color="crimson",
+        alpha=0.12,
+        label=f"Crossover Band ({TRANSITION_REGION[0]}-{TRANSITION_REGION[1]} MeV)",
+        zorder=1,
+    )
+
+    color_indigo = "#4f46e5"
+    ax.errorbar(
+        temps,
+        disc_means,
+        yerr=disc_errs,
+        fmt="o-",
+        color=color_indigo,
+        ecolor="#a5b4fc",
+        mfc="#6366f1",
+        mec=color_indigo,
+        mew=1.5,
+        ms=7,
+        capsize=4,
+        elinewidth=1.5,
+        label=r"Renormalized $\chi_{\mathrm{disc}} / Z_m$",
+        zorder=3,
+    )
+
+    for i, beta in enumerate(betas):
+        ax.annotate(
+            f"β={beta}",
+            (temps[i], disc_means[i]),
+            textcoords="offset points",
+            xytext=(0, 10),
+            ha="center",
+            fontsize=9,
+            fontweight="semibold",
+        )
+
+    ax.set_xlabel("Temperature (T) [MeV]", fontsize=12, fontweight="bold", labelpad=10)
+    ax.set_ylabel(r"Renormalized Susceptibility $\chi_{\mathrm{disc}} / Z_m$ [$\mathrm{GeV}^2$]", fontsize=12, fontweight="bold", labelpad=10)
+    ax.set_title(r"Renormalized Chiral Susceptibility $\chi_{\mathrm{disc}} / Z_m$ vs Temperature", fontsize=13, fontweight="bold", pad=15)
+    ax.grid(True, linestyle="--", alpha=0.6)
+    ax.legend(loc="upper right", framealpha=0.9)
+    plt.tight_layout()
+
+    save_plot_multiformat(fig, "pbpchisce_renormalized")
+    plt.close(fig)
+
+
 def main():
     print("=" * 80)
     print("       ParseLQCData 手征磁化率 (Chiral Susceptibility) 绘图脚本       ")
@@ -269,6 +338,7 @@ def main():
 
     plot_sucep(df_48)
     plot_scaled_pbpchisce(df_48)
+    plot_renormalized_pbpchisce(df_48)
 
     ensemble_csv_path = OUTPUT_CONDENSATE_DIR / "all_ensembles_susceptibility.csv"
     if ensemble_csv_path.exists():
