@@ -153,9 +153,31 @@ int run_meson_all_task(std::span<const std::string_view> args) {
     return 0;
 }
 
+int run_meson_multi_all_task(std::span<const std::string_view> args) {
+    const std::string beta_str = args.empty() ? "17" : std::string(args[0]);
+    const auto channel_defs = lqcd::load_channel_configs_from_docs();
+    for (const auto& [ch, _] : channel_defs) {
+        const size_t binsize = (beta_str == "18" && ch == "S") ? 5 : 4;
+        execute_meson_measurement(beta_str, ch, binsize, false);
+    }
+    return 0;
+}
+
+int run_meson_single_all_task(std::span<const std::string_view> args) {
+    const std::string beta_str = args.empty() ? "17" : std::string(args[0]);
+    const auto channel_defs = lqcd::load_channel_configs_from_docs();
+    for (const auto& [ch, _] : channel_defs) {
+        const size_t binsize = (beta_str == "18" || beta_str == "20" || beta_str == "23" || beta_str == "30") ? 5 : 4;
+        execute_meson_measurement(beta_str, ch, binsize, true);
+    }
+    return 0;
+}
+
 REGISTER_TASK("meson_multi", run_meson_multi_task, "Run multi-source meson correlation measurement: [beta] [channel] [binsize]");
 REGISTER_TASK("meson_single", run_meson_single_task, "Run single-source meson correlation measurement: [beta] [channel] [binsize]");
 REGISTER_TASK("meson_all", run_meson_all_task, "Batch measure all meson channels for a given beta: [beta] [multi|single]");
+REGISTER_TASK("meson_multi_all", run_meson_multi_all_task, "Batch measure all multi-source channels: [beta]");
+REGISTER_TASK("meson_single_all", run_meson_single_all_task, "Batch measure all single-source channels: [beta]");
 
 #ifdef STANDALONE_MESON
 int main(int argc, char* argv[]) {

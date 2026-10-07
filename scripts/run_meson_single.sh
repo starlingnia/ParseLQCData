@@ -6,5 +6,5 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT"
 
 echo "[MESON-SINGLE] Running single-source meson data pipeline..."
-uv run python scripts/reproduce_meson_single.py
+uv run python scripts/run_meson.py --source single
 echo "[MESON-SINGLE] Single-source pipeline completed."

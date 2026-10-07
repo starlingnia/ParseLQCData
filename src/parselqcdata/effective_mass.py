@@ -15,47 +15,26 @@ from scipy.optimize import fsolve
 from typing import Tuple
 
 
-def solve_effective_mass_one_point(y: float, x: int) -> float:
-    """求解单个数据点的有效质量方程 (严格匹配 ana/src/effectivemass.py 实现)"""
-    def equation(m):
-        a = m * (x - 24.0)
-        b = m * (x + 1.0 - 24.0)
-        num = np.exp(a) + np.exp(-a)
-        den = np.exp(b) + np.exp(-b)
-        return num / den - y
-    try:
-        sol = fsolve(equation, x0=0.1, xtol=1e-15, maxfev=5000)
-        return abs(float(sol[0]))
-    except Exception:
-        return np.nan
-
-
-def compute_effective_mass_matrix(dr_matrix: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+def solve_effective_mass_one_point(y: float, x: int, half: float = 24.0) -> float:
     """
-    输入: dr_matrix (47 行 x N_cols 样本)
+    求解单个数据点的有效质量方程:
+        C(x) / C(x+1) = cosh(m*(x-half)) / cosh(m*(x+1-half))
+    默认对称点 half = 24.0，亦可传入 Ns/2。
+    """
+    return solve_effective_mass_one_point_centered(y, x, half=half)
+
+
+def compute_effective_mass_matrix(
+    dr_matrix: np.ndarray, half: Optional[float] = None, vectorized: bool = True
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    输入: dr_matrix (N_lines x J 列样本矩阵)
     返回: (meff_matrix, meff_mean, meff_err)
     """
-    nrow, ncol = dr_matrix.shape
-    meff = np.zeros((nrow, ncol), dtype=np.float64)
-
-    for i in range(nrow):
-        for j in range(ncol):
-            meff[i, j] = solve_effective_mass_one_point(dr_matrix[i, j], i)
-
-    meff = np.abs(meff)
-    meff_mean = np.full(nrow, np.nan, dtype=np.float64)
-    meff_err = np.full(nrow, np.nan, dtype=np.float64)
-    min_k = max(2, int(ncol * 0.8))
-    for i in range(nrow):
-        finite = meff[i, np.isfinite(meff[i])]
-        k = len(finite)
-        if k >= min_k:
-            m = float(np.mean(finite))
-            e = float(np.sqrt((k - 1) * np.sum((finite - m) ** 2) / k))
-            meff_mean[i] = m
-            meff_err[i] = e
-
-    return meff, meff_mean, meff_err
+    if half is None:
+        nrow = dr_matrix.shape[0]
+        half = 24.0 if nrow in (47, 48) else (nrow + 1) / 2.0
+    return compute_effective_mass_matrix_centered(dr_matrix, half=half, vectorized=vectorized)
 
 
 def detect_plateau_window(

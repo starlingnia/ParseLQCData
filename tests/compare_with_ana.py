@@ -302,7 +302,10 @@ def compare_susceptibility() -> Tuple[bool, List[dict]]:
         print(f"  [WARN] 缺少文件: {my_file} 或 {ana_file}")
         return False, []
 
-    df_my = pl.read_csv(my_file).sort("Temp")
+    df_my = pl.read_csv(my_file)
+    if "Ns" in df_my.columns and "Nt" in df_my.columns:
+        df_my = df_my.filter((pl.col("Ns") == 48) & (pl.col("Nt") == 16))
+    df_my = df_my.sort("Temp")
     df_ana = pl.read_csv(ana_file).sort("Temp")
 
     for row_my, row_ana in zip(df_my.iter_rows(named=True), df_ana.iter_rows(named=True)):

@@ -20,4 +20,7 @@ uv run python tests/test_meson_b417_scan.py
 echo "[TEST] Running ccor flow reproduction tests (vs ana/dat/ccor)..."
 uv run python tests/test_ccor_flow.py
 
+echo "[TEST] Running chiral susceptibility extraction and Zm scaling tests..."
+uv run python tests/test_susceptibility.py
+
 echo "[TEST] All tests completed."

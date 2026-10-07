@@ -121,11 +121,11 @@ def test_susceptibility_zm_renormalization():
     zm_4405 = get_zm_factor(4.405)
     assert abs(zm_4405 - 1.09274) < 1e-5
 
-    # 校验测试样本下的 Jackknife 重整化
+    # 校验测试样本下的 Jackknife 重整化 (最新口径除以 Zm^2)
     list_obar = [1.0, 2.0, 3.0, 4.0, 5.0]
     list_o2bar = [2.0, 5.0, 10.0, 17.0, 26.0]
     res = compute_jackknife_susceptibility(list_obar, list_o2bar, beta=4.17)
-    expected_renorm = (res["mean_scaled"] / 1e6) / zm_417
+    expected_renorm = (res["mean_scaled"] / 1e6) / (zm_417 ** 2)
     assert abs(res["mean_scaled_gev2_renorm"] - expected_renorm) < 1e-12
 
 
