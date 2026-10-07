@@ -224,9 +224,9 @@ def compute_jackknife_susceptibility(
     mean_scaled_gev2 = mean_scaled / 1e6
     error_scaled_gev2 = error_scaled / 1e6
 
-    # 质量重整化因子 Zm (除 Zm 重整化步骤)
+    # 质量重整化因子 Zm (除 Zm**2 重整化步骤)
     eff_zm = zm if zm is not None else (get_zm_factor(beta) if beta is not None else 1.0)
-    inv_zm = (1.0 / eff_zm) if abs(eff_zm) > 1e-15 else 1.0
+    inv_zm = (1.0 / eff_zm**2 ) if abs(eff_zm) > 1e-15 else 1.0
 
     mean_scaled_renorm = mean_scaled * inv_zm
     error_scaled_renorm = error_scaled * inv_zm
@@ -332,7 +332,7 @@ class SusceptibilityPipeline:
             eff_temp = base_temp * (16.0 / eff_nt)
 
         eff_zm = get_zm_factor(eff_beta)
-        inv_zm = (1.0 / eff_zm) if abs(eff_zm) > 1e-15 else 1.0
+        inv_zm = (1.0 / eff_zm **2 ) if abs(eff_zm) > 1e-15 else 1.0
 
         # 优先使用 C++ 26 高性能多线程引擎 (单次 100+ 构型耗时 < 0.05s)
         if self.orchestrator and self.orchestrator.is_available():
@@ -421,7 +421,7 @@ class SusceptibilityPipeline:
                 b_str = str(beta_raw)
 
             zm_val = float(r.get("Zm", r.get("zm", get_zm_factor(b_float))))
-            inv_zm = 1.0 / zm_val if abs(zm_val) > 1e-15 else 1.0
+            inv_zm = 1.0 / zm_val **2 if abs(zm_val) > 1e-15 else 1.0
 
             chi_lat = float(r["Mean_vol_scaled"])
             err_lat = float(r["Error_vol_scaled"])
@@ -557,7 +557,7 @@ class SusceptibilityPipeline:
                 eff_temp = float(base_temp * (16.0 / eff_nt))
 
             eff_zm = get_zm_factor(eff_beta_str)
-            inv_zm = (1.0 / eff_zm) if abs(eff_zm) > 1e-15 else 1.0
+            inv_zm = (1.0 / eff_zm ** 2) if abs(eff_zm) > 1e-15 else 1.0
 
             print(f"  -> 正在处理 [{d.name}] (Ns={eff_ns}, Nt={eff_nt}, beta={eff_beta_str}, T={eff_temp:.2f} MeV, Zm={eff_zm:.6f})...")
             try:
@@ -629,7 +629,7 @@ class SusceptibilityPipeline:
                 for r in df_exist.iter_rows(named=True):
                     b = float(r["Beta"])
                     zm = float(r.get("Zm", r.get("zm", get_zm_factor(b))))
-                    inv_zm = (1.0 / zm) if abs(zm) > 1e-15 else 1.0
+                    inv_zm = (1.0 / zm **2 ) if abs(zm) > 1e-15 else 1.0
                     m_scaled = float(r["Mean_scaled"])
                     e_scaled = float(r["Error_scaled"])
                     m_gev2 = m_scaled / 1e6
@@ -668,7 +668,7 @@ class SusceptibilityPipeline:
             eu = float(r["Error_unscaled"])
             f_vol, f_scaled = compute_scaling_factors(48, 16, t)
             zm = get_zm_factor(b)
-            inv_zm = (1.0 / zm) if abs(zm) > 1e-15 else 1.0
+            inv_zm = (1.0 / zm**2) if abs(zm) > 1e-15 else 1.0
             m_scaled = mu * f_scaled
             e_scaled = eu * f_scaled
             m_gev2 = m_scaled / 1e6
