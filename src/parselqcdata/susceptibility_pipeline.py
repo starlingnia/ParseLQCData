@@ -1,4 +1,4 @@
-r"""
+"""
 src/parselqcdata/susceptibility_pipeline.py
 --------------------------------------------------------------------------------
 Python 整合层：手征磁化率 (Chiral Susceptibility, \\chi) 端到端分析管道
@@ -193,7 +193,7 @@ def compute_jackknife_susceptibility(
     - factor_vol = Ns^3 * Nt
     - factor_scaled = Ns^3 * Nt^3 * T^2
     - chi_disc(lattice unit) = Mean_vol_scaled
-    - chi_disc(GeV^2 renormalized) = (Mean_scaled / 1e6) / Zm
+    - chi_disc(GeV^2 renormalized) = (Mean_scaled / 1e6) / Zm**2
     """
     n = len(list_obar)
     if n <= 1 or len(list_o2bar) != n:
