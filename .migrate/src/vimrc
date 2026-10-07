@@ -1,0 +1,190 @@
+" ==============================================================================
+" Vim 基础配置
+" ==============================================================================
+set nocompatible
+filetype plugin indent on
+syntax on
+set clipboard=unnamed
+nnoremap <C-t> :tabnew<CR>
+nnoremap <C-e> :Lex<CR>
+if has('nvim')
+  colorscheme wildcharm
+  set termguicolors
+  function! NvimTransparentBackground() abort
+    highlight Normal guibg=NONE ctermbg=NONE
+    highlight NormalNC guibg=NONE ctermbg=NONE
+    highlight NormalFloat guibg=NONE ctermbg=NONE
+    highlight FloatBorder guibg=NONE ctermbg=NONE
+    highlight CursorLine guibg=NONE ctermbg=NONE
+    highlight SignColumn guibg=NONE ctermbg=NONE
+    highlight EndOfBuffer guibg=NONE ctermbg=NONE
+    highlight NonText guibg=NONE ctermbg=NONE
+    highlight Pmenu guibg=NONE ctermbg=NONE
+    highlight CocFloating guibg=NONE ctermbg=NONE
+    highlight Comment guifg=#9fb38b ctermfg=108
+    highlight SpecialComment guifg=#9fb38b ctermfg=108
+  endfunction
+  augroup NvimTransparentBackground
+    autocmd!
+    autocmd ColorScheme * call NvimTransparentBackground()
+  augroup END
+  call NvimTransparentBackground()
+else
+  colorscheme default
+endif
+set signcolumn=no
+set encoding=utf-8
+set fileencoding=utf-8
+
+"" 常用按键映射
+nnoremap - :Ex<CR>
+" 将 jk 映射为 Ctrl-[ (<Esc>)
+inoremap jk <C-[>l
+vnoremap jk <C-[>
+
+"" 用户基础编辑与界面优化
+set mouse=a
+"set number                      " 显示行号
+"set relativenumber              " 显示相对行号（方便跳转）
+set cursorline                  " 高亮当前行
+set updatetime=300              " 提高刷新响应速度 (毫秒)
+set timeoutlen=500
+set hidden                      " 允许在有未保存修改时切换缓冲区
+set nobackup                    " 禁止备份文件
+set nowritebackup
+set autoread                    " 文件在外部被修改时自动重新载入
+set showcmd                     " 在右下角显示未完成的命令
+set hlsearch                    " 搜索高亮
+set incsearch                   " 增量搜索
+set ignorecase smartcase        " 智能大小写匹配搜索
+
+"" 缩进设置 (4 空格)
+set tabstop=4
+set shiftwidth=4
+set expandtab
+set autoindent
+set smartindent
+
+"" 设置 Leader 键为空格键
+let mapleader = " "
+nnoremap <silent> <leader>e :<C-u>Ex<CR>
+nnoremap <silent> <leader>E :<C-u>Lex<CR>
+
+"" 解决 paste 模式导致自动补全与快捷键失效的问题：
+"" 改用 F2 键随时切换粘贴模式，平时保持普通模式以支持 LSP 自动补全
+if !has('nvim')
+  set pastetoggle=<F2>
+endif
+
+" ==============================================================================
+" 插件管理: vim-plug
+" ==============================================================================
+if !has('nvim')
+let data_dir = expand('~/.vim')
+if empty(glob(data_dir . '/autoload/plug.vim'))
+  silent execute '!curl -fLo ' . data_dir . '/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+
+call plug#begin('~/.vim/plugged')
+
+" coc.nvim: 完整的 LSP、代码补全与扩展生态
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
+
+call plug#end()
+
+" ==============================================================================
+" coc.nvim (LSP) 详细配置与快捷键
+" ==============================================================================
+"" 确保指定 Node.js 执行路径
+if executable('/Users/junxiongnie/.local/bin/node')
+  let g:coc_node_path = '/Users/junxiongnie/.local/bin/node'
+endif
+
+"" 自动安装与管理的常用语言 LSP 扩展 (C/C++ 和 Python)
+let g:coc_global_extensions = ['coc-clangd', 'coc-pyright']
+
+"" 1. Tab 键智能补全选择与跳转
+inoremap <silent><expr> <TAB>
+      \ coc#pum#visible() ? coc#pum#next(1) :
+      \ CheckBackspace() ? "\<Tab>" :
+      \ coc#refresh()
+inoremap <expr><S-TAB> coc#pum#visible() ? coc#pum#prev(1) : "\<C-h>"
+
+function! CheckBackspace() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+"" 2. 回车键确认补全项 (<CR>)
+inoremap <silent><expr> <CR> coc#pum#visible() ? coc#pum#confirm()
+                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+
+"" 3. 手动触发补全 (Ctrl + Space)
+inoremap <silent><expr> <c-space> coc#refresh()
+
+"" 4. LSP 代码导航与跳转
+" gd: 跳转到定义 (Go to Definition)
+nmap <silent> gd <Plug>(coc-definition)
+" gy: 跳转到类型定义 (Go to Type Definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+" gi: 跳转到实现 (Go to Implementation)
+nmap <silent> gi <Plug>(coc-implementation)
+" gr: 查找所有引用 (Find References)
+nmap <silent> gr <Plug>(coc-references)
+
+"" 5. 查看文档与悬浮信息 (光标停留在符号上按大写 K)
+nnoremap <silent> K :call ShowDocumentation()<CR>
+nnoremap <silent> KK :call ShowDocumentation()<CR>
+
+function! ShowDocumentation()
+  if CocAction('hasProvider', 'hover')
+    call CocActionAsync('doHover')
+  else
+    call feedkeys('K', 'in')
+  endif
+endfunction
+
+"" 6. 诊断信息导航 (错误/警告前后跳转)
+" [g: 上一个报错 / 警告
+" ]g: 下一个报错 / 警告
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+
+"" 7. 重命名符号 (Space + rn)
+nmap <leader>rn <Plug>(coc-rename)
+
+"" 8. 代码格式化 (Space + f 或 :Format 命令)
+command! -nargs=0 Format :call CocActionAsync('format')
+nnoremap <leader>f :call CocActionAsync('format')<CR>
+
+"" 9. 快速修复与代码操作 (Code Action)
+nmap <leader>qf <Plug>(coc-fix-current)
+nmap <leader>ac <Plug>(coc-codeaction-cursor)
+
+"" 10. 光标悬停时高亮相同符号引用
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+"" 11. 状态栏展示 LSP 状态与当前函数名
+set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
+
+"" 12. 常用全局列表 (Space + a 查看所有诊断，Space + o 查看大纲)
+nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
+nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
+
+"" ==============================================================================
+"" 13. coc.nvim 多光标模式 (Multi-Cursor)
+"" ==============================================================================
+" 进入多光标会话（推荐使用 Leader + m）：
+" 普通模式：光标置于目标词上按 <leader>m 将当前词加入多光标会话（可按 . 继续匹配下一个）
+nmap <silent> <leader>m <Plug>(coc-cursors-word)
+" 可视模式：选中区域后按 <leader>m 将选区加入多光标会话
+xmap <silent> <leader>m <Plug>(coc-cursors-range)
+" 位置光标：在当前光标位置添加一个空光标
+nmap <silent> <leader>mp <Plug>(coc-cursors-position)
+endif
+
+if has('nvim')
+  set laststatus=1
+  set statusline=%t
+endif

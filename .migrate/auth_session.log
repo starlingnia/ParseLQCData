@@ -1,0 +1,5 @@
+# Tailscale SSH requires an additional check.
+# To authenticate, visit: https://login.tailscale.com/a/l1bed961337ef97
+tailscale: failed to fetch next SSH action
+Connection closed by 100.116.158.77 port 22
+EXIT=255

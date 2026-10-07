@@ -2,7 +2,6 @@
 .xmake/
 bin/
 data/
-dat/
 # MacOS Cache
 .DS_Store
 

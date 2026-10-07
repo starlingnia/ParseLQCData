@@ -1,0 +1,16 @@
+{
+  "suggest.noselect": false,
+  "suggest.enablePreview": true,
+  "diagnostic.enable": true,
+  "diagnostic.checkCurrentLine": true,
+  "diagnostic.signOffset": 1,
+  "diagnostic.errorSign": ">>",
+  "diagnostic.warningSign": "⚠",
+  "diagnostic.infoSign": "ℹ",
+  "diagnostic.hintSign": "➤",
+  "signature.enable": true,
+  "hover.target": "float",
+  "clangd.path": "/opt/local/bin/clangd",
+  "python.pythonPath": "/opt/local/bin/python3",
+  "cursors.cancelKey": "nk"
+}

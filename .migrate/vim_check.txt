@@ -1,0 +1,8 @@
+has_nvim=0
+coc_cmd=2
+coc_node_path=/Users/junxiongnie/.local/share/node-v22.23.2-darwin-arm64/bin/node
+plug_cmd=2
+coc_ext=coc-clangd,coc-pyright
+colorscheme=default
+pastetoggle=<F2>
+lex_cmd=2
