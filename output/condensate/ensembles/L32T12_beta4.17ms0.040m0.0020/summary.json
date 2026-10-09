@@ -1,6 +1,6 @@
 {
   "dataset_name": "L32T12_beta4.17ms0.040m0.0020",
-  "dataset_path": "/Users/junxiongnie/code/algo/ParseLQCData/data/readin/L32T12_beta4.17ms0.040m0.0020",
+  "dataset_path": "/Users/junxiongnie/code/build/ParseLQCData/data/readin/L32T12_beta4.17ms0.040m0.0020",
   "ns": 32,
   "nt": 12,
   "beta": 4.17,
@@ -14,6 +14,6 @@
   "pbpl_err": 2.3337180913091992e-05,
   "pbps": 0.01686806666666667,
   "pbps_err": 1.0698136943423484e-05,
-  "pbp_rm": -2.1006781565234455e-05,
-  "pbp_rm_err": 2.418202790781587e-05
+  "pbp_rm": -2.100678156523447e-05,
+  "pbp_rm_err": 2.4182027907815825e-05
 }

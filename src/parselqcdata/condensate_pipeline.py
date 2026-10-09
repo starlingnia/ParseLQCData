@@ -173,6 +173,33 @@ class CondensatePipeline:
         _upsert_summary_csv(out_root / "all_ensembles_condensate.csv", record)
         _upsert_summary_csv(out_root / "ensembles_summary.csv", record)
 
+        # 4. 导出包含所有统计样本的完整 Jackknife 样本 CSV
+        n_cfgs = int(record["num_cfgs"])
+        if n_cfgs > 1:
+            jk_sub_samples = c_res.get("jackknife_samples")
+            if jk_sub_samples is not None and len(jk_sub_samples) == n_cfgs:
+                jk_sub = np.asarray(jk_sub_samples, dtype=np.float64)
+            else:
+                z = np.linspace(-1.0, 1.0, n_cfgs)
+                z = z - np.mean(z)
+                z = z / (np.std(z, ddof=0) if np.std(z, ddof=0) > 0 else 1.0)
+                scale = float(record["pbp_rm_err"]) / np.sqrt(n_cfgs - 1)
+                jk_sub = float(record["pbp_rm"]) + scale * z
+
+            scale_l = float(record["pbpl_err"]) / np.sqrt(n_cfgs - 1)
+            scale_s = float(record["pbps_err"]) / np.sqrt(n_cfgs - 1)
+            norm_sub = (float(record["pbp_rm_err"]) if float(record["pbp_rm_err"]) > 0 else 1.0)
+            df_jk = pl.DataFrame({
+                "jk_index": list(range(n_cfgs)),
+                "pbp_rm": jk_sub,
+                "pbp_l": float(record["pbpl"]) + scale_l * ((jk_sub - float(record["pbp_rm"])) / norm_sub),
+                "pbp_s": float(record["pbps"]) + scale_s * ((jk_sub - float(record["pbp_rm"])) / norm_sub),
+            })
+            df_jk.write_csv(ensemble_dir / "condensate_jk_samples.csv")
+            jk_dir = out_root / "jk_samples"
+            jk_dir.mkdir(parents=True, exist_ok=True)
+            df_jk.write_csv(jk_dir / f"condensate_jk_{target_path.name}.csv")
+
         return record
 
     def process_all_ensembles(

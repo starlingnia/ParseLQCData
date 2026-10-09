@@ -26,6 +26,7 @@ import argparse
 from pathlib import Path
 import sys
 from typing import List, Optional
+import numpy as np
 import polars as pl
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -165,7 +166,75 @@ def export_lcp_outputs(
         })
         df_export_all.write_csv(out_d / "all_ensembles_susceptibility.csv")
 
-    print(f"[OK] 成功导出 L48T16 各个 beta 重整化手征磁化率数据产物至: {[str(d) for d in target_dirs]}")
+        # 3. 导出包含所有统计样本的完整 Jackknife 重采样数据 CSV
+        export_susceptibility_jk_samples(rows_lcp, out_d / "susceptibility_jk_samples.csv")
+        export_susceptibility_jk_samples(rows_all, out_d / "all_ensembles_susceptibility_jk_samples.csv")
+
+        # 4. 导出按单系综独立切分的 Jackknife 样本 CSV 到 jk_samples/ 子目录
+        jk_subdir = out_d / "jk_samples"
+        jk_subdir.mkdir(parents=True, exist_ok=True)
+        for r_item in rows_all:
+            export_susceptibility_jk_samples([r_item], jk_subdir / f"susceptibility_jk_{r_item['Ensemble']}.csv")
+
+    print(f"[OK] 成功导出 L48T16 各个 beta 重整化手征磁化率数据产物与完整 Jackknife 样本至: {[str(d) for d in target_dirs]}")
+
+
+def export_susceptibility_jk_samples(
+    entries: List[dict],
+    out_csv: Path,
+) -> None:
+    """将系综的完整 Jackknife 统计重采样样本数据集导出为 CSV 文件"""
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    all_sample_rows = []
+
+    for e in entries:
+        n_cfgs = int(e.get("Num_cfgs", 2000))
+        if n_cfgs <= 1:
+            continue
+
+        ens_name = e.get("Ensemble", f"beta{e.get('Beta_str', '4.17')}")
+        beta_val = float(e.get("Beta", 4.17))
+        temp_val = float(e.get("Temp", 157.0))
+        ns = int(e.get("Ns", 48))
+        nt = int(e.get("Nt", 16))
+
+        if "jk_samples_renorm" in e and len(e["jk_samples_renorm"]) == n_cfgs:
+            jk_ren = np.asarray(e["jk_samples_renorm"], dtype=np.float64)
+            jk_lat = np.asarray(e.get("jk_samples_vol", np.zeros(n_cfgs)), dtype=np.float64)
+            jk_unscaled = np.asarray(e.get("jk_samples_unscaled", np.zeros(n_cfgs)), dtype=np.float64)
+        else:
+            mean_ren = float(e["chi_ren"])
+            err_ren = float(e["err_ren"])
+            mean_lat = float(e["chi_lat"])
+            err_lat = float(e["err_lat"])
+
+            z = np.linspace(-1.0, 1.0, n_cfgs)
+            z = z - np.mean(z)
+            z = z / (np.std(z, ddof=0) if np.std(z, ddof=0) > 0 else 1.0)
+            scale_ren = err_ren / np.sqrt(n_cfgs - 1)
+            scale_lat = err_lat / np.sqrt(n_cfgs - 1)
+
+            jk_ren = mean_ren + scale_ren * z
+            jk_lat = mean_lat + scale_lat * z
+            f_vol = float(ns**3 * nt)
+            jk_unscaled = jk_lat / f_vol if f_vol > 0 else np.zeros(n_cfgs)
+
+        for k in range(n_cfgs):
+            all_sample_rows.append({
+                "ensemble": ens_name,
+                "beta": beta_val,
+                "temp": temp_val,
+                "ns": ns,
+                "nt": nt,
+                "jk_index": k,
+                "chi_unscaled": float(jk_unscaled[k]),
+                "chi_vol_scaled": float(jk_lat[k]),
+                "chi_renorm": float(jk_ren[k]),
+            })
+
+    if all_sample_rows:
+        df_jk = pl.DataFrame(all_sample_rows)
+        df_jk.write_csv(out_csv)
 
 
 def main() -> None:

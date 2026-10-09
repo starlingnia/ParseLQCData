@@ -873,6 +873,32 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     mass_df.write_csv(out_root / "meson_mass_all.csv")
     delta_df.write_csv(out_root / "delta_mass_all.csv")
 
+    # 导出包含全量 Jackknife 统计重采样样本的明细 CSV
+    jk_rows = []
+    for r in results:
+        ds = r.get("dataset", "")
+        cs = r.get("case", "")
+        ml_val = r.get("ml", "")
+        for ch, m_list in r.get("masses", {}).items():
+            for k, m in enumerate(m_list):
+                jk_rows.append({
+                    "dataset": ds,
+                    "case": cs,
+                    "ml": ml_val,
+                    "channel": ch,
+                    "jk_index": k,
+                    "mass_lattice": float(m),
+                    "mass_mev": float(m * 2640.0),
+                })
+    if jk_rows:
+        df_ccor_jk = pl.DataFrame(jk_rows)
+        df_ccor_jk.write_csv(out_root / "ccor_jk_samples.csv")
+        for ds in args.datasets:
+            ds_df = df_ccor_jk.filter(pl.col("dataset") == ds)
+            if ds_df.height:
+                (out_root / ds).mkdir(parents=True, exist_ok=True)
+                ds_df.write_csv(out_root / ds / "ccor_jk_samples.csv")
+
     # 关联函数直接对比 + 口径归因
     if "reference" in args.datasets and any(d in args.datasets for d in ("multisrc", "singlesrc")):
         corr_df = compare_correlators(mass_df, ensembles, Path(args.readin), args.datasets)

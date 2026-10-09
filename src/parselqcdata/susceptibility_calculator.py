@@ -107,6 +107,13 @@ def compute_jackknife_susceptibility(
     mean_scaled_gev2_renorm = mean_scaled_gev2 * inv_zm
     error_scaled_gev2_renorm = error_scaled_gev2 * inv_zm
 
+    # 完整统计样本数据序列
+    jk_unscaled = chi_jk
+    jk_vol = chi_jk * f_vol
+    jk_scaled = chi_jk * f_scaled
+    jk_gev2 = jk_scaled / 1e6
+    jk_renorm = jk_gev2 * inv_zm
+
     return {
         "mean_unscaled": mean_unscaled,
         "error_unscaled": err_unscaled,
@@ -127,7 +134,45 @@ def compute_jackknife_susceptibility(
         "ns": ns,
         "nt": nt,
         "temp": temp_mev,
+        # 完整统计重采样样本
+        "jk_samples_unscaled": jk_unscaled,
+        "jk_samples_vol": jk_vol,
+        "jk_samples_scaled": jk_scaled,
+        "jk_samples_gev2": jk_gev2,
+        "jk_samples_renorm": jk_renorm,
     }
+
+
+def save_susceptibility_jk_samples_csv(
+    res: Dict[str, Union[float, int, np.ndarray, list]],
+    csv_path: Path,
+    ensemble_name: str = "",
+) -> None:
+    """将单个系综的完整 Jackknife 统计重采样样本序列持久化保存为独立 CSV 文件"""
+    import polars as pl
+
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+    jk_renorm = np.asarray(res.get("jk_samples_renorm", []))
+    n = len(jk_renorm)
+    if n == 0:
+        return
+
+    jk_unscaled = np.asarray(res.get("jk_samples_unscaled", np.zeros(n)))
+    jk_vol = np.asarray(res.get("jk_samples_vol", np.zeros(n)))
+    jk_gev2 = np.asarray(res.get("jk_samples_gev2", np.zeros(n)))
+
+    df_jk = pl.DataFrame({
+        "jk_index": list(range(n)),
+        "chi_unscaled": jk_unscaled,
+        "chi_vol_scaled": jk_vol,
+        "chi_scaled_gev2": jk_gev2,
+        "chi_renorm": jk_renorm,
+    })
+    if ensemble_name:
+        df_jk = df_jk.with_columns(pl.lit(ensemble_name).alias("ensemble"))
+        df_jk = df_jk.select(["ensemble", "jk_index", "chi_unscaled", "chi_vol_scaled", "chi_scaled_gev2", "chi_renorm"])
+
+    df_jk.write_csv(csv_path)
 
 
 def main() -> None:

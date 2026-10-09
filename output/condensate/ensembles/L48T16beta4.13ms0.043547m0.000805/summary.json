@@ -1,6 +1,6 @@
 {
   "dataset_name": "L48T16beta4.13ms0.043547m0.000805",
-  "dataset_path": "/Users/junxiongnie/code/algo/ParseLQCData/data/readin/L48T16beta4.13ms0.043547m0.000805",
+  "dataset_path": "/Users/junxiongnie/code/build/ParseLQCData/data/readin/L48T16beta4.13ms0.043547m0.000805",
   "ns": 48,
   "nt": 16,
   "beta": 4.13,
@@ -14,6 +14,6 @@
   "pbpl_err": 6.341626533820122e-06,
   "pbps": 0.01942523692499998,
   "pbps_err": 1.3460934076140242e-06,
-  "pbp_rm": 0.0010608249581001642,
-  "pbp_rm_err": 6.740409618069169e-06
+  "pbp_rm": 0.0010608249581001645,
+  "pbp_rm_err": 6.74040961806908e-06
 }

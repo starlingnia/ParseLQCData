@@ -46,7 +46,7 @@ from docs.physics_setup import (
     OUTPUT_ROOT,
     SINGLE_FIT_SLICES,
 )
-from src.parselqcdata import fit_single_jackknife_column
+from src.parselqcdata import fit_cosh_plateau
 
 
 def fit_plateau_from_matrix(
@@ -58,54 +58,21 @@ def fit_plateau_from_matrix(
     channel: str,
     out_dir: Path | None = None,
 ) -> dict:
-    """对关联函数切片执行逐 Jackknife 样本 cosh 平台拟合并汇总"""
-    x_array = np.arange(t_start, t_end)
-    y_slice = dr[t_start:t_end, :]
-    err_slice = errors[t_start:t_end]
-    n_bins = y_slice.shape[1]
-
-    fit_records = []
-    mass_list = []
-
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        for k in range(n_bins):
-            try:
-                fit = fit_single_jackknife_column(x_array, y_slice[:, k], err_slice)
-                if fit:
-                    fit_records.append(fit)
-                    mass_list.append(float(fit.get("massfit_mean", np.nan)))
-                else:
-                    mass_list.append(np.nan)
-            except Exception:
-                mass_list.append(np.nan)
-
-    if out_dir is not None and fit_records:
-        pl.DataFrame(fit_records).write_csv(out_dir / f"fittresult{channel}.csv")
-
-    mass_arr = np.array(mass_list, dtype=np.float64)
-    valid_mask = np.isfinite(mass_arr)
-
-    if np.any(valid_mask):
-        fit_mass = float(np.mean(mass_arr[valid_mask]))
-        diff = mass_arr[valid_mask] - fit_mass
-        fit_err = float(np.sqrt((n_bins - 1) * np.sum(diff ** 2) / n_bins))
-    else:
-        fit_mass, fit_err = np.nan, np.nan
-
-    if out_dir is not None:
-        summary_df = pl.DataFrame({
-            "quantity": ["mass"],
-            "mean": [fit_mass],
-            "jack_err": [fit_err]
-        })
-        summary_df.write_csv(out_dir / f"summary_fit_{channel}.csv")
-
+    """调用高层拟合 wrapper 执行逐 Jackknife 样本 cosh 平台拟合并落盘"""
+    summary, _ = fit_cosh_plateau(
+        dr_matrix=dr,
+        errors=errors,
+        t_start=t_start,
+        t_end=t_end,
+        half=24.0,
+        channel=channel,
+        out_dir=out_dir,
+    )
     return {
         "beta": beta,
         "channel": channel,
-        "mass_mean": fit_mass,
-        "mass_err": fit_err,
+        "mass_mean": summary["mass_mean"],
+        "mass_err": summary["mass_err"],
         "t_start": t_start,
         "t_end": t_end,
     }

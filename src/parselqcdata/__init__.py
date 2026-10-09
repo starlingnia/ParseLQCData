@@ -44,6 +44,7 @@ from .cosh_fitter import (
     fit_single_jackknife_column_centered,
     fit_mass_window_scan,
     fit_jackknife_mass_centered,
+    fit_cosh_plateau,
 )
 
 __all__ = [
@@ -80,4 +81,5 @@ __all__ = [
     "fit_single_jackknife_column_centered",
     "fit_mass_window_scan",
     "fit_jackknife_mass_centered",
+    "fit_cosh_plateau",
 ]

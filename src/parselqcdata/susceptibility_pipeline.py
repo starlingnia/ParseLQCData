@@ -51,7 +51,6 @@ from docs.physics_setup import (
     ANA_ROOT,
     DEFAULT_READIN_DIR,
     OUTPUT_CONDENSATE_DIR,
-    OUTPUTS_LCP_DIR,
     OUTPUT_LCP_DIR,
     TEMP_MAP,
     MRES_TABLE,
@@ -81,6 +80,7 @@ from src.parselqcdata.scaling_factors import (
 from src.parselqcdata.susceptibility_calculator import (
     jackknife_resample,
     compute_jackknife_susceptibility,
+    save_susceptibility_jk_samples_csv,
 )
 from src.parselqcdata.lcp_exporter import export_lcp_outputs
 
@@ -183,9 +183,14 @@ class SusceptibilityPipeline:
         if not list_obar:
             raise ValueError(f"在目录 {ensemble_dir} 中未能成功提取到有效随机源向量数据")
 
-        return compute_jackknife_susceptibility(
+        res = compute_jackknife_susceptibility(
             list_obar, list_o2bar, ns=eff_ns, nt=eff_nt, temp_mev=eff_temp, beta=eff_beta, zm=eff_zm
         )
+        jk_subdir = self.output_dir / "jk_samples"
+        save_susceptibility_jk_samples_csv(
+            res, jk_subdir / f"susceptibility_jk_{ensemble_dir.name}.csv", ensemble_name=ensemble_dir.name
+        )
+        return res
 
     def export_lcp_outputs(
         self,

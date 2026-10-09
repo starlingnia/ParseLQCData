@@ -15,7 +15,7 @@ LCP (常物理线) 子任务 3: 质量因子 Zm^2 重整化与 LCP 标准格式�
    - results_susceptibility_scaling.txt
    标头为:
    # beta,  Z_m(beta),  chi_disc(lattice unit) error  chi_disc(GeV^2 renormalized)  error
-4. 同时输出至 output/LCP/ 并向 outputs/LCP/ 提供兼容镜像，保证与历史脚本 100% 兼容。
+4. 输出至标准 output/LCP/，保证目录规范统一。
 
 【底层调用的 C++ 功能与关联】:
 - 输入数据直接源自 C++ 磁化率计算组件 target("condensate_analysis") 与 target("statistics") 的产物。
@@ -38,7 +38,6 @@ if str(PROJECT_ROOT) not in sys.path:
 from docs.physics_setup import (
     OUTPUT_CONDENSATE_DIR,
     OUTPUT_LCP_DIR,
-    OUTPUTS_LCP_DIR,
 )
 from src.parselqcdata.susceptibility_pipeline import SusceptibilityPipeline
 
@@ -56,12 +55,8 @@ def run_export_lcp_task(
     else:
         df = pipeline.get_full_scan_results()
 
-    # 导出至 output/LCP 以及兼容目录 outputs/LCP
+    # 规范导出至 output/LCP/
     target_dirs = [output_lcp_dir]
-    compat_dir = PROJECT_ROOT / "outputs" / "LCP"
-    if compat_dir != output_lcp_dir:
-        target_dirs.append(compat_dir)
-
     pipeline.export_lcp_outputs(df, target_dirs=target_dirs)
     print(f"[OK] LCP 规范产物已成功导出至: {[str(d) for d in target_dirs]}")
 

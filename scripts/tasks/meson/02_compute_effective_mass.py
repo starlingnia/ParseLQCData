@@ -61,8 +61,8 @@ def solve_effective_mass_ratio(y: float, x: int) -> float:
         return np.nan
 
 
-def compute_meff_from_matrix(dr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """从 (num_lines x n_bins) 折叠矩阵直接计算有效质量均值与 Jackknife 误差"""
+def compute_meff_from_matrix(dr: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """从 (num_lines x n_bins) 折叠矩阵直接计算有效质量均值与 Jackknife 误差，并返回完整样本矩阵"""
     nrow, ncol = dr.shape
     meff = np.full((nrow, ncol), np.nan, dtype=np.float64)
 
@@ -78,7 +78,7 @@ def compute_meff_from_matrix(dr: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
     meff_mean = np.nanmean(meff, axis=1)
     diffs2 = (meff - meff_mean[:, None]) ** 2
     meff_err = np.sqrt((ncol - 1) * np.nansum(diffs2, axis=1) / ncol)
-    return meff_mean, meff_err
+    return meff_mean, meff_err, meff
 
 
 def run_effective_mass_task(
@@ -111,10 +111,22 @@ def run_effective_mass_task(
                     print(f"  [WARN] 找不到关联函数折叠矩阵: {dr_file}")
                     continue
 
-                meff_mean, meff_err = compute_meff_from_matrix(dr_mat)
+                meff_mean, meff_err, meff_mat = compute_meff_from_matrix(dr_mat)
 
+                # 1. 历史基准摘要 (均值与误差)
                 out_csv = ratio_dir / f"meff_{ch}.csv"
                 pl.DataFrame({"mean": meff_mean, "err": meff_err}).write_csv(out_csv)
+
+                # 2. 完整统计样本数据 (包含时隙 t、均值、误差以及所有 Jackknife 重采样样本列)
+                nrow, ncol = meff_mat.shape
+                jk_cols = {f"jk_{k}": meff_mat[:, k] for k in range(ncol)}
+                df_samples = pl.DataFrame({
+                    "t": list(range(nrow)),
+                    "mean": meff_mean,
+                    "err": meff_err,
+                    **jk_cols,
+                })
+                df_samples.write_csv(ratio_dir / f"meff_jk_samples_{ch}.csv")
 
             print(f"  [OK] Beta 4.{beta} ({mode_str}): 6 信道有效质量求解完成 (耗时: {time.time() - t0_beta:.2f}s)")
 

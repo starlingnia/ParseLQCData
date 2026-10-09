@@ -38,6 +38,7 @@ import sys
 import time
 from typing import Sequence
 
+import numpy as np
 import polars as pl
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -85,6 +86,52 @@ def extract_correlators_for_channel(
     pl.DataFrame(folded_jk).write_parquet(pick_dir / f"dr_{channel}.parquet")
     pl.DataFrame(errors).write_csv(pick_dir / f"err_{channel}.csv", include_header=False)
 
+    # 完整统计样本数据 CSV (包含时隙 t、均值、误差以及所有 Jackknife 样本列)
+    folded_arr = np.asarray(folded_jk, dtype=np.float64)
+    jk_cols = {f"jk_{k}": folded_arr[:, k] for k in range(n_bins)}
+    df_samples = pl.DataFrame({
+        "t": list(range(len(means))),
+        "mean": means,
+        "err": errors,
+        **jk_cols,
+    })
+    df_samples.write_csv(pick_dir / f"correlator_jk_samples_{channel}.csv")
+
+
+def save_jk_samples_from_existing(pick_dir: Path, channel: str) -> bool:
+    """若原始文本已由 C++ 抽取过但未生成完整样本 CSV，从现有 dr_{ch}.csv 与 save_{ch}.csv 补全导出"""
+    dr_file = pick_dir / f"dr_{channel}.csv"
+    save_file = pick_dir / f"save_{channel}.csv"
+    err_file = pick_dir / f"err_{channel}.csv"
+    out_samples = pick_dir / f"correlator_jk_samples_{channel}.csv"
+
+    if not dr_file.exists():
+        return False
+
+    dr_mat = pl.read_csv(dr_file, has_header=False).to_numpy()
+    nrow, ncol = dr_mat.shape
+
+    if save_file.exists():
+        df_save = pl.read_csv(save_file)
+        means = df_save["mean"].to_numpy()
+        errors = df_save["err"].to_numpy()
+    elif err_file.exists():
+        errors = pl.read_csv(err_file, has_header=False).to_numpy().flatten()
+        means = np.mean(dr_mat, axis=1)
+    else:
+        means = np.mean(dr_mat, axis=1)
+        errors = np.zeros(nrow)
+
+    jk_cols = {f"jk_{k}": dr_mat[:, k] for k in range(ncol)}
+    df_samples = pl.DataFrame({
+        "t": list(range(nrow)),
+        "mean": means[:nrow],
+        "err": errors[:nrow],
+        **jk_cols,
+    })
+    df_samples.write_csv(out_samples)
+    return True
+
 
 def run_extract_task(
     betas: Sequence[str] = BETAS,
@@ -101,12 +148,21 @@ def run_extract_task(
 
         print(f"\n[MESON-TASK-01] 正在抽取 {mode_str.upper()} 关联函数...")
         for beta in betas:
+            pick_dir = output_root / dir_pick / f"b4.{beta}"
             input_dir = readin_dir / f"48x16b4.{beta}" / "Output"
+
             if not input_dir.exists():
-                print(f"  [WARN] 目录不存在，跳过: {input_dir}")
+                # 检查是否已有抽取好的 dr 矩阵，若是则就地补齐完整 JK 样本 CSV
+                synced = 0
+                for ch in CHANNELS:
+                    if save_jk_samples_from_existing(pick_dir, ch):
+                        synced += 1
+                if synced > 0:
+                    print(f"  [OK] Beta 4.{beta} ({mode_str}): 已从现有折叠矩阵同步导出 {synced} 个信道的完整 JK 样本 CSV")
+                else:
+                    print(f"  [WARN] 目录不存在，跳过: {input_dir}")
                 continue
 
-            pick_dir = output_root / dir_pick / f"b4.{beta}"
             t0_beta = time.time()
             for ch in CHANNELS:
                 extract_correlators_for_channel(

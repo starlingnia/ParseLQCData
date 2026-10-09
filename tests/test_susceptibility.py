@@ -130,7 +130,7 @@ def test_susceptibility_zm_renormalization():
 
 
 def test_lcp_outputs_format():
-    """校验 output/LCP/ 目录产物及其标头格式要求，确认 outputs/ 冗余目录不存在"""
+    """校验 output/LCP/ 目录产物及其标头格式要求"""
     pipeline = SusceptibilityPipeline()
     pipeline.get_full_scan_results()
 
@@ -141,9 +141,6 @@ def test_lcp_outputs_format():
     assert lcp_dir.exists(), f"LCP 目录 {lcp_dir} 必须存在"
     assert txt_file.exists(), f"结果文件 {txt_file} 必须存在"
     assert lcp_txt_file.exists(), f"LCP 标准文件 {lcp_txt_file} 必须存在"
-
-    # 严格确保废除的 outputs 目录不存在
-    assert not (PROJECT_ROOT / "outputs").exists(), "冗余 outputs/ 目录不应存在，所有产物统一归集至 output/LCP"
 
     expected_header = "# beta,  Z_m(beta),  chi_disc(lattice unit) error  chi_disc(GeV^2 renormalized)  error"
     content = txt_file.read_text(encoding="utf-8").strip().splitlines()

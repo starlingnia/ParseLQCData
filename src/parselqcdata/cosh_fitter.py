@@ -2,11 +2,11 @@
 """
 src/parselqcdata/cosh_fitter.py
 --------------------------------------------------------------------------------
-独立脚本与模块：双曲余弦 (cosh) 平台非线性拟合器
-- 拟合形式: f(x) = a * cosh(m * (x - half))
-- 统一强制 chi2 最小二乘拟合器 (scipy_least_squares, tol=1e-15, maxit=10000)
-- 逐 Jackknife 样本列独立拟合与全量矩阵重采样统计
-- 候选窗口全量扫描与 chi2/dof 评估
+高层可读性包装器：双曲余弦 (cosh) 平台非线性拟合器
+- 统一委托至 src.parselqcdata.plateau_fit 权威拟合核心 (消除重复实现)
+- 强制使用 scipy_least_squares 拟合器与统一残差容差
+- 提供面向介子分析的高层可读性拟合接口 fit_cosh_plateau()
+- 完整保留所有统计重采样样本明细 (含 jk_index, mass, a, chi2, dof)
 - 支持独立命令行运行 (CLI)
 --------------------------------------------------------------------------------
 """
@@ -19,257 +19,128 @@ import sys
 from typing import Dict, List, Optional, Sequence, Tuple
 import warnings
 
-import gvar as gv
-import lsqfit
 import numpy as np
 import pandas as pd
 import polars as pl
 
-# ==============================================================================
-# 拟合器统一入口
-# ------------------------------------------------------------------------------
-# lsqfit.nonlinear_fit 的 fitter 默认值是 None, 含义是 "按环境自动挑":
-# 装了 GSL 时用 'gsl_multifit', 没装时才退到 'scipy_least_squares'。
-# 这会让同一份代码在不同机器上走出不同结果 (甚至退化), 因此本仓库**一律显式**
-# 指定 chi2 最小二乘拟合器, 所有拟合必须经过 chi2_least_squares_fit()。
-# ==============================================================================
-from src.parselqcdata.plateau_fit import LEAST_SQUARES_FITTER, chi2_least_squares_fit
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+# 从权威实现 plateau_fit 统一导入，杜绝多处重复定义
+from src.parselqcdata.plateau_fit import (
+    LEAST_SQUARES_FITTER,
+    chi2_least_squares_fit,
+    target_cosh_func,
+    centered_cosh_func,
+    fit_single_jackknife_column,
+    fit_single_jackknife_column_centered,
+    fit_meson_plateau,
+    fit_jackknife_mass_centered,
+    fit_mass_window_scan,
+)
 
 
-
-def target_cosh_func(x, p):
-    """默认对称点 center = 24.0 的 cosh 拟合函数"""
-    return p["a"] * np.cosh(p["m"] * (x - 24.0))
-
-
-def centered_cosh_func(half: float):
-    """生成对称点为 half 的 cosh 拟合函数: f(x) = a * cosh(m * (x - half))"""
-    def _fcn(x, p):
-        return p["a"] * np.cosh(p["m"] * (x - half))
-    return _fcn
-
-
-def _initial_guess(x_data: np.ndarray, y_val: np.ndarray, half: float) -> dict:
-    """按首点量级给出初值, 避免 cosh(x - half) 很大时 a 的初值离谱"""
-    x0 = float(np.asarray(x_data).ravel()[0])
-    y0 = float(np.asarray(y_val).ravel()[0])
-    m0 = 0.3
-    c0 = np.cosh(m0 * (x0 - half))
-    a0 = y0 / c0 if np.isfinite(c0) and c0 != 0.0 else 1.0
-    if not np.isfinite(a0) or a0 == 0.0:
-        a0 = 1.0
-    return {"a": a0, "m": m0}
-
-
-def fit_single_jackknife_column(
-    x_data: np.ndarray, y_val: np.ndarray, y_err: np.ndarray
-) -> dict:
-    """对单个 Jackknife 样本列执行非线性拟合 (默认 half = 24.0)"""
-    y_gv = gv.gvar(y_val, y_err)
-    try:
-        fit = chi2_least_squares_fit(
-            data=(x_data, y_gv),
-            fcn=target_cosh_func,
-            p0={"a": 1.0, "m": 0.5},
-        )
-        return {
-            "chi2": float(fit.chi2),
-            "dof": fit.dof,
-            "massfit_mean": abs(float(fit.p["m"].mean)),
-            "massfit_err": float(fit.p["m"].sdev),
-            "fita": float(fit.p["a"].mean),
-            "fita_err": float(fit.p["a"].sdev),
-            "chi2_dof": float(fit.chi2 / (fit.dof - 1)) if fit.dof > 1 else float("inf"),
-        }
-    except Exception:
-        return {}
-
-
-def fit_single_jackknife_column_centered(
-    x_data: np.ndarray, y_val: np.ndarray, y_err: np.ndarray, half: float
-) -> dict:
-    """单个 Jackknife 样本列的非线性 cosh 拟合 (对称点 half = Ns/2)"""
-    y_gv = gv.gvar(y_val, y_err)
-    try:
-        fit = chi2_least_squares_fit(
-            data=(x_data, y_gv),
-            fcn=centered_cosh_func(half),
-            p0=_initial_guess(x_data, y_val, half),
-        )
-        return {
-            "chi2": float(fit.chi2),
-            "dof": fit.dof,
-            "massfit_mean": abs(float(fit.p["m"].mean)),
-            "massfit_err": float(fit.p["m"].sdev),
-            "fita": float(fit.p["a"].mean),
-            "fita_err": float(fit.p["a"].sdev),
-            "chi2_dof": float(fit.chi2 / (fit.dof - 1)) if fit.dof > 1 else float("inf"),
-        }
-    except Exception:
-        return {}
-
-
-def fit_meson_plateau(
-    df_sym: pd.DataFrame,
-    err_vals: np.ndarray,
-    slice_start: int,
-    slice_end: int = 25,
-) -> Tuple[pd.DataFrame, Optional[dict]]:
-    """对对称折叠矩阵全部 Jackknife 样本进行切片平台拟合 (兼容旧接口)"""
-    x_array = np.arange(48)[slice_start:slice_end]
-    fits = []
-
-    for col in df_sym.columns:
-        y_val = df_sym[col].to_numpy()[slice_start:slice_end]
-        y_err = err_vals[slice_start:slice_end]
-        f = fit_single_jackknife_column(x_array, y_val, y_err)
-        if f and f.get("chi2_dof", float("inf")) <= 1000000.0:
-            fits.append(f)
-
-    df_res = pd.DataFrame(fits)
-    summary = None
-
-    if not df_res.empty:
-        n_samples = len(df_res)
-        means = df_res.mean()
-        diffs = df_res - means
-        sum_sq = (diffs**2).sum()
-        jack_err = np.sqrt(((n_samples - 1) / n_samples) * sum_sq)
-        summary = {
-            "mass_mean": float(means["massfit_mean"]),
-            "mass_err": float(jack_err["massfit_mean"]),
-            "a_mean": float(means["fita"]),
-            "a_err": float(jack_err["fita"]),
-            "chi2_dof": float(means["chi2_dof"]),
-            "n_samples": int(n_samples),
-        }
-
-    return df_res, summary
-
-
-def fit_mass_window_scan(
-    x_data: np.ndarray,
-    y_mean: np.ndarray,
-    y_err: np.ndarray,
-    windows: List[Tuple[int, int]],
-    half: float,
-) -> List[dict]:
+def fit_cosh_plateau(
+    dr_matrix: np.ndarray,
+    errors: np.ndarray,
+    t_start: int,
+    t_end: int,
+    half: float = 24.0,
+    channel: str = "",
+    out_dir: Optional[Path] = None,
+) -> Tuple[Dict[str, float], List[dict]]:
     """
-    平台窗口扫描 (对均值关联函数逐窗口拟合), 用于挑选最佳平台窗口。
-    返回每个窗口的质量/chi2 记录, 失败窗口以 NaN 占位。
+    高层可读性拟合 Wrapper:
+    对关联函数 Jackknife 折叠矩阵在时间切片窗口 [t_start, t_end) 执行逐样本 cosh 平台拟合。
+
+    Parameters:
+        dr_matrix: (N_time x N_bins) 关联函数折叠矩阵
+        errors: (N_time,) 关联函数统计误差向量
+        t_start: 拟合窗口起始时隙
+        t_end: 拟合窗口截止时隙
+        half: 对称点 (默认 24.0，对应 Ns=48; 若 Ns=32 则为 16.0)
+        channel: 信道名称 (例如 'AV', 'PS', 'S')
+        out_dir: 产物输出目录 (若提供则自动落盘逐样本与汇总 CSV)
+
+    Returns:
+        (summary_dict, fit_records):
+        - summary_dict: {"mass": ..., "mass_err": ..., "a": ..., "a_err": ..., "chi2_dof": ...}
+        - fit_records: 逐 Jackknife 样本的拟合明细列表 (含 jk_index)
     """
-    records: List[dict] = []
-    x_data = np.asarray(x_data)
-    y_mean = np.asarray(y_mean)
-    y_err = np.asarray(y_err)
+    dr_matrix = np.asarray(dr_matrix, dtype=np.float64)
+    errors = np.asarray(errors, dtype=np.float64)
+    x_array = np.arange(t_start, t_end)
+    y_slice = dr_matrix[t_start:t_end, :]
+    err_slice = errors[t_start:t_end]
+    n_bins = y_slice.shape[1]
 
-    for start, end in windows:
-        rec = {
-            "x_start": int(start), "x_end": int(end), "n_points": int(end - start),
-            "mass": np.nan, "mass_err": np.nan, "a": np.nan, "a_err": np.nan,
-            "chi2": np.nan, "dof": np.nan, "chi2_dof": np.nan, "ok": False,
-        }
-        if end - start < 2:
-            records.append(rec)
-            continue
-        fit = fit_single_jackknife_column_centered(
-            x_data[start:end], y_mean[start:end], y_err[start:end], half
-        )
-        if fit:
-            rec.update({
-                "mass": float(fit["massfit_mean"]),
-                "mass_err": float(fit["massfit_err"]),
-                "a": float(fit["fita"]),
-                "a_err": float(fit["fita_err"]),
-                "chi2": float(fit["chi2"]),
-                "dof": float(fit["dof"]),
-                "chi2_dof": float(fit["chi2_dof"]),
-                "ok": True,
-            })
-        records.append(rec)
-    return records
-
-
-def fit_jackknife_mass_centered(
-    x_data: np.ndarray,
-    jk_matrix: np.ndarray,
-    y_err: np.ndarray,
-    start: int,
-    end: int,
-    half: float,
-) -> dict:
-    """
-    对 Jackknife 折叠矩阵的每一列在窗口 [start, end) 内做 cosh 平台拟合,
-    按仓库既有约定汇总 (均值 + Jackknife 误差 sqrt((J-1) * sum(d^2) / J))。
-    """
-    x_array = np.asarray(x_data)[start:end]
-    err_slice = np.asarray(y_err)[start:end]
-    jk_slice = np.asarray(jk_matrix)[start:end, :]
-    n_samples = jk_slice.shape[1]
-
-    masses: List[float] = []
-    amps: List[float] = []
-    chi2_dofs: List[float] = []
-    per_sample: List[dict] = []
+    fit_records: List[dict] = []
+    mass_list: List[float] = []
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        for k in range(n_samples):
-            fit = fit_single_jackknife_column_centered(
-                x_array, jk_slice[:, k], err_slice, half
-            )
-            if fit:
-                masses.append(float(fit["massfit_mean"]))
-                amps.append(float(fit["fita"]))
-                if np.isfinite(fit["chi2_dof"]):
-                    chi2_dofs.append(float(fit["chi2_dof"]))
-                per_sample.append({"sample": k, **fit})
-            else:
-                per_sample.append({"sample": k})
+        for k in range(n_bins):
+            try:
+                if abs(half - 24.0) < 1e-6:
+                    fit = fit_single_jackknife_column(x_array, y_slice[:, k], err_slice)
+                else:
+                    fit = fit_single_jackknife_column_centered(
+                        x_array, y_slice[:, k], err_slice, half=half
+                    )
+                if fit:
+                    rec = {"jk_index": k, **fit}
+                    fit_records.append(rec)
+                    mass_list.append(float(fit.get("massfit_mean", np.nan)))
+                else:
+                    fit_records.append({"jk_index": k, "massfit_mean": np.nan})
+                    mass_list.append(np.nan)
+            except Exception:
+                fit_records.append({"jk_index": k, "massfit_mean": np.nan})
+                mass_list.append(np.nan)
 
-    masses_arr = np.asarray(masses, dtype=np.float64)
-    amps_arr = np.asarray(amps, dtype=np.float64)
+    mass_arr = np.array(mass_list, dtype=np.float64)
+    valid_mask = np.isfinite(mass_arr)
 
-    result = {
-        "mass": np.nan, "mass_err": np.nan,
-        "a": np.nan, "a_err": np.nan,
-        "chi2_dof": np.nan,
-        "n_samples": int(n_samples), "n_fitted": int(masses_arr.size),
-        "x_start": int(start), "x_end": int(end), "half": float(half),
+    if np.any(valid_mask):
+        fit_mass = float(np.mean(mass_arr[valid_mask]))
+        diff = mass_arr[valid_mask] - fit_mass
+        fit_err = float(np.sqrt((n_bins - 1) * np.sum(diff**2) / n_bins))
+    else:
+        fit_mass, fit_err = np.nan, np.nan
+
+    summary_dict = {
+        "channel": channel,
+        "mass_mean": fit_mass,
+        "mass_err": fit_err,
+        "t_start": t_start,
+        "t_end": t_end,
+        "half": half,
+        "n_bins": n_bins,
     }
-    if masses_arr.size:
-        mass_mean = float(np.mean(masses_arr))
-        a_mean = float(np.mean(amps_arr)) if amps_arr.size else np.nan
-        result["mass"] = mass_mean
-        result["a"] = a_mean
-        result["mass_err"] = float(np.sqrt((masses_arr.size - 1) * np.sum((masses_arr - mass_mean) ** 2) / masses_arr.size))
-        if amps_arr.size:
-            result["a_err"] = float(np.sqrt((amps_arr.size - 1) * np.sum((amps_arr - a_mean) ** 2) / amps_arr.size))
-        if chi2_dofs:
-            result["chi2_dof"] = float(np.mean(chi2_dofs))
-    result["per_sample"] = per_sample
-    return result
 
+    # 持久化输出
+    if out_dir is not None:
+        out_dir = Path(out_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        ch_suffix = f"{channel}" if channel else ""
 
-def select_best_window(
-    scan_results: Sequence[dict],
-    chi2_max: float = 3.0,
-    min_points: int = 3,
-) -> Optional[dict]:
-    """从窗口扫描结果中挑选 chi2/dof <= chi2_max 且最平坦的窗口。"""
-    valid = [
-        r for r in scan_results
-        if r.get("ok") and np.isfinite(r.get("chi2_dof", np.nan)) and r.get("n_points", 0) >= min_points
-    ]
-    if not valid:
-        return None
-    acceptable = [r for r in valid if r["chi2_dof"] <= chi2_max]
-    pool = acceptable if acceptable else valid
-    return min(pool, key=lambda r: r["chi2_dof"])
+        if fit_records:
+            df_samples = pl.DataFrame(fit_records)
+            df_samples.write_csv(out_dir / f"fittresult{ch_suffix}.csv")
+
+        summary_df = pl.DataFrame({
+            "quantity": ["mass"],
+            "mean": [fit_mass],
+            "jack_err": [fit_err],
+        })
+        summary_df.write_csv(out_dir / f"summary_fit_{ch_suffix}.csv")
+
+    return summary_dict, fit_records
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="双曲余弦 (cosh) 平台拟合脚本")
+    parser = argparse.ArgumentParser(description="双曲余弦 (cosh) 平台拟合包装工具")
     parser.add_argument("--start", type=int, default=14, help="平台起始切片 (默认: 14)")
     parser.add_argument("--end", type=int, default=24, help="平台结束切片 (默认: 24)")
     parser.add_argument("--half", type=float, default=24.0, help="对称点 (默认: 24.0)")
@@ -280,7 +151,7 @@ def main() -> None:
     y = true_a * np.cosh(true_m * (x - args.half)) + 1e-5 * np.random.randn(len(x))
     err = np.full(len(x), 1e-4)
     res = fit_single_jackknife_column_centered(x, y, err, half=args.half)
-    print("--- Cosh 平台拟合测试 ---")
+    print("--- Cosh 平台拟合测试 (通过 plateau_fit 统一引擎) ---")
     print(f"真值: mass={true_m}, A={true_a}")
     for k, v in res.items():
         print(f"  {k:<14}: {v}")

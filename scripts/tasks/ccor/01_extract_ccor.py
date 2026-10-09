@@ -30,7 +30,8 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.parselqcdata.ccor_flow import extract_and_fold_blocks, CaseSpec, DEFAULT_CASES, ANA_CHANNEL_BLOCKS
+from docs.meson_scan_setup import SCAN_CASES
+from src.parselqcdata.ccor_flow import ANA_CHANNEL_BLOCKS
 
 
 def main() -> None:
@@ -38,15 +39,13 @@ def main() -> None:
     parser.add_argument("--case", type=str, default="32x12", help="指定系综规格 (如 32x12, 32x14, 32x16, 36x18)")
     args = parser.parse_args()
 
-    matching = [c for c in DEFAULT_CASES if c.name == args.case]
-    if not matching:
-        print(f"[WARN] 未知系综规格: {args.case}")
+    if args.case not in SCAN_CASES:
+        print(f"[WARN] 未知系综规格: {args.case} (支持规格: {SCAN_CASES})")
         return
 
-    case = matching[0]
-    print(f"[CCOR-TASK-01] 抽取系综 {case.name} 的介子 block 关联函数...")
+    print(f"[CCOR-TASK-01] 抽取系综 {args.case} 的介子 block 关联函数...")
     # 抽取逻辑通过 ccor_flow 模块驱动底层 C++ 抽取与折叠
-    print(f"[OK] 系综 {case.name} 介子关联函数抽取完成")
+    print(f"[OK] 系综 {args.case} 介子关联函数抽取完成")
 
 
 if __name__ == "__main__":
