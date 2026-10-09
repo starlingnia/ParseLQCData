@@ -2,7 +2,6 @@
 
 #include <fstream>
 #include <iomanip>
-#include <print>
 
 namespace iodata {
 

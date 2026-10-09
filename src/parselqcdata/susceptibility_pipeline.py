@@ -25,7 +25,7 @@ Python 整合层：手征磁化率 (Chiral Susceptibility, \\chi) 端到端分�
      \\chi_{vol} = F_vol * \\chi_{unscaled}
    - 标度因子: F_scaled = Ns^3 * Nt^3 * T^2 = F_vol * (Nt * T)^2
      \\chi_{scaled} = F_scaled * \\chi_{unscaled}  (单位: MeV^2)
-     对应 plot_chisce.py 中的 $(N_t T)^2 a^2 \chi$ 标准。
+     对应 plot_chisce.py 中的 $(N_t T)^2 a^2 \\chi$ 标准。
 
 5. 跨机器移植性:
    既支持在包含全量原始构型向量的集群计算机上全自动遍历提取，
@@ -70,218 +70,20 @@ SUSCEPTIBILITY_TEMP_MAP: Dict[str, float] = {
 }
 
 
-def get_zm_factor(beta_val: Union[float, str]) -> float:
-    """
-    根据规范耦合常数 Beta 查询获取质量重整化因子 Zm(beta)。
-    默认查阅 docs.physics_setup.MRES_TABLE 标准表，缺失时平滑兜底为 1.0。
-    """
-    try:
-        from docs.physics_setup import MRES_TABLE
-        b_float = float(beta_val)
-        b_str = f"{b_float:.2f}" if abs(b_float - 4.405) > 1e-4 else "4.405"
-        if str(beta_val) in MRES_TABLE:
-            return float(MRES_TABLE[str(beta_val)]["zm"])
-        if b_str in MRES_TABLE:
-            return float(MRES_TABLE[b_str]["zm"])
-    except Exception:
-        pass
-    return 1.0
+from src.parselqcdata.xml_pbp_extractor import extract_pbp_from_xml, extract_pbp_from_directory
+from src.parselqcdata.unbiased_quadratic import compute_unbiased_quadratic
+from src.parselqcdata.scaling_factors import (
+    compute_scaling_factors,
+    get_zm_factor,
+    parse_ensemble_meta_from_dir,
+    is_valid_condensate_dir,
+)
+from src.parselqcdata.susceptibility_calculator import (
+    jackknife_resample,
+    compute_jackknife_susceptibility,
+)
+from src.parselqcdata.lcp_exporter import export_lcp_outputs
 
-
-def parse_ensemble_meta_from_dir(dir_name: str) -> Dict[str, Union[int, float, str]]:
-    """
-    从目录名称中解析格点几何尺寸 (Ns, Nt) 与耦合常数 Beta。
-    支持格式:
-      - L48T16beta4.18ms0.037265m0.001022
-      - 48x16b4.18
-      - L32T12beta4.17
-      - L40T16_beta4.17
-    """
-    meta: Dict[str, Union[int, float, str]] = {
-        "ns": 48,
-        "nt": 16,
-        "beta": "4.17",
-    }
-
-    # 1. 匹配时空几何 Ns, Nt
-    geom_match = re.search(r"L(\d+)T(\d+)", dir_name, re.IGNORECASE)
-    if geom_match:
-        meta["ns"] = int(geom_match.group(1))
-        meta["nt"] = int(geom_match.group(2))
-    else:
-        geom_x = re.search(r"(\d+)x(\d+)", dir_name)
-        if geom_x:
-            meta["ns"] = int(geom_x.group(1))
-            meta["nt"] = int(geom_x.group(2))
-
-    # 2. 匹配 Beta
-    beta_match = re.search(r"b(?:eta)?([0-9.]+)", dir_name, re.IGNORECASE)
-    if beta_match:
-        meta["beta"] = beta_match.group(1)
-
-    return meta
-
-
-def compute_scaling_factors(ns: int, nt: int, temp_mev: float) -> Tuple[float, float]:
-    """
-    计算磁化率所需的体积因子与标度因子：
-    - factor_vol = Ns^3 * Nt
-    - factor_scaled = Ns^3 * Nt^3 * T^2 = factor_vol * (Nt * T)^2
-    """
-    f_vol = float((ns**3) * nt)
-    f_scaled = float((ns**3) * (nt**3) * (temp_mev**2))
-    return f_vol, f_scaled
-
-
-def extract_pbp_from_xml(file_path: Path) -> Optional[float]:
-    """
-    使用高效正则从 XML 中提取 <pbp>(real, imag)</pbp> 的实部数值。
-    """
-    try:
-        content = file_path.read_text(encoding="utf-8", errors="ignore")
-        match = re.search(r"<pbp>\(([^,]+),", content)
-        if match:
-            return float(match.group(1))
-    except Exception:
-        pass
-    return None
-
-
-def compute_unbiased_quadratic(vals: List[float]) -> Tuple[float, float]:
-    """
-    计算单个规范构型上的无偏手征凝聚均值与两点方均关联估计：
-    - Obar = (1/k) * \\sum_{i=1}^k O_i
-    - O2bar = [1/(k(k-1))] * \\sum_{i \\neq j} O_i O_j
-            = (1/k) * \\sum_{i=1}^k [ 1/(k-1) * O_i * (S - O_i) ]
-    消除了由于有限随机源数目 k 带来的随机噪声方差对算符平方的内积偏差。
-    """
-    k = len(vals)
-    if k <= 1:
-        raise ValueError(f"计算两体无偏关联至少需要 2 个随机源向量，当前仅提供 {k} 个")
-
-    total_s = float(sum(vals))
-    obar = total_s / k
-    # 向量化无偏方均估计
-    obar_sq_unbiased = float(np.mean([(1.0 / (k - 1)) * x * (total_s - x) for x in vals]))
-    return obar, obar_sq_unbiased
-
-
-def jackknife_resample(arr: np.ndarray) -> np.ndarray:
-    """
-    对一维样本序列执行 Jackknife Leave-One-Out 重采样。
-    输入大小 N，输出大小 N 的 Jackknife 假样本序列。
-    """
-    n = len(arr)
-    if n <= 1:
-        raise ValueError("Jackknife 重采样至少需要 2 个构型样本")
-    total_sum = np.sum(arr)
-    return (total_sum - arr) / (n - 1)
-
-
-def compute_jackknife_susceptibility(
-    list_obar: List[float],
-    list_o2bar: List[float],
-    ns: int = 48,
-    nt: int = 16,
-    temp_mev: float = 157.0,
-    beta: Optional[Union[float, str]] = None,
-    zm: Optional[float] = None,
-) -> Dict[str, float]:
-    """
-    通过 Jackknife 假样本计算手征磁化率 \\chi = \\langle O^2 \\rangle - \\langle O \\rangle^2
-    并根据 Ns, Nt 与温度 T 准确折算标度因子与质量重整化因子 Zm：
-    - factor_vol = Ns^3 * Nt
-    - factor_scaled = Ns^3 * Nt^3 * T^2
-    - chi_disc(lattice unit) = Mean_vol_scaled
-    - chi_disc(GeV^2 renormalized) = (Mean_scaled / 1e6) / Zm**2
-    """
-    n = len(list_obar)
-    if n <= 1 or len(list_o2bar) != n:
-        raise ValueError(f"样本维度不合法: obar={len(list_obar)}, o2bar={len(list_o2bar)}")
-
-    arr_obar = np.array(list_obar, dtype=np.float64)
-    arr_o2bar = np.array(list_o2bar, dtype=np.float64)
-
-    a_jk = jackknife_resample(arr_obar)
-    b_jk = jackknife_resample(arr_o2bar)
-
-    # 每一个 Jackknife bin 中的磁化率估计
-    chi_jk = b_jk - (a_jk**2)
-
-    mean_unscaled = float(np.mean(chi_jk))
-    # 统计标准误: \\sigma = \\sqrt{N-1} * \\text{std}(chi_jk, \\text{ddof}=0)
-    err_unscaled = float(np.sqrt(n - 1) * np.std(chi_jk, ddof=0))
-
-    f_vol, f_scaled = compute_scaling_factors(ns, nt, temp_mev)
-
-    mean_vol_scaled = mean_unscaled * f_vol
-    error_vol_scaled = err_unscaled * f_vol
-
-    mean_scaled = mean_unscaled * f_scaled
-    error_scaled = err_unscaled * f_scaled
-
-    # 物理量纲 [GeV^2] (未重整化)
-    mean_scaled_gev2 = mean_scaled / 1e6
-    error_scaled_gev2 = error_scaled / 1e6
-
-    # 质量重整化因子 Zm (除 Zm**2 重整化步骤)
-    eff_zm = zm if zm is not None else (get_zm_factor(beta) if beta is not None else 1.0)
-    inv_zm = (1.0 / eff_zm**2 ) if abs(eff_zm) > 1e-15 else 1.0
-
-    mean_scaled_renorm = mean_scaled * inv_zm
-    error_scaled_renorm = error_scaled * inv_zm
-    mean_scaled_gev2_renorm = mean_scaled_gev2 * inv_zm
-    error_scaled_gev2_renorm = error_scaled_gev2 * inv_zm
-
-    return {
-        "mean_unscaled": mean_unscaled,
-        "error_unscaled": err_unscaled,
-        "factor_vol": f_vol,
-        "mean_vol_scaled": mean_vol_scaled,
-        "error_vol_scaled": error_vol_scaled,
-        "factor_scaled": f_scaled,
-        "mean_scaled": mean_scaled,
-        "error_scaled": error_scaled,
-        "mean_scaled_gev2": mean_scaled_gev2,
-        "error_scaled_gev2": error_scaled_gev2,
-        "zm": eff_zm,
-        "mean_scaled_renorm": mean_scaled_renorm,
-        "error_scaled_renorm": error_scaled_renorm,
-        "mean_scaled_gev2_renorm": mean_scaled_gev2_renorm,
-        "error_scaled_gev2_renorm": error_scaled_gev2_renorm,
-        "num_configs": n,
-        "ns": ns,
-        "nt": nt,
-        "temp": temp_mev,
-    }
-
-
-def is_valid_condensate_dir(dir_path: Path) -> bool:
-    """
-    检查目录是否为有效的手征凝聚测量目录。
-    自动识别并跳过强子/介子关联函数目录（例如包含 Output/test1_lhadrons_* 且无 PsibarPsi 的目录）。
-    """
-    if not dir_path.is_dir():
-        return False
-    # 介子关联函数输出目录通常包含 Output/ 且没有 meas.*
-    if (dir_path / "Output").exists():
-        has_meas = any((dir_path / m).is_dir() for m in ["test_condensate"] if (dir_path / m).exists()) or list(dir_path.glob("meas.*"))
-        if not has_meas:
-            return False
-
-    # 检查根目录下是否有 meas.*/PsibarPsi
-    for m in dir_path.glob("meas.*"):
-        if (m / "PsibarPsi").exists():
-            return True
-
-    # 检查子目录下是否有 test_condensate/meas.*/PsibarPsi
-    sub_cand = dir_path / "test_condensate"
-    if sub_cand.exists():
-        for m in sub_cand.glob("meas.*"):
-            if (m / "PsibarPsi").exists():
-                return True
-
-    return False
 
 
 class SusceptibilityPipeline:
@@ -390,135 +192,15 @@ class SusceptibilityPipeline:
         df_res: pl.DataFrame,
         target_dirs: Optional[List[Path]] = None,
     ) -> None:
-        """
-        将所有 L 开头的系综结果执行除 Zm 重整化，并输出至指定的 LCP 目录 (outputs/LCP/)。
-        结果输出格式严格保持为:
-        # beta,  Z_m(beta),  chi_disc(lattice unit) error  chi_disc(GeV^2 renormalized)  error
-        """
-        if target_dirs is None:
-            target_dirs = [OUTPUTS_LCP_DIR, OUTPUT_LCP_DIR]
+        """将所有 L 开头的系综结果执行除 Zm^2 重整化，并输出至指定的 LCP 目录 (output/LCP/)。"""
+        export_lcp_outputs(df_res, target_dirs=target_dirs)
 
-        # 筛选所有 L 开头的系综 (如果包含 Ensemble 列)
-        if "Ensemble" in df_res.columns:
-            df_l = df_res.filter(pl.col("Ensemble").str.starts_with("L"))
-        else:
-            df_l = df_res
-
-        if df_l.height == 0:
-            df_l = df_res
-
-        rows_all = []
-        rows_lcp = []
-        rows_scaling = []
-
-        for r in df_l.iter_rows(named=True):
-            beta_raw = r["Beta"]
-            try:
-                b_float = float(beta_raw)
-                b_str = f"{b_float:.2f}" if abs(b_float - 4.405) > 1e-4 else "4.405"
-            except Exception:
-                b_float = 4.17
-                b_str = str(beta_raw)
-
-            zm_val = float(r.get("Zm", r.get("zm", get_zm_factor(b_float))))
-            inv_zm = 1.0 / zm_val **2 if abs(zm_val) > 1e-15 else 1.0
-
-            chi_lat = float(r["Mean_vol_scaled"])
-            err_lat = float(r["Error_vol_scaled"])
-
-            if "Mean_scaled_gev2_renorm" in r and r["Mean_scaled_gev2_renorm"] is not None:
-                chi_ren = float(r["Mean_scaled_gev2_renorm"])
-                err_ren = float(r["Error_scaled_gev2_renorm"])
-            elif "Mean_scaled" in r and r["Mean_scaled"] is not None:
-                chi_gev2 = float(r["Mean_scaled"]) / 1e6
-                err_gev2 = float(r["Error_scaled"]) / 1e6
-                chi_ren = chi_gev2 * inv_zm
-                err_ren = err_gev2 * inv_zm
-            else:
-                chi_ren = chi_lat * inv_zm
-                err_ren = err_lat * inv_zm
-
-            entry = {
-                "Ensemble": str(r.get("Ensemble", f"beta{b_str}")),
-                "Beta": b_float,
-                "Beta_str": b_str,
-                "Temp": float(r.get("Temp", 157.0)),
-                "Ns": int(r.get("Ns", 48)),
-                "Nt": int(r.get("Nt", 16)),
-                "Num_cfgs": int(r.get("Num_cfgs", r.get("num_cfgs", 0))),
-                "Zm": zm_val,
-                "chi_lat": chi_lat,
-                "err_lat": err_lat,
-                "chi_ren": chi_ren,
-                "err_ren": err_ren,
-            }
-            rows_all.append(entry)
-
-            if entry["Ns"] == 48 and entry["Nt"] == 16:
-                rows_lcp.append(entry)
-            else:
-                rows_scaling.append(entry)
-
-        # 排序
-        rows_all.sort(key=lambda x: (x["Beta"], x["Temp"]))
-        rows_lcp.sort(key=lambda x: x["Beta"])
-        rows_scaling.sort(key=lambda x: (x["Beta"], x["Temp"]))
-
-        header = "# beta,  Z_m(beta),  chi_disc(lattice unit) error  chi_disc(GeV^2 renormalized)  error\n"
-
-        def write_txt_content(entries: List[dict]) -> str:
-            lines = [header]
-            for e in entries:
-                b_s = f"{e['Beta_str']:<8}"
-                zm_s = f"{e['Zm']:<12.6f}"
-                c_lat_s = f"{e['chi_lat']:<18.8e}"
-                e_lat_s = f"{e['err_lat']:<18.8e}"
-                c_ren_s = f"{e['chi_ren']:<18.8e}"
-                e_ren_s = f"{e['err_ren']:<18.8e}"
-                lines.append(f"{b_s} {zm_s} {c_lat_s} {e_lat_s} {c_ren_s} {e_ren_s}\n")
-            return "".join(lines)
-
-        content_all = write_txt_content(rows_all)
-        content_lcp = write_txt_content(rows_lcp)
-        content_scaling = write_txt_content(rows_scaling)
-
-        for out_d in target_dirs:
-            out_d.mkdir(parents=True, exist_ok=True)
-
-            # 1. 规范结果文本 (以 L48T16 各个 beta 为核心产物)
-            (out_d / "results_susceptibility.txt").write_text(content_lcp, encoding="utf-8")
-            (out_d / "results_susceptibility_lcp.txt").write_text(content_lcp, encoding="utf-8")
-            (out_d / "results_susceptibility_all.txt").write_text(content_all, encoding="utf-8")
-            if rows_scaling:
-                (out_d / "results_susceptibility_scaling.txt").write_text(content_scaling, encoding="utf-8")
-            (out_d / "chi_disc.txt").write_text(content_lcp, encoding="utf-8")
-            (out_d / "results_beta.txt").write_text(content_lcp, encoding="utf-8")
-
-            # 2. 导出完整 CSV 与 Parquet 格式
-            df_export_lcp = pl.DataFrame(rows_lcp).rename({
-                "chi_lat": "Mean_vol_scaled",
-                "err_lat": "Error_vol_scaled",
-                "chi_ren": "Mean_scaled_gev2_renorm",
-                "err_ren": "Error_scaled_gev2_renorm",
-            })
-            df_export_lcp.write_csv(out_d / "results_susceptibility.csv")
-            df_export_lcp.write_parquet(out_d / "results_susceptibility.parquet")
-
-            df_export_all = pl.DataFrame(rows_all).rename({
-                "chi_lat": "Mean_vol_scaled",
-                "err_lat": "Error_vol_scaled",
-                "chi_ren": "Mean_scaled_gev2_renorm",
-                "err_ren": "Error_scaled_gev2_renorm",
-            })
-            df_export_all.write_csv(out_d / "all_ensembles_susceptibility.csv")
-
-        print(f"[OK] 成功导出 L48T16 各个 beta 重整化手征磁化率数据产物至: {[str(d) for d in target_dirs]}")
 
     def run_cluster_scan(self, readin_dir: Path) -> pl.DataFrame:
         """
         在拥有全量构型测量数据的计算机/集群上执行全温度与全系综扫描计算。
         自动遍历 readin_dir 下的所有格点目录，智能过滤介子关联函数目录，
-        计算手征磁化率，导出至 output/condensate/results_susceptibility.csv 及 outputs/LCP/。
+        计算手征磁化率，导出至 output/condensate/results_susceptibility.csv 及 output/LCP/。
         """
         all_dirs = sorted([d for d in readin_dir.iterdir() if d.is_dir()])
         results = []
@@ -600,7 +282,7 @@ class SusceptibilityPipeline:
         df_res.write_parquet(out_parquet)
         df_res.write_csv(out_all_csv)
 
-        # 导出至 outputs/LCP/ 与 output/LCP/
+        # 导出至 output/LCP/
         self.export_lcp_outputs(df_res)
 
         print(f"[OK] 集群计算完成，结果已保存至 {out_csv} 及 {out_all_csv}")
@@ -614,7 +296,7 @@ class SusceptibilityPipeline:
         """
         获取手征磁化率完整数据集 (含 Zm 重整化与物理标度)。
         优先载入包含全量真实测量的 all_ensembles_susceptibility.csv 并注入 Zm 重整化；
-        若不存在则自 ana 基准数据对齐同步，并自动导出至 outputs/LCP/。
+        若不存在则自 ana 基准数据对齐同步，并自动导出至 output/LCP/。
         """
         out_csv = self.output_dir / "results_susceptibility.csv"
         out_parquet = self.output_dir / "results_susceptibility.parquet"
