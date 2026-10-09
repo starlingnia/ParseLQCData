@@ -31,6 +31,9 @@ struct SusceptibilityResult {
     int ns{48};
     int nt{16};
     double temp{157.0};
+    std::vector<double> jackknife_samples;
+    std::vector<double> obar_list;
+    std::vector<double> o2bar_list;
 };
 
 // GSL 规范：小函数职责单一，[[nodiscard]] 强制调用方检查结果 (独立功能算子)

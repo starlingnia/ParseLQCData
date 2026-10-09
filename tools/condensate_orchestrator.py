@@ -9,6 +9,7 @@ Loads liblqcd_condensate.dylib / libparselqcdata.dylib
 import ctypes
 from pathlib import Path
 from typing import Optional, Tuple
+import numpy as np
 
 class CondensateOrchestrator:
     """Python bridge for Chiral Condensate C++ pipeline."""
@@ -101,6 +102,27 @@ class CondensateOrchestrator:
                 ctypes.POINTER(ctypes.c_int),    # out_num_cfgs
             ]
             self._lib.run_chiral_susceptibility_c_api.restype = ctypes.c_int
+
+        if hasattr(self._lib, "run_chiral_susceptibility_full_c_api"):
+            self._lib.run_chiral_susceptibility_full_c_api.argtypes = [
+                ctypes.c_char_p,                 # base_dir
+                ctypes.c_int,                    # ns
+                ctypes.c_int,                    # nt
+                ctypes.c_double,                 # temp_mev
+                ctypes.c_double,                 # zm_factor
+                ctypes.POINTER(ctypes.c_double), # out_mean_unscaled
+                ctypes.POINTER(ctypes.c_double), # out_error_unscaled
+                ctypes.POINTER(ctypes.c_double), # out_mean_vol_scaled
+                ctypes.POINTER(ctypes.c_double), # out_error_vol_scaled
+                ctypes.POINTER(ctypes.c_double), # out_mean_scaled
+                ctypes.POINTER(ctypes.c_double), # out_error_scaled
+                ctypes.POINTER(ctypes.c_int),    # out_num_cfgs
+                ctypes.c_int,                    # max_cfgs
+                ctypes.POINTER(ctypes.c_double), # out_jk_samples_renorm
+                ctypes.POINTER(ctypes.c_double), # out_obar
+                ctypes.POINTER(ctypes.c_double), # out_o2bar
+            ]
+            self._lib.run_chiral_susceptibility_full_c_api.restype = ctypes.c_int
     
     def process_condensate(
 
@@ -197,13 +219,11 @@ class CondensateOrchestrator:
         ns: int = 48,
         nt: int = 16,
         temp_mev: float = 157.0,
+        zm_factor: float = 1.0,
     ) -> dict:
         """
         通过 C++ 高性能多线程引擎提取纯轻夸克手征磁化率并进行物理标度计算。
         """
-        if not hasattr(self._lib, "run_chiral_susceptibility_c_api"):
-            raise NotImplementedError("Dynamic library does not export run_chiral_susceptibility_c_api")
-
         out_mean_unscaled = ctypes.c_double(0.0)
         out_error_unscaled = ctypes.c_double(0.0)
         out_mean_vol_scaled = ctypes.c_double(0.0)
@@ -214,19 +234,46 @@ class CondensateOrchestrator:
 
         base_dir_bytes = str(base_dir).encode('utf-8')
 
-        ret = self._lib.run_chiral_susceptibility_c_api(
-            base_dir_bytes,
-            ctypes.c_int(ns),
-            ctypes.c_int(nt),
-            ctypes.c_double(temp_mev),
-            ctypes.byref(out_mean_unscaled),
-            ctypes.byref(out_error_unscaled),
-            ctypes.byref(out_mean_vol_scaled),
-            ctypes.byref(out_error_vol_scaled),
-            ctypes.byref(out_mean_scaled),
-            ctypes.byref(out_error_scaled),
-            ctypes.byref(out_num_cfgs)
-        )
+        max_cfgs = 10000
+        jk_samples_buf = (ctypes.c_double * max_cfgs)()
+        obar_buf = (ctypes.c_double * max_cfgs)()
+        o2bar_buf = (ctypes.c_double * max_cfgs)()
+
+        if hasattr(self._lib, "run_chiral_susceptibility_full_c_api"):
+            ret = self._lib.run_chiral_susceptibility_full_c_api(
+                base_dir_bytes,
+                ctypes.c_int(ns),
+                ctypes.c_int(nt),
+                ctypes.c_double(temp_mev),
+                ctypes.c_double(zm_factor),
+                ctypes.byref(out_mean_unscaled),
+                ctypes.byref(out_error_unscaled),
+                ctypes.byref(out_mean_vol_scaled),
+                ctypes.byref(out_error_vol_scaled),
+                ctypes.byref(out_mean_scaled),
+                ctypes.byref(out_error_scaled),
+                ctypes.byref(out_num_cfgs),
+                ctypes.c_int(max_cfgs),
+                jk_samples_buf,
+                obar_buf,
+                o2bar_buf,
+            )
+        elif hasattr(self._lib, "run_chiral_susceptibility_c_api"):
+            ret = self._lib.run_chiral_susceptibility_c_api(
+                base_dir_bytes,
+                ctypes.c_int(ns),
+                ctypes.c_int(nt),
+                ctypes.c_double(temp_mev),
+                ctypes.byref(out_mean_unscaled),
+                ctypes.byref(out_error_unscaled),
+                ctypes.byref(out_mean_vol_scaled),
+                ctypes.byref(out_error_vol_scaled),
+                ctypes.byref(out_mean_scaled),
+                ctypes.byref(out_error_scaled),
+                ctypes.byref(out_num_cfgs),
+            )
+        else:
+            raise NotImplementedError("Dynamic library does not export run_chiral_susceptibility_c_api")
 
         if ret != 0:
             raise RuntimeError(f"run_chiral_susceptibility_c_api failed with code {ret}")
@@ -234,7 +281,8 @@ class CondensateOrchestrator:
         f_vol = float((ns**3) * nt)
         f_scaled = float((ns**3) * (nt**3) * (temp_mev**2))
 
-        return {
+        n_cfgs = int(out_num_cfgs.value)
+        result = {
             "mean_unscaled": float(out_mean_unscaled.value),
             "error_unscaled": float(out_error_unscaled.value),
             "factor_vol": f_vol,
@@ -243,9 +291,16 @@ class CondensateOrchestrator:
             "factor_scaled": f_scaled,
             "mean_scaled": float(out_mean_scaled.value),
             "error_scaled": float(out_error_scaled.value),
-            "num_configs": int(out_num_cfgs.value),
+            "num_configs": n_cfgs,
             "ns": ns,
             "nt": nt,
             "temp": temp_mev,
         }
+
+        if n_cfgs > 0 and hasattr(self._lib, "run_chiral_susceptibility_full_c_api"):
+            result["jk_samples_renorm"] = np.array(jk_samples_buf[:n_cfgs], dtype=np.float64)
+            result["obar_list"] = np.array(obar_buf[:n_cfgs], dtype=np.float64)
+            result["o2bar_list"] = np.array(o2bar_buf[:n_cfgs], dtype=np.float64)
+
+        return result
 

@@ -23,4 +23,7 @@ uv run python tests/test_ccor_flow.py
 echo "[TEST] Running chiral susceptibility extraction and Zm scaling tests..."
 uv run python tests/test_susceptibility.py
 
+echo "[TEST] Running chiral susceptibility Padé rational approximation and pole tests..."
+uv run python tests/test_pade_fitter.py
+
 echo "[TEST] All tests completed."

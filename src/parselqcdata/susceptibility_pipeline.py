@@ -144,6 +144,7 @@ class SusceptibilityPipeline:
                     ns=eff_ns,
                     nt=eff_nt,
                     temp_mev=eff_temp,
+                    zm_factor=eff_zm,
                 )
                 if res["num_configs"] > 0:
                     res["zm"] = eff_zm

@@ -369,6 +369,10 @@ namespace lqcd::condensate {
     res.mean_scaled = mean_chi * f_scaled;
     res.error_scaled = res.error_unscaled * f_scaled;
 
+    res.jackknife_samples = std::move(chi_jk);
+    res.obar_list = std::move(clean_obar);
+    res.o2bar_list = std::move(clean_o2bar);
+
     return res;
 }
 

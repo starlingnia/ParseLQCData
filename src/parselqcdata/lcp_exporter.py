@@ -34,6 +34,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.parselqcdata.scaling_factors import get_zm_factor
+from docs.physics_setup import OUTPUT_CONDENSATE_DIR
 
 DEFAULT_TARGET_DIRS = [
     PROJECT_ROOT / "output" / "LCP",
@@ -197,6 +198,23 @@ def export_susceptibility_jk_samples(
         temp_val = float(e.get("Temp", 157.0))
         ns = int(e.get("Ns", 48))
         nt = int(e.get("Nt", 16))
+
+        cand_csv = OUTPUT_CONDENSATE_DIR / "jk_samples" / f"susceptibility_jk_{ens_name}.csv"
+        if cand_csv.exists():
+            df_cand = pl.read_csv(cand_csv)
+            for row in df_cand.iter_rows(named=True):
+                all_sample_rows.append({
+                    "ensemble": ens_name,
+                    "beta": beta_val,
+                    "temp": temp_val,
+                    "ns": ns,
+                    "nt": nt,
+                    "jk_index": int(row.get("jk_index", 0)),
+                    "chi_unscaled": float(row.get("chi_unscaled", 0.0)),
+                    "chi_vol_scaled": float(row.get("chi_vol_scaled", 0.0)),
+                    "chi_renorm": float(row.get("chi_renorm", 0.0)),
+                })
+            continue
 
         if "jk_samples_renorm" in e and len(e["jk_samples_renorm"]) == n_cfgs:
             jk_ren = np.asarray(e["jk_samples_renorm"], dtype=np.float64)
