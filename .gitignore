@@ -10,3 +10,6 @@ build/.*
 build/macosx/
 __pycache__/
 *.pyc
+*pycache*
+src/parselqcdata/__pycache__
+

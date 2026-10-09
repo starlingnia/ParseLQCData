@@ -172,6 +172,7 @@ def run_single_channel_workflow(
     pl.DataFrame({"mean": means, "err": errors}).write_csv(pick_dir / f"save_{channel}.csv")
     pl.DataFrame({"mean": means[:25], "err": errors[:25]}).write_csv(pick_dir / f"sym_{channel}.csv")
     pl.DataFrame(folded_jk).write_csv(pick_dir / f"dr_{channel}.csv", include_header=False)
+    pl.DataFrame(folded_jk).write_parquet(pick_dir / f"dr_{channel}.parquet")
     pl.DataFrame(errors).write_csv(pick_dir / f"err_{channel}.csv", include_header=False)
 
     # 2. 直接在内存中求解有效质量并落盘
@@ -249,8 +250,17 @@ def run_meson_pipeline(
             print(f"  [OK] Beta 4.{beta}: 6 信道全流程完成 (耗时: {elapsed_beta:.2f}s)")
 
         if all_fits:
-            summary_df = pl.DataFrame(all_fits).sort(["beta", "channel"])
+            new_df = pl.DataFrame(all_fits)
             summary_path = output_root / dir_sim / "all_fits_summary.csv"
+            if summary_path.exists() and len(betas) < len(BETAS):
+                try:
+                    old_df = pl.read_csv(summary_path)
+                    filtered_df = old_df.filter(~pl.col("beta").cast(pl.String).is_in([str(b) for b in betas]))
+                    summary_df = pl.concat([filtered_df, new_df]).sort(["beta", "channel"])
+                except Exception:
+                    summary_df = new_df.sort(["beta", "channel"])
+            else:
+                summary_df = new_df.sort(["beta", "channel"])
             summary_df.write_csv(summary_path)
             print(f"  -> 汇总拟合表已落盘: {summary_path}")
 

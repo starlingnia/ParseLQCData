@@ -386,11 +386,11 @@ target_link_libraries(ParseLQCData PRIVATE
     statistics
     iodata
 )
-add_library(target_objectfiles_ParseLQCData_7163dc64bf541cc4 INTERFACE)
-target_link_libraries(target_objectfiles_ParseLQCData_7163dc64bf541cc4 INTERFACE
+add_library(target_objectfiles_ParseLQCData_9587da303e596915 INTERFACE)
+target_link_libraries(target_objectfiles_ParseLQCData_9587da303e596915 INTERFACE
     task_components
 )
-target_link_libraries(ParseLQCData PRIVATE target_objectfiles_ParseLQCData_7163dc64bf541cc4)
+target_link_libraries(ParseLQCData PRIVATE target_objectfiles_ParseLQCData_9587da303e596915)
 target_link_directories(ParseLQCData PRIVATE
     build/macosx/arm64/release
 )
@@ -563,8 +563,7 @@ target_link_options(task_components PRIVATE
 # private sourcefiles from sourcebatch c++.build for target task_components
 target_sources(task_components PRIVATE 
     build/meson_task.cpp
-    build/meson_singlesrc_task.cpp
-    build/meson_multisrc_task.cpp
+    build/susceptibility_task.cpp
     build/condensate_task.cpp
 )
 
