@@ -1,4 +1,4 @@
-# ParseLQCData 脚本与工具调用结构梳理
+,# ParseLQCData 脚本与工具调用结构梳理
 
 > 本文档梳理当前仓库中 `scripts/`、`tools/`、`src/parselqcdata/` 以及原生 CLI `bin/ParseLQCData` 的职责、调用关系和使用方式。
 > 目标：说明“哪个脚本调用了哪个工具、基础功能是什么、应该怎么运行”。
