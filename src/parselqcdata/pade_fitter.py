@@ -48,7 +48,7 @@ from src.parselqcdata.plateau_fit import chi2_least_squares_fit
 class PadeModel:
     """Padé 有理式逼近模型基类与常用阶数实现"""
 
-    def __init__(self, order: str = "3/2", t0: float = 157.0) -> None:
+    def __init__(self, order: str = "2/2", t0: float = 157.0) -> None:
         self.order = order.strip()
         self.t0 = float(t0)
 
@@ -60,10 +60,12 @@ class PadeModel:
             self.param_keys = ["p0", "p1", "p2", "q1", "q2"]
         elif self.order == "3/2":
             self.param_keys = ["p0", "p1", "p2", "p3", "q1", "q2"]
+        elif self.order == "1/3":
+            self.param_keys = ["p0", "p1", "q1", "q2", "q3"]
         elif self.order == "0/4":
             self.param_keys = ["p0", "q1", "q2", "q3", "q4"]
         else:
-            raise ValueError(f"暂不支持的 Padé 阶数: {order} (支持: '0/2', '1/2', '2/2', '3/2', '0/4')")
+            raise ValueError(f"暂不支持的 Padé 阶数: {order} (支持: '0/2', '1/2', '2/2', '3/2', '1/3', '0/4')")
 
     def eval(self, t: Union[float, np.ndarray], p: Dict[str, Union[float, gv.GVar]]) -> Union[float, np.ndarray]:
         """计算 Padé 有理函数值 R(t; p)"""
@@ -80,6 +82,9 @@ class PadeModel:
         elif self.order == "3/2":
             num = p["p0"] + p["p1"] * dx + p["p2"] * (dx**2) + p["p3"] * (dx**3)
             den = 1.0 + p["q1"] * dx + p["q2"] * (dx**2)
+        elif self.order == "1/3":
+            num = p["p0"] + p["p1"] * dx
+            den = 1.0 + p["q1"] * dx + p["q2"] * (dx**2) + p["q3"] * (dx**3)
         elif self.order == "0/4":
             num = p["p0"]
             den = 1.0 + p["q1"] * dx + p["q2"] * (dx**2) + p["q3"] * (dx**3) + p["q4"] * (dx**4)
@@ -107,6 +112,8 @@ class PadeModel:
             return {"p0": max(p0_est, 0.1), "p1": 0.0, "p2": 0.0, "q1": q1_est, "q2": q2_est}
         elif self.order == "3/2":
             return {"p0": max(p0_est, 0.1), "p1": 0.0, "p2": 0.0, "p3": 0.0, "q1": q1_est, "q2": q2_est}
+        elif self.order == "1/3":
+            return {"p0": max(p0_est, 0.1), "p1": 0.0, "q1": q1_est, "q2": q2_est, "q3": 0.0}
         elif self.order == "0/4":
             return {"p0": max(p0_est, 0.1), "q1": q1_est, "q2": q2_est, "q3": 0.0, "q4": q2_est**2}
         return {"p0": 1.0}
@@ -132,6 +139,21 @@ class PadeModel:
             else:
                 im_part = 0.0
             return re_part, im_part
+
+        elif self.order == "1/3":
+            # 三次多项式求根
+            q1 = float(p.get("q1", 0.0))
+            q2 = float(p.get("q2", 0.0))
+            q3 = float(p.get("q3", 0.0))
+            coeffs = [q3, q2, q1, 1.0]
+            roots = np.roots(coeffs)
+            # 找到复根对 (虚部绝对值不为零)，若没有则选最近实根
+            complex_roots = [r for r in roots if abs(r.imag) > 1e-6]
+            if complex_roots:
+                nearest = min(complex_roots, key=lambda r: abs(r.imag))
+            else:
+                nearest = min(roots, key=lambda r: abs(r.real))
+            return float(self.t0 + nearest.real), float(abs(nearest.imag))
 
         elif self.order == "0/4":
             # 四次多项式求根
@@ -249,10 +271,13 @@ def load_and_align_susceptibility_samples(
     csv_path: Optional[Path] = None,
     max_samples: Optional[int] = None,
     binsize: int = 1,
+    ns: Optional[int] = 48,
+    nt: Optional[int] = 16,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, List[float]]:
     """
     载入并对齐各温度的 Jackknife 样本:
     - 确保每个温度具有完全一致的统计样本量 N = min(N_i) 或 max_samples
+    - 支持按 Ns, Nt 空间时间格点尺寸过滤，防止多尺寸混淆
     - 支持 binsize 降采样 / 重抽样 (先不用做 binsize 处理时 binsize=1)
 
     Returns:
@@ -271,6 +296,14 @@ def load_and_align_susceptibility_samples(
         raise FileNotFoundError(f"找不到磁化率样本数据文件: {csv_path}")
 
     df = pl.read_csv(csv_path)
+
+    # 格点规模过滤
+    ns_col = "ns" if "ns" in df.columns else ("Ns" if "Ns" in df.columns else None)
+    if ns_col is not None and ns is not None:
+        df = df.filter(pl.col(ns_col) == ns)
+    nt_col = "nt" if "nt" in df.columns else ("Nt" if "Nt" in df.columns else None)
+    if nt_col is not None and nt is not None:
+        df = df.filter(pl.col(nt_col) == nt)
 
     # 识别列名
     beta_col = "beta" if "beta" in df.columns else "Beta"
@@ -335,7 +368,7 @@ def fit_jackknife_susceptibility_pade(
     temps: np.ndarray,
     chi_matrix: np.ndarray,
     errors: np.ndarray,
-    order: str = "3/2",
+    order: str = "2/2",
     t0: float = 157.0,
 ) -> Tuple[dict, List[dict]]:
     """
@@ -345,7 +378,7 @@ def fit_jackknife_susceptibility_pade(
         temps: 一维温度数组 (K,)
         chi_matrix: (K, N) 二维磁化率 Jackknife 样本矩阵
         errors: (K,) 各温度在格点系综上的统计标准误差 (对角不确定度权重)
-        order: Padé 逼近阶数 (默认: "3/2")
+        order: Padé 逼近阶数 (默认: "2/2")
         t0: 展开参考中心温度 (默认: 157.0 MeV)
 
     Returns:
@@ -448,7 +481,7 @@ def fit_jackknife_susceptibility_pade(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="手征磁化率 Padé 有理式拟合分析工具")
-    parser.add_argument("--order", type=str, default="3/2", choices=["0/2", "1/2", "2/2", "3/2", "0/4"], help="Padé 拟合阶数 (默认: 3/2)")
+    parser.add_argument("--order", type=str, default="2/2", choices=["0/2", "1/2", "2/2", "3/2", "1/3", "0/4"], help="Padé 拟合阶数 (默认: 2/2)")
     parser.add_argument("--t0", type=float, default=157.0, help="展开中心温度 T0 (MeV, 默认: 157.0)")
     parser.add_argument("--binsize", type=int, default=1, help="构型重抽样 binsize (默认: 1，不执行 bin 聚合)")
     parser.add_argument("--max-samples", type=int, default=2000, help="截取对齐的样本总数 (默认: 2000)")

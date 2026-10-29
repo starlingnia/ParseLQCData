@@ -48,7 +48,7 @@ from src.parselqcdata.pade_fitter import (
 
 
 def run_pade_fit_task(
-    order: str = "3/2",
+    order: str = "2/2",
     t0: float = 157.0,
     binsize: int = 1,
     max_samples: int = 2000,
@@ -109,7 +109,7 @@ def run_pade_fit_task(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="LCP 子任务 4: 手征磁化率 Padé 有理函数逼近拟合工具")
-    parser.add_argument("--order", type=str, default="3/2", choices=["0/2", "1/2", "2/2", "3/2", "0/4"], help="Padé 阶数 (默认: 3/2)")
+    parser.add_argument("--order", type=str, default="2/2", choices=["0/2", "1/2", "2/2", "3/2", "1/3", "0/4"], help="Padé 阶数 (默认: 2/2)")
     parser.add_argument("--t0", type=float, default=157.0, help="展开中心温度 T0 (MeV, 默认: 157.0)")
     parser.add_argument("--binsize", type=int, default=1, help="构型重抽样 binsize (默认: 1)")
     parser.add_argument("--max-samples", type=int, default=2000, help="截取对齐的样本总数 (默认: 2000)")

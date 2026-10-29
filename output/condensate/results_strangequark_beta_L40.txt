@@ -1,0 +1,2 @@
+Beta	Mean	Jackknife Error
+4.17	0.01753103	0.00000884

@@ -258,6 +258,26 @@ ENSEMBLE_CONFIGS: Dict[str, dict] = {
     "L48T16beta4.405ms0.021032m0.000760": {
         "ns": 48, "nt": 16, "beta": 4.405, "ms": 0.021032, "ml": 0.000760,
         "mres": 0.00000375269, "zm": 1.09274, "aliases": ["48x16b4.405", "405", "4.405"]
+    },
+    "L64T16beta4.15ms0.040843m0.000930": {
+        "ns": 64, "nt": 16, "beta": 4.15, "ms": 0.040843, "ml": 0.000930,
+        "mres": 0.000498493, "zm": 0.95239, "aliases": ["L64T16_beta4.15"]
+    },
+    "L64T16beta4.17ms0.038400m0.001001": {
+        "ns": 64, "nt": 16, "beta": 4.17, "ms": 0.038400, "ml": 0.001001,
+        "mres": 0.000339722, "zm": 0.966247, "aliases": ["L64T16_beta4.17"]
+    },
+    "L64T16beta4.18ms0.037265m0.001022": {
+        "ns": 64, "nt": 16, "beta": 4.18, "ms": 0.037265, "ml": 0.001022,
+        "mres": 0.000280451, "zm": 0.972899, "aliases": ["L64T16_beta4.18"]
+    },
+    "L64T16beta4.20ms0.035150m0.001041": {
+        "ns": 64, "nt": 16, "beta": 4.20, "ms": 0.035150, "ml": 0.001041,
+        "mres": 0.000191127, "zm": 0.98571, "aliases": ["L64T16_beta4.20"]
+    },
+    "L64T16beta4.405ms0.021032m0.000760": {
+        "ns": 64, "nt": 16, "beta": 4.405, "ms": 0.021032, "ml": 0.000760,
+        "mres": 0.00000375269, "zm": 1.09274, "aliases": ["L64T16_beta4.405"]
     }
 }
 
@@ -379,7 +399,7 @@ def get_binsize(beta: str, channel: str, is_single_source: bool) -> int:
 
 # 7. 残余手征质量函数 (Domain Wall Fermion Residual Mass)
 def calculate_residual_mass(beta_val) -> float:
-    """计算 DWF 残余质量: 优先查表，缺失时使用拟合公式 m_res = 2.547e28 * exp(-17.559 * beta)"""
+    """计算 DWF 残余质量: 优先查表，缺失时使用拟合公式 m_res = exp(71.964037 - 19.173002 * beta)"""
     b_float = float(beta_val)
     beta_str = f"{b_float:.2f}" if abs(b_float - 4.405) > 1e-4 else "4.405"
     if str(beta_val) in MRES_TABLE:
@@ -387,7 +407,7 @@ def calculate_residual_mass(beta_val) -> float:
     if beta_str in MRES_TABLE:
         return float(MRES_TABLE[beta_str]["m_residual"])
     import numpy as np
-    return float(2.547e28 * np.exp(-17.559 * b_float))
+    return float(np.exp(71.964037 - 19.173002 * b_float))
 
 def calculate_temperature(beta_val: float, nt: int = 16) -> float:
     """根据有限温度公式 T = 1 / (a(beta) * nt) 计算物理温度 (MeV)"""

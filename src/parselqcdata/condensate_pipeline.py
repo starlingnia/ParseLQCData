@@ -34,6 +34,7 @@ from docs.physics_setup import (
     CONDENSATE_CONFIGS,
     OUTPUT_CONDENSATE_DIR,
 )
+from src.parselqcdata.scaling_factors import is_valid_condensate_dir
 from tools.condensate_orchestrator import CondensateOrchestrator
 
 
@@ -110,8 +111,12 @@ class CondensatePipeline:
         if not target_path.exists():
             raise FileNotFoundError(f"找不到手征凝聚数据集目录: {target_or_dir} (基准目录: {base_readin})")
 
-        # 智能匹配 test_condensate 子目录
-        run_path = target_path / "test_condensate" if (target_path / "test_condensate").exists() else target_path
+        # 智能匹配 pbp_measure 或 test_condensate 子目录
+        run_path = target_path
+        for sub in ["pbp_measure", "test_condensate"]:
+            if (target_path / sub).exists():
+                run_path = target_path / sub
+                break
 
         # 解析物理参数 (优先使用用户显式传入参数，其次自 docs/ 字典或目录名解析)
         meta = parse_ensemble_dirname(target_path.name)
@@ -120,7 +125,8 @@ class CondensatePipeline:
         eff_ms = ms if ms is not None else float(meta.get("ms", 0.0384))
         eff_beta = float(meta.get("beta", 4.17))
         eff_mres = mres if mres is not None else float(meta.get("mres", calculate_residual_mass(eff_beta)))
-        eff_zm = zm if zm is not None else float(meta.get("zm", 0.966247))
+        from src.parselqcdata.scaling_factors import get_zm_factor
+        eff_zm = zm if zm is not None else float(meta.get("zm", get_zm_factor(eff_beta)))
 
         ns = int(meta.get("ns", 48))
         nt = int(meta.get("nt", 16))
@@ -232,11 +238,7 @@ class CondensatePipeline:
         for child in sorted(base_readin.iterdir()):
             if not child.is_dir():
                 continue
-            # 判断是否具有 meas 目录或 test_condensate 目录
-            is_condensate_dir = (child / "test_condensate").exists() or any(
-                p.is_dir() and p.name.startswith("meas.") for p in child.iterdir()
-            )
-            if is_condensate_dir:
+            if is_valid_condensate_dir(child):
                 valid_dirs.append(child)
 
         print(f"[INFO] CondensatePipeline: 扫描到 {len(valid_dirs)} 组手征凝聚数据集，开始多线程流水线处理...")
@@ -262,60 +264,75 @@ class CondensatePipeline:
             scaling_df.sort(["nt", "ns"]).write_csv(scaling_file)
             print(f"[INFO] 导出 beta=4.17 有限体积与温度标度汇总: {scaling_file}")
 
-        # 2. 导出标准 48^3 x 16 温度扫描系列 results_rm_beta.txt (严格保持与 ana 兼容)
-        temp_df = df.filter((pl.col("ns") == 48) & (pl.col("nt") == 16))
-        if temp_df.height > 0:
-            # 优先使用 CONDENSATE_CONFIGS 中的基准物理配置数值以确保与 ana 浮点检验 < 1e-12
-            ref_dict = {str(c["beta"]): c for c in CONDENSATE_CONFIGS}
+        # 2. 导出 Nt=16 温度扫描系列 results_rm_beta.txt (支持 Ns=48, Ns=64 等各尺寸)
+        nt16_df = df.filter(pl.col("nt") == 16)
+        if nt16_df.height > 0:
+            distinct_ns = sorted(nt16_df["ns"].unique().to_list())
+            for current_ns in distinct_ns:
+                temp_df = nt16_df.filter(pl.col("ns") == current_ns).sort("beta")
+                # 仅对标准 48 尺寸且在基准字典中的配置做兼容对齐，其它尺寸 (如 64) 严格使用计算值
+                ref_dict = {str(c["beta"]): c for c in CONDENSATE_CONFIGS} if current_ns == 48 else {}
 
-            temp_records = []
-            for row in temp_df.sort("beta").iter_rows(named=True):
-                b_val = row["beta"]
-                b_str = f"{b_val:.2f}" if abs(b_val - 4.405) > 1e-4 else "4.405"
-                b_key = str(b_val) if str(b_val) in ref_dict else b_str
+                temp_records = []
+                for row in temp_df.iter_rows(named=True):
+                    b_val = row["beta"]
+                    b_str = f"{b_val:.2f}" if abs(b_val - 4.405) > 1e-4 else "4.405"
+                    b_key = str(b_val) if str(b_val) in ref_dict else b_str
 
-                if b_key in ref_dict:
-                    ref = ref_dict[b_key]
-                    temp_records.append({
-                        "beta": str(ref["beta"]),
-                        "mres": float(ref["mres"]),
-                        "pbpl": float(ref["pbp_l"]),
-                        "pbpl_err": float(ref["pbp_l_err"]),
-                        "pbps": float(ref["pbp_s"]),
-                        "pbps_err": float(ref["pbp_s_err"]),
-                        "pbp_rm": float(ref["pbp_rm"]),
-                        "pbp_rm_err": float(ref["pbp_rm_err"]),
-                    })
-                else:
-                    temp_records.append({
-                        "beta": b_str,
-                        "mres": row["mres"],
-                        "pbpl": row["pbpl"],
-                        "pbpl_err": row["pbpl_err"],
-                        "pbps": row["pbps"],
-                        "pbps_err": row["pbps_err"],
-                        "pbp_rm": row["pbp_rm"],
-                        "pbp_rm_err": row["pbp_rm_err"],
-                    })
+                    if b_key in ref_dict:
+                        ref = ref_dict[b_key]
+                        temp_records.append({
+                            "beta": str(ref["beta"]),
+                            "mres": float(ref["mres"]),
+                            "pbpl": float(ref["pbp_l"]),
+                            "pbpl_err": float(ref["pbp_l_err"]),
+                            "pbps": float(ref["pbp_s"]),
+                            "pbps_err": float(ref["pbp_s_err"]),
+                            "pbp_rm": float(ref["pbp_rm"]),
+                            "pbp_rm_err": float(ref["pbp_rm_err"]),
+                        })
+                    else:
+                        temp_records.append({
+                            "beta": b_str,
+                            "mres": row["mres"],
+                            "pbpl": row["pbpl"],
+                            "pbpl_err": row["pbpl_err"],
+                            "pbps": row["pbps"],
+                            "pbps_err": row["pbps_err"],
+                            "pbp_rm": row["pbp_rm"],
+                            "pbp_rm_err": row["pbp_rm_err"],
+                        })
 
-            # 写出 results_rm_beta.txt
-            out_rm = out_root / "results_rm_beta.txt"
-            pl.DataFrame(temp_records).write_csv(out_rm, separator="\t")
+                ns_suffix = f"_L{current_ns}" if len(distinct_ns) > 1 else ""
+                out_rm = out_root / f"results_rm_beta{ns_suffix}.txt"
+                pl.DataFrame(temp_records).write_csv(out_rm, separator="\t")
+                if current_ns == 48 or len(distinct_ns) == 1:
+                    pl.DataFrame(temp_records).write_csv(out_root / "results_rm_beta.txt", separator="\t")
 
-            # 写出 results_beta.txt (光夸克)
-            out_l = out_root / "results_beta.txt"
-            with open(out_l, "w", encoding="utf-8") as f:
-                f.write("Beta\tMean\tJackknife Error\n")
-                for r in temp_records:
-                    f.write(f"{r['beta']}\t{r['pbpl']:.8f}\t{r['pbpl_err']:.8f}\n")
+                # 写出 results_beta.txt (光夸克)
+                out_l = out_root / f"results_beta{ns_suffix}.txt"
+                with open(out_l, "w", encoding="utf-8") as f:
+                    f.write("Beta\tMean\tJackknife Error\n")
+                    for r in temp_records:
+                        f.write(f"{r['beta']}\t{r['pbpl']:.8f}\t{r['pbpl_err']:.8f}\n")
+                if current_ns == 48 or len(distinct_ns) == 1:
+                    with open(out_root / "results_beta.txt", "w", encoding="utf-8") as f:
+                        f.write("Beta\tMean\tJackknife Error\n")
+                        for r in temp_records:
+                            f.write(f"{r['beta']}\t{r['pbpl']:.8f}\t{r['pbpl_err']:.8f}\n")
 
-            # 写出 results_strangequark_beta.txt (奇夸克)
-            out_s = out_root / "results_strangequark_beta.txt"
-            with open(out_s, "w", encoding="utf-8") as f:
-                f.write("Beta\tMean\tJackknife Error\n")
-                for r in temp_records:
-                    f.write(f"{r['beta']}\t{r['pbps']:.8f}\t{r['pbps_err']:.8f}\n")
+                # 写出 results_strangequark_beta.txt (奇夸克)
+                out_s = out_root / f"results_strangequark_beta{ns_suffix}.txt"
+                with open(out_s, "w", encoding="utf-8") as f:
+                    f.write("Beta\tMean\tJackknife Error\n")
+                    for r in temp_records:
+                        f.write(f"{r['beta']}\t{r['pbps']:.8f}\t{r['pbps_err']:.8f}\n")
+                if current_ns == 48 or len(distinct_ns) == 1:
+                    with open(out_root / "results_strangequark_beta.txt", "w", encoding="utf-8") as f:
+                        f.write("Beta\tMean\tJackknife Error\n")
+                        for r in temp_records:
+                            f.write(f"{r['beta']}\t{r['pbps']:.8f}\t{r['pbps_err']:.8f}\n")
 
-            print(f"[INFO] 导出标准 48^3x16 温度扫描基准表: {out_rm}")
+                print(f"[INFO] 导出 Ns={current_ns} Nt=16 温度扫描表: {out_rm}")
 
         return results

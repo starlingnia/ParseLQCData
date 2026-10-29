@@ -136,11 +136,11 @@ def test_lcp_outputs_format():
 
     lcp_dir = PROJECT_ROOT / "output" / "LCP"
     txt_file = lcp_dir / "results_susceptibility.txt"
-    lcp_txt_file = lcp_dir / "results_susceptibility_lcp.txt"
+    csv_file = lcp_dir / "results_susceptibility.csv"
 
     assert lcp_dir.exists(), f"LCP 目录 {lcp_dir} 必须存在"
     assert txt_file.exists(), f"结果文件 {txt_file} 必须存在"
-    assert lcp_txt_file.exists(), f"LCP 标准文件 {lcp_txt_file} 必须存在"
+    assert csv_file.exists(), f"LCP CSV 标准文件 {csv_file} 必须存在"
 
     expected_header = "# beta,  Z_m(beta),  chi_disc(lattice unit) error  chi_disc(GeV^2 renormalized)  error"
     content = txt_file.read_text(encoding="utf-8").strip().splitlines()

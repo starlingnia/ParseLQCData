@@ -109,14 +109,14 @@ def export_lcp_outputs(
         }
         rows_all.append(entry)
 
-        if entry["Ns"] == 48 and entry["Nt"] == 16:
+        if entry["Nt"] == 16:
             rows_lcp.append(entry)
         else:
             rows_scaling.append(entry)
 
     # 排序
     rows_all.sort(key=lambda x: (x["Beta"], x["Temp"]))
-    rows_lcp.sort(key=lambda x: x["Beta"])
+    rows_lcp.sort(key=lambda x: (x["Ns"], x["Beta"]))
     rows_scaling.sort(key=lambda x: (x["Beta"], x["Temp"]))
 
     header = "# beta,  Z_m(beta),  chi_disc(lattice unit) error  chi_disc(GeV^2 renormalized)  error\n"
@@ -137,13 +137,20 @@ def export_lcp_outputs(
     content_lcp = write_txt_content(rows_lcp)
     content_scaling = write_txt_content(rows_scaling)
 
+    rows_lcp_48 = [e for e in rows_lcp if e["Ns"] == 48]
+    rows_lcp_64 = [e for e in rows_lcp if e["Ns"] == 64]
+
     for out_d in target_dirs:
         out_d.mkdir(parents=True, exist_ok=True)
 
-        # 1. 规范结果文本 (以 L48T16 各个 beta 为核心产物)
+        # 1. 规范结果文本 (以 LCP Nt=16 为核心产物，同时提供各尺寸分表)
         (out_d / "results_susceptibility.txt").write_text(content_lcp, encoding="utf-8")
         (out_d / "results_susceptibility_lcp.txt").write_text(content_lcp, encoding="utf-8")
         (out_d / "results_susceptibility_all.txt").write_text(content_all, encoding="utf-8")
+        if rows_lcp_48:
+            (out_d / "results_susceptibility_L48.txt").write_text(write_txt_content(rows_lcp_48), encoding="utf-8")
+        if rows_lcp_64:
+            (out_d / "results_susceptibility_L64.txt").write_text(write_txt_content(rows_lcp_64), encoding="utf-8")
         if rows_scaling:
             (out_d / "results_susceptibility_scaling.txt").write_text(content_scaling, encoding="utf-8")
         (out_d / "chi_disc.txt").write_text(content_lcp, encoding="utf-8")

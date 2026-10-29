@@ -1,6 +1,6 @@
 {
   "dataset_name": "L48T16beta4.20ms0.035150m0.001041",
-  "dataset_path": "/Users/junxiongnie/code/build/ParseLQCData/data/readin/L48T16beta4.20ms0.035150m0.001041",
+  "dataset_path": "data/readin/L48T16beta4.20ms0.035150m0.001041",
   "ns": 48,
   "nt": 16,
   "beta": 4.2,

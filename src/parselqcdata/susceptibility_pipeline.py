@@ -159,11 +159,15 @@ class SusceptibilityPipeline:
                 print(f"  [WARN] C++ 引擎抽取失败 ({e})，降级为 Python 解析...")
 
         # Python 并行/流式降级实现
-        meas_dirs = sorted(ensemble_dir.glob("meas.*"))
+        meas_dirs = [m for m in ensemble_dir.glob("meas.*") if m.is_dir()]
         if not meas_dirs:
-            sub_cand = ensemble_dir / "test_condensate"
-            if sub_cand.exists():
-                meas_dirs = sorted(sub_cand.glob("meas.*"))
+            for sub in ["pbp_measure", "test_condensate"]:
+                sub_cand = ensemble_dir / sub
+                if sub_cand.exists() and sub_cand.is_dir():
+                    meas_dirs = [m for m in sub_cand.glob("meas.*") if m.is_dir()]
+                    if meas_dirs:
+                        break
+        meas_dirs = sorted(meas_dirs)
 
         list_obar: List[float] = []
         list_o2bar: List[float] = []
@@ -354,7 +358,9 @@ class SusceptibilityPipeline:
             t = float(r["Temp"])
             mu = float(r["Mean_unscaled"])
             eu = float(r["Error_unscaled"])
-            f_vol, f_scaled = compute_scaling_factors(48, 16, t)
+            r_ns = int(r.get("Ns", 48))
+            r_nt = int(r.get("Nt", 16))
+            f_vol, f_scaled = compute_scaling_factors(r_ns, r_nt, t)
             zm = get_zm_factor(b)
             inv_zm = (1.0 / zm**2) if abs(zm) > 1e-15 else 1.0
             m_scaled = mu * f_scaled
@@ -364,11 +370,11 @@ class SusceptibilityPipeline:
 
             b_str = f"{float(b):.2f}" if abs(float(b) - 4.405) > 1e-4 else "4.405"
             rows.append({
-                "Ensemble": f"L48T16beta{b_str}",
+                "Ensemble": str(r.get("Ensemble", f"L{r_ns}T{r_nt}beta{b_str}")),
                 "Beta": float(b),
                 "Temp": t,
-                "Ns": 48,
-                "Nt": 16,
+                "Ns": r_ns,
+                "Nt": r_nt,
                 "Num_cfgs": int(r.get("Num_cfgs", 2000)),
                 "Zm": zm,
                 "Mean_unscaled": mu,

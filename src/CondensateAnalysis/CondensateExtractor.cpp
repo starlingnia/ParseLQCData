@@ -69,17 +69,30 @@ namespace lqcd::condensate {
 
     CondensateResult res;
 
-    // 扫描全部 meas.* 目录
-    std::vector<std::filesystem::path> meas_dirs;
-    if (!std::filesystem::exists(base_dir)) {
+    // 扫描全部 meas.* 目录 (智能兼容 base_dir 或 pbp_measure / test_condensate 子目录)
+    std::filesystem::path run_dir = base_dir;
+    std::error_code ec;
+    if (std::filesystem::exists(base_dir / "pbp_measure", ec)) {
+        run_dir = base_dir / "pbp_measure";
+    } else if (std::filesystem::exists(base_dir / "test_condensate", ec)) {
+        run_dir = base_dir / "test_condensate";
+    }
+
+    if (!std::filesystem::exists(run_dir, ec)) {
         return res;
     }
 
-    for (const auto& entry : std::filesystem::directory_iterator(base_dir)) {
-        if (entry.is_directory()) {
-            const std::string name = entry.path().filename().string();
+    std::vector<std::filesystem::path> meas_dirs;
+    for (std::filesystem::directory_iterator it(run_dir, ec), end; it != end; it.increment(ec)) {
+        if (ec) {
+            ec.clear();
+            continue;
+        }
+        std::error_code entry_ec;
+        if (it->is_directory(entry_ec) && !entry_ec) {
+            const std::string name = it->path().filename().string();
             if (name.starts_with("meas.")) {
-                meas_dirs.push_back(entry.path());
+                meas_dirs.push_back(it->path());
             }
         }
     }
@@ -249,24 +262,32 @@ namespace lqcd::condensate {
     res.nt = nt;
     res.temp = temp_mev;
 
-    // 智能定位真实的 meas.* 所在目录 (支持直接目录或 test_condensate 子目录)
+    // 智能定位真实的 meas.* 所在目录 (支持直接目录或 pbp_measure / test_condensate 子目录)
     std::filesystem::path run_dir = base_dir;
-    if (std::filesystem::exists(base_dir / "test_condensate")) {
+    std::error_code ec;
+    if (std::filesystem::exists(base_dir / "pbp_measure", ec)) {
+        run_dir = base_dir / "pbp_measure";
+    } else if (std::filesystem::exists(base_dir / "test_condensate", ec)) {
         run_dir = base_dir / "test_condensate";
     }
 
-    if (!std::filesystem::exists(run_dir)) {
+    if (!std::filesystem::exists(run_dir, ec)) {
         return res;
     }
 
     std::vector<std::filesystem::path> meas_dirs;
-    for (const auto& entry : std::filesystem::directory_iterator(run_dir)) {
-        if (entry.is_directory()) {
-            const std::string name = entry.path().filename().string();
+    for (std::filesystem::directory_iterator it(run_dir, ec), end; it != end; it.increment(ec)) {
+        if (ec) {
+            ec.clear();
+            continue;
+        }
+        std::error_code entry_ec;
+        if (it->is_directory(entry_ec) && !entry_ec) {
+            const std::string name = it->path().filename().string();
             if (name.starts_with("meas.")) {
                 // 确保 PsibarPsi 目录存在
-                if (std::filesystem::exists(entry.path() / "PsibarPsi")) {
-                    meas_dirs.push_back(entry.path());
+                if (std::filesystem::exists(it->path() / "PsibarPsi", entry_ec) && !entry_ec) {
+                    meas_dirs.push_back(it->path());
                 }
             }
         }

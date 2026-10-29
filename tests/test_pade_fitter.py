@@ -97,14 +97,16 @@ def test_full_pade_jackknife_workflow():
         print(f"  [SKIP] 样本文件 {csv_cand} 尚未生成")
         return
 
-    # 对前 50 个样本进行快速集成测试 (验证 Padé [3/2] 阶数)
+    # 对前 50 个样本进行快速集成测试 (验证 Padé [2/2] 阶数)
+    tmp_out = Path("/tmp/test_pade_output")
+    tmp_out.mkdir(parents=True, exist_ok=True)
     summary, records = run_pade_fit_task(
-        order="3/2",
+        order="2/2",
         t0=157.0,
         binsize=1,
         max_samples=50,
         csv_path=csv_cand,
-        output_dir=OUTPUT_LCP_DIR,
+        output_dir=tmp_out,
     )
 
     assert summary["n_samples"] == 50
@@ -116,8 +118,8 @@ def test_full_pade_jackknife_workflow():
     assert summary["t_pole_imag_mean"] > 0, "极点虚部必须为正"
 
     # 验证输出 CSV 文件存在
-    summary_file = OUTPUT_LCP_DIR / "pade_fit_summary.csv"
-    samples_file = OUTPUT_LCP_DIR / "pade_jk_samples.csv"
+    summary_file = tmp_out / "pade_fit_summary.csv"
+    samples_file = tmp_out / "pade_jk_samples.csv"
     assert summary_file.exists(), f"汇总表 {summary_file} 必须存在"
     assert samples_file.exists(), f"明细表 {samples_file} 必须存在"
 
