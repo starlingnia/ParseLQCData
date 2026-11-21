@@ -39,6 +39,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+from docs.physics_setup import meson_stage_dir
 from src.parselqcdata.ccor_flow import FIT_WINDOW_FILE, load_fit_windows
 
 # 物理常数与标度 (153 * 16 = 2448 MeV)
@@ -138,7 +139,7 @@ def build_directory_list() -> List[DirectorySpec]:
             )
 
     # 2. 48x16b4.17 目录 (定标度温度扫描基准点)
-    ratio_p = PROJECT_ROOT / "output" / "ratio_results" / "b4.17"
+    ratio_p = meson_stage_dir("meff", "17", False)
     specs.append(
         DirectorySpec(
             dir_name="48x16b4.17",

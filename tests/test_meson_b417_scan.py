@@ -52,7 +52,7 @@ from docs.meson_scan_setup import (  # noqa: E402
     resolve_tasks,
     scan_windows,
 )
-from docs.physics_setup import CHANNEL_CONFIGS, OUTPUT_ROOT  # noqa: E402
+from docs.physics_setup import CHANNEL_CONFIGS, OUTPUT_ROOT, meson_stage_dir  # noqa: E402
 from src.parselqcdata import (  # noqa: E402
     compute_effective_mass_matrix_centered,
     detect_plateau_window,
@@ -63,8 +63,8 @@ from src.parselqcdata.effective_mass import solve_effective_mass_one_point  # no
 from tools.meson_orchestrator import MesonOrchestrator  # noqa: E402
 
 REFERENCE_ENSEMBLE = readin_root() / "48x16b4.17" / "Output"
-REFERENCE_MEFF = OUTPUT_ROOT / "ratio_results" / "b4.17" / "meff_PS.csv"
-REFERENCE_FIT = OUTPUT_ROOT / "simulateresult" / "b4.17" / "summary_fit_PS.csv"
+REFERENCE_MEFF = meson_stage_dir("meff", "17", False) / "meff_PS.csv"
+REFERENCE_FIT = meson_stage_dir("fit", "17", False) / "summary_fit_PS.csv"
 
 
 def test_scan_table_matches_spec():

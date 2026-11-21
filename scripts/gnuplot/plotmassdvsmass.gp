@@ -1,5 +1,6 @@
 # 来源: /Users/junxiongnie/code/ana/dat/ccor/plotmassdvsmass.gp
 set datafile separator ","
+if (!exists("input_fname")) input_fname = "deltamass_nt12.csv"
 set terminal pdfcairo enhanced font "Helvetica,12"
 set xlabel "mass"
 set ylabel "delta mass(MeV) at 204 MeV"
@@ -11,6 +12,6 @@ set output "deltamassvsm.pdf"
 
 set zeroaxis linetype 1 linecolor "black"
 plot \
-"deltamass_nt12.csv" using (($1==1)?$2:1/0):($3*2453):($4*2453) with yerrorbars pt 6 lc rgb "#69b3a2" title "V-A (SU(2)_L × SU(2)_R)", \
-"deltamass_nt12.csv" using (($1==2)?$2:1/0):($3*2453):($4*2453) with yerrorbars pt 8 lc rgb "#64b5f6" title "T-X (U(1)_A)", \
-"deltamass_nt12.csv" using (($1==4)?$2:1/0):($3*2453):($4*2453) with yerrorbars pt 10 lc rgb "#ffb74d" title "A-X (SU(2)_{CS})"
+input_fname using (($1==1)?$2:1/0):($3*2453):($4*2453) with yerrorbars pt 6 lc rgb "#69b3a2" title "V-A (SU(2)_L × SU(2)_R)", \
+input_fname using (($1==2)?$2:1/0):($3*2453):($4*2453) with yerrorbars pt 8 lc rgb "#64b5f6" title "T-X (U(1)_A)", \
+input_fname using (($1==4)?$2:1/0):($3*2453):($4*2453) with yerrorbars pt 10 lc rgb "#ffb74d" title "A-X (SU(2)_{CS})"

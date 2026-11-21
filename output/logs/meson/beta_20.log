@@ -1,0 +1,50 @@
+=== [Beta 4.20] STEP 1: 抽取关联函数 ===
+
+[MESON-TASK-01] 正在抽取 MULTISRC 关联函数...
+  [OK] Beta 4.20 (multisrc): 6 信道关联函数抽取完毕 (耗时: 6.12s)
+
+[MESON-TASK-01] 正在抽取 SINGLESRC 关联函数...
+  [OK] Beta 4.20 (singlesrc): 6 信道关联函数抽取完毕 (耗时: 4.61s)
+[OK] 关联函数抽取子任务执行完成！总耗时: 10.73s
+=== [Beta 4.20] STEP 2: 求解有效质量 ===
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+/Users/junxiongnie/code/algo/ParseLQCData/scripts/tasks/meson/02_compute_effective_mass.py:78: RuntimeWarning: Mean of empty slice
+  meff_mean = np.nanmean(meff, axis=1)
+
+[MESON-TASK-02] 正在求解 MULTISRC 有效质量超越方程...
+  [OK] Beta 4.20 (multisrc): 6 信道有效质量求解完成 (耗时: 11.35s)
+
+[MESON-TASK-02] 正在求解 SINGLESRC 有效质量超越方程...
+  [OK] Beta 4.20 (singlesrc): 6 信道有效质量求解完成 (耗时: 4.59s)
+[OK] 有效质量求解子任务执行完成！总耗时: 15.94s
+=== [Beta 4.20] STEP 3: 拟合基态平台 ===
+
+[MESON-TASK-03] 正在对 MULTISRC 执行平台 cosh 拟合...
+  [OK] Beta 4.20 (multisrc): 6 信道平台拟合完成 (耗时: 3.69s)
+  [OK] (multisrc) 成功汇总 42 条拟合记录至: /Users/junxiongnie/code/algo/ParseLQCData/output/meson/multisrc/all_fits_summary.csv
+
+[MESON-TASK-03] 正在对 SINGLESRC 执行平台 cosh 拟合...
+  [OK] Beta 4.20 (singlesrc): 6 信道平台拟合完成 (耗时: 2.90s)
+  [OK] (singlesrc) 成功汇总 42 条拟合记录至: /Users/junxiongnie/code/algo/ParseLQCData/output/meson/singlesrc/all_fits_summary.csv
+[OK] 平台 cosh 拟合子任务执行完成！总耗时: 6.60s

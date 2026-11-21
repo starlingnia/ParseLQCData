@@ -56,16 +56,12 @@ def run_compute_susceptibility_task(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"\n[LCP-TASK-02] 启动手征磁化率无偏交叉估计与标度计算...")
-    print(f"  - 输入目录: {readin_dir if readin_dir else '自动定位/基准验证模式'}")
+    print(f"  - 输入目录: {readin_dir}")
     print(f"  - 输出目录: {output_dir}")
 
     pipeline = SusceptibilityPipeline(output_dir=output_dir)
 
-    if readin_dir and readin_dir.exists():
-        print(f"[INFO] 正在扫描格点系综构型目录: {readin_dir}")
-        df = pipeline.run_cluster_scan(readin_dir)
-    else:
-        df = pipeline.get_full_scan_results(force_recompute=True)
+    df = pipeline.run_cluster_scan(readin_dir)
 
     print(f"[OK] 磁化率计算完成 (共 {df.height} 组系综)，耗时: {time.time() - t0:.2f}s")
 

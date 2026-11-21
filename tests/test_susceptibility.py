@@ -131,8 +131,6 @@ def test_susceptibility_zm_renormalization():
 
 def test_lcp_outputs_format():
     """校验 output/LCP/ 目录产物及其标头格式要求"""
-    pipeline = SusceptibilityPipeline()
-    pipeline.get_full_scan_results()
 
     lcp_dir = PROJECT_ROOT / "output" / "LCP"
     txt_file = lcp_dir / "results_susceptibility.txt"

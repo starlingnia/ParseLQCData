@@ -1,0 +1,11 @@
+==========================================================================
+>>> [PROJECT: LCP] 启动常物理线 (LCP) 项目流水线总控编排
+  - 包含任务: 手征凝聚抽取、手征磁化率计算、LCP 格式导出、热力学绘图
+  - 绘图开启: true
+==========================================================================
+
+>>> [LCP STEP 1/4] 调度原子任务: 手征凝聚抽取与残余质量减除 (C++ CondensateExtractor)...
+usage: 01_extract_condensate.py [-h] [--readin-dir READIN_DIR]
+                                [--output-dir OUTPUT_DIR]
+                                [--ensemble ENSEMBLE]
+01_extract_condensate.py: error: unrecognized arguments: --j 4

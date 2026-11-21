@@ -11,7 +11,7 @@ scripts/tasks/meson/02_compute_effective_mass.py
 3. 针对所有 Jackknife 重采样样本的求解值执行 Jackknife 方差分析:
      meff_mean = (1/N) * sum(m_k)
      meff_err  = sqrt( (N-1)/N * sum( (m_k - meff_mean)^2 ) )
-4. 输出标准产物至 ratio_results[-singlesrc]/b4.{beta}/meff_{channel}.csv:
+4. 输出标准产物至 meson/{multisrc|singlesrc}/<格点>_b4.{beta}/meff/meff_{channel}.csv:
    包含各时隙的均值 mean 与误差 err。
 
 【底层调用的 C++ 功能与关联】:
@@ -39,7 +39,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from docs.physics_setup import BETAS, CHANNELS, OUTPUT_ROOT
+from docs.physics_setup import BETAS, CHANNELS, OUTPUT_ROOT, meson_stage_dir
 
 
 def solve_effective_mass_ratio(y: float, x: int) -> float:
@@ -90,13 +90,11 @@ def run_effective_mass_task(
 
     for is_single in sources:
         mode_str = "singlesrc" if is_single else "multisrc"
-        dir_pick = "pickdata-singlesrc" if is_single else "pickdata"
-        dir_ratio = "ratio_results-singlesrc" if is_single else "ratio_results"
 
         print(f"\n[MESON-TASK-02] 正在求解 {mode_str.upper()} 有效质量超越方程...")
         for beta in betas:
-            pick_dir = output_root / dir_pick / f"b4.{beta}"
-            ratio_dir = output_root / dir_ratio / f"b4.{beta}"
+            pick_dir = meson_stage_dir("correlator", beta, is_single, output_root=output_root)
+            ratio_dir = meson_stage_dir("meff", beta, is_single, output_root=output_root)
             ratio_dir.mkdir(parents=True, exist_ok=True)
 
             t0_beta = time.time()

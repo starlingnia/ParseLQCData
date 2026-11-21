@@ -1,6 +1,6 @@
 {
   "dataset_name": "L40T16_beta4.17ms0.040m0.0020",
-  "dataset_path": "data/readin/L40T16_beta4.17ms0.040m0.0020",
+  "dataset_path": "/Users/junxiongnie/code/algo/ParseLQCData/data/readin/L40T16_beta4.17ms0.040m0.0020",
   "ns": 40,
   "nt": 16,
   "beta": 4.17,

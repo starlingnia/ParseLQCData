@@ -23,12 +23,25 @@ DEFAULT_DATA_DIR: Path = PROJECT_ROOT / "data"
 DEFAULT_READIN_DIR: Path = DEFAULT_DATA_DIR / "readin" if (DEFAULT_DATA_DIR / "readin").exists() else Path("/Users/junxiongnie/code/ana/dat/readin")
 
 OUTPUT_ROOT: Path = PROJECT_ROOT / "output"
-OUTPUT_PICKDATA_DIR: Path = OUTPUT_ROOT / "pickdata"
-OUTPUT_PICKDATA_SINGLE_DIR: Path = OUTPUT_ROOT / "pickdata-singlesrc"
-OUTPUT_RATIO_DIR: Path = OUTPUT_ROOT / "ratio_results"
-OUTPUT_RATIO_SINGLE_DIR: Path = OUTPUT_ROOT / "ratio_results-singlesrc"
-OUTPUT_SIMULATE_DIR: Path = OUTPUT_ROOT / "simulateresult"
-OUTPUT_SIMULATE_SINGLE_DIR: Path = OUTPUT_ROOT / "simulateresult-singlesrc"
+# 介子关联函数测量输出布局: output/meson/{multisrc|singlesrc}/{格点}_b{beta}/{correlator|meff|fit}/
+OUTPUT_MESON_DIR: Path = OUTPUT_ROOT / "meson"
+MESON_LATTICE: str = "48x16"
+
+
+def meson_ensemble_dir(beta: str, is_single: bool, lattice: str = MESON_LATTICE, output_root: Path = OUTPUT_ROOT) -> Path:
+    """某系综(格点 x beta)介子结果根目录, beta 可写 "17" 或 "4.17"。"""
+    b = str(beta).removeprefix("4.")
+    return output_root / "meson" / ("singlesrc" if is_single else "multisrc") / f"{lattice}_b4.{b}"
+
+
+def meson_stage_dir(stage: str, beta: str, is_single: bool, lattice: str = MESON_LATTICE, output_root: Path = OUTPUT_ROOT) -> Path:
+    """stage: correlator (关联函数折叠) / meff (有效质量) / fit (平台拟合)。"""
+    return meson_ensemble_dir(beta, is_single, lattice, output_root) / stage
+
+
+def meson_summary_path(is_single: bool, output_root: Path = OUTPUT_ROOT) -> Path:
+    """全 Beta 全信道拟合汇总表。"""
+    return output_root / "meson" / ("singlesrc" if is_single else "multisrc") / "all_fits_summary.csv"
 OUTPUT_CONDENSATE_DIR: Path = OUTPUT_ROOT / "condensate"
 OUTPUT_LCP_DIR: Path = OUTPUT_ROOT / "LCP"
 OUTPUT_LCP_INTERMEDIATE_DIR: Path = OUTPUT_LCP_DIR / "intermediate"
@@ -516,12 +529,7 @@ def export_to_json(out_path: Path) -> None:
             "DEFAULT_DATA_DIR": str(DEFAULT_DATA_DIR),
             "DEFAULT_READIN_DIR": str(DEFAULT_READIN_DIR),
             "OUTPUT_ROOT": str(OUTPUT_ROOT),
-            "OUTPUT_PICKDATA_DIR": str(OUTPUT_PICKDATA_DIR),
-            "OUTPUT_PICKDATA_SINGLE_DIR": str(OUTPUT_PICKDATA_SINGLE_DIR),
-            "OUTPUT_RATIO_DIR": str(OUTPUT_RATIO_DIR),
-            "OUTPUT_RATIO_SINGLE_DIR": str(OUTPUT_RATIO_SINGLE_DIR),
-            "OUTPUT_SIMULATE_DIR": str(OUTPUT_SIMULATE_DIR),
-            "OUTPUT_SIMULATE_SINGLE_DIR": str(OUTPUT_SIMULATE_SINGLE_DIR),
+            "OUTPUT_MESON_DIR": str(OUTPUT_MESON_DIR),
             "OUTPUT_CONDENSATE_DIR": str(OUTPUT_CONDENSATE_DIR),
             "OUTPUT_LCP_DIR": str(OUTPUT_LCP_DIR),
             "OUTPUT_LCP_INTERMEDIATE_DIR": str(OUTPUT_LCP_INTERMEDIATE_DIR),

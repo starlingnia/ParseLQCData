@@ -25,6 +25,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from docs.physics_setup import (
     BETAS, CHANNELS, TEMP_MAP, MULTI_FIT_SLICES, SINGLE_FIT_SLICES,
     SYMMETRY_PAIRS, TRANSITION_REGION, OUTPUT_ROOT,
+    meson_stage_dir, meson_summary_path,
     FIGURES_DIR as DOCS_FIGURES_DIR
 )
 DOCS_FIGURES_DIR.mkdir(parents=True, exist_ok=True)
@@ -118,8 +119,8 @@ def plot_channel_comparisons() -> None:
     comp_dir = DOCS_FIGURES_DIR / "channel_comparisons"
     comp_dir.mkdir(parents=True, exist_ok=True)
 
-    s_summary_path = OUTPUT_ROOT / "simulateresult-singlesrc" / "all_fits_summary.csv"
-    m_summary_path = OUTPUT_ROOT / "simulateresult" / "all_fits_summary.csv"
+    s_summary_path = meson_summary_path(True)
+    m_summary_path = meson_summary_path(False)
     s_summary = pl.read_csv(s_summary_path) if s_summary_path.exists() else None
     m_summary = pl.read_csv(m_summary_path) if m_summary_path.exists() else None
 
@@ -129,8 +130,8 @@ def plot_channel_comparisons() -> None:
         beta_dir.mkdir(parents=True, exist_ok=True)
 
         for ch in CHANNELS:
-            s_meff_file = OUTPUT_ROOT / "ratio_results-singlesrc" / f"b4.{b_short}" / f"meff_{ch}.csv"
-            m_meff_file = OUTPUT_ROOT / "ratio_results" / f"b4.{b_short}" / f"meff_{ch}.csv"
+            s_meff_file = meson_stage_dir("meff", b_short, True) / f"meff_{ch}.csv"
+            m_meff_file = meson_stage_dir("meff", b_short, False) / f"meff_{ch}.csv"
 
             if not (s_meff_file.exists() and m_meff_file.exists()):
                 continue
@@ -165,7 +166,7 @@ def plot_channel_comparisons() -> None:
 
             # 拟合区间数据坐标填充 (彻底替代有坐标系偏差的 axhspan)
             s_val, s_err_val = load_fit_band(
-                OUTPUT_ROOT / "simulateresult-singlesrc" / f"b4.{b_short}",
+                meson_stage_dir("fit", b_short, True),
                 ch, s_summary, b_short
             )
             if s_val is not None and s_err_val is not None and np.isfinite(s_val):
@@ -178,7 +179,7 @@ def plot_channel_comparisons() -> None:
                 ax.hlines(s_val, s_t_start, t_fit_end, colors='#d62728', linestyles='--', linewidth=1.2, zorder=2)
 
             m_val, m_err_val = load_fit_band(
-                OUTPUT_ROOT / "simulateresult" / f"b4.{b_short}",
+                meson_stage_dir("fit", b_short, False),
                 ch, m_summary, b_short
             )
             if m_val is not None and m_err_val is not None and np.isfinite(m_val):
@@ -209,7 +210,7 @@ def plot_channel_comparisons() -> None:
 
 def plot_simulation_results() -> None:
     """绘制所有强子信道在不同温度下的热演化曲线"""
-    fit_summary_file = OUTPUT_ROOT / "simulateresult" / "all_fits_summary.csv"
+    fit_summary_file = meson_summary_path(False)
     if not fit_summary_file.exists():
         print(f"[WARN] 找不到拟合总结文件: {fit_summary_file}")
         return
@@ -273,7 +274,7 @@ def plot_simulation_results() -> None:
 
 def plot_symmetry_breaking() -> None:
     """绘制宇称与手征伴侣的质量简并劈裂曲线（表征对称性恢复）"""
-    fit_summary_file = OUTPUT_ROOT / "simulateresult" / "all_fits_summary.csv"
+    fit_summary_file = meson_summary_path(False)
     if not fit_summary_file.exists():
         return
 

@@ -46,6 +46,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from docs.physics_setup import (
+    meson_stage_dir,
+    meson_summary_path,
     BETAS,
     CHANNELS,
     CHANNEL_CONFIGS,
@@ -144,11 +146,10 @@ def run_extract_task(
 
     for is_single in sources:
         mode_str = "singlesrc" if is_single else "multisrc"
-        dir_pick = "pickdata-singlesrc" if is_single else "pickdata"
 
         print(f"\n[MESON-TASK-01] 正在抽取 {mode_str.upper()} 关联函数...")
         for beta in betas:
-            pick_dir = output_root / dir_pick / f"b4.{beta}"
+            pick_dir = meson_stage_dir("correlator", beta, is_single, output_root=output_root)
             input_dir = readin_dir / f"48x16b4.{beta}" / "Output"
 
             if not input_dir.exists():

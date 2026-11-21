@@ -99,7 +99,7 @@ def main() -> None:
     print(f"✅ LCP 全流程分析完成! 总耗时: {elapsed:.2f} 秒")
     print(f"  - LCP 规范结果输出目录: {args.output_dir}/LCP/")
     print(f"  - 手征凝聚输出目录    : {args.output_dir}/condensate/")
-    print(f"  - 介子关联函数与质量表: {args.output_dir}/simulateresult/")
+    print(f"  - 介子关联函数与质量表: {args.output_dir}/meson/")
     print(f"  - 物理图表输出目录    : docs/figures/")
     print("==========================================================================")
 

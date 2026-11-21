@@ -11,9 +11,9 @@ scripts/tasks/meson/03_fit_plateau.py
 3. 逐 Jackknife 重采样样本执行 cosh 理论模型非线性最小二乘拟合:
      C(t) = A * cosh(m * (t - Nt/2))
 4. 汇总 Jackknife 拟合参数，输出:
-   - simulateresult[-singlesrc]/b4.{beta}/fittresult{channel}.csv : 逐样本拟合明细 (mass, amp, chi2)
-   - simulateresult[-singlesrc]/b4.{beta}/summary_fit_{channel}.csv : 该信道统计平均质量与误差
-   - simulateresult[-singlesrc]/all_fits_summary.csv : 全 Beta、全信道汇总大表
+   - meson/<mode>/<格点>_b4.{beta}/fit/fittresult{channel}.csv : 逐样本拟合明细 (mass, amp, chi2)
+   - meson/<mode>/<格点>_b4.{beta}/fit/summary_fit_{channel}.csv : 该信道统计平均质量与误差
+   - meson/<mode>/all_fits_summary.csv : 全 Beta、全信道汇总大表
 
 【底层调用的 C++ 功能与关联】:
 - 数据依赖: C++ 抽取与折叠产物 (target("meson_analysis") + target("core"))。
@@ -39,6 +39,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from docs.physics_setup import (
+    meson_stage_dir,
+    meson_summary_path,
     BETAS,
     CHANNELS,
     FIT_SLICE_END,
@@ -87,18 +89,17 @@ def run_fit_task(
 
     for is_single in sources:
         mode_str = "singlesrc" if is_single else "multisrc"
-        dir_pick = "pickdata-singlesrc" if is_single else "pickdata"
-        dir_sim = "simulateresult-singlesrc" if is_single else "simulateresult"
         slice_map = SINGLE_FIT_SLICES if is_single else MULTI_FIT_SLICES
 
         print(f"\n[MESON-TASK-03] 正在对 {mode_str.upper()} 执行平台 cosh 拟合...")
         all_fits = []
 
         for beta in betas:
-            pick_dir = output_root / dir_pick / f"b4.{beta}"
-            sim_dir = output_root / dir_sim / f"b4.{beta}"
+            pick_dir = meson_stage_dir("correlator", beta, is_single, output_root=output_root)
+            sim_dir = meson_stage_dir("fit", beta, is_single, output_root=output_root)
             sim_dir.mkdir(parents=True, exist_ok=True)
 
+            all_fits_beta = []
             t0_beta = time.time()
             for ch in CHANNELS:
                 dr_parquet = pick_dir / f"dr_{ch}.parquet"
@@ -129,27 +130,34 @@ def run_fit_task(
                     out_dir=sim_dir,
                 )
                 all_fits.append(rec)
+                all_fits_beta.append(rec)
+
+            if all_fits_beta:
+                pl.DataFrame(all_fits_beta).write_csv(sim_dir / "summary_fit_beta.csv")
 
             print(f"  [OK] Beta 4.{beta} ({mode_str}): 6 信道平台拟合完成 (耗时: {time.time() - t0_beta:.2f}s)")
 
-        if all_fits:
-            new_df = pl.DataFrame(all_fits)
-            summary_path = output_root / dir_sim / "all_fits_summary.csv"
-            if summary_path.exists() and len(betas) < len(BETAS):
-                try:
-                    old_df = pl.read_csv(summary_path)
-                    filtered_df = old_df.filter(
-                        ~pl.col("beta").cast(pl.String).is_in([str(b) for b in betas])
-                    )
-                    summary_df = pl.concat([filtered_df, new_df]).sort(["beta", "channel"])
-                except Exception:
-                    summary_df = new_df.sort(["beta", "channel"])
-            else:
-                summary_df = new_df.sort(["beta", "channel"])
-            summary_df.write_csv(summary_path)
-            print(f"  -> 全量拟合总表已保存: {summary_path}")
+        aggregate_summaries([is_single], output_root)
 
     print(f"[OK] 平台 cosh 拟合子任务执行完成！总耗时: {time.time() - t0_all:.2f}s")
+
+
+def aggregate_summaries(sources: Sequence[bool], output_root: Path = OUTPUT_ROOT) -> None:
+    """汇总各个系综独立的 summary_fit_beta.csv 为总表 all_fits_summary.csv"""
+    for is_single in sources:
+        mode_str = "singlesrc" if is_single else "multisrc"
+        base_dir = output_root / "meson" / mode_str
+        sub_dfs = []
+        for p in sorted(base_dir.glob("48x16_b4.*/fit/summary_fit_beta.csv")):
+            try:
+                sub_dfs.append(pl.read_csv(p))
+            except Exception:
+                pass
+        if sub_dfs:
+            summary_df = pl.concat(sub_dfs).sort(["beta", "channel"])
+            out_p = meson_summary_path(is_single, output_root)
+            summary_df.write_csv(out_p)
+            print(f"  [OK] ({mode_str}) 成功汇总 {summary_df.height} 条拟合记录至: {out_p}")
 
 
 def main() -> None:
@@ -172,6 +180,11 @@ def main() -> None:
         default=OUTPUT_ROOT,
         help="输出根目录",
     )
+    parser.add_argument(
+        "--aggregate-only",
+        action="store_true",
+        help="仅汇总已有的 summary_fit_beta.csv，不重新拟合",
+    )
     args = parser.parse_args()
 
     if args.source == "multi":
@@ -180,6 +193,10 @@ def main() -> None:
         sources = [True]
     else:
         sources = [False, True]
+
+    if args.aggregate_only:
+        aggregate_summaries(sources, args.output_root)
+        return
 
     if args.beta == "all":
         betas = BETAS

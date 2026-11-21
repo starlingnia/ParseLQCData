@@ -34,13 +34,9 @@ Python 整合层：手征磁化率 (Chiral Susceptibility, \\chi) 端到端分�
 """
 
 import argparse
-import os
 from pathlib import Path
-import re
 import sys
-from typing import Dict, List, Optional, Tuple, Union
-
-import numpy as np
+from typing import Any, Dict, List, Optional
 import polars as pl
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -52,8 +48,8 @@ from docs.physics_setup import (
     DEFAULT_READIN_DIR,
     OUTPUT_CONDENSATE_DIR,
     OUTPUT_LCP_DIR,
-    TEMP_MAP,
-    MRES_TABLE,
+    calculate_temperature,
+    parse_ensemble_dirname,
 )
 
 # 8组温度与 Beta 标准映射表 (Nt=16基准, 单位 MeV)
@@ -130,8 +126,7 @@ class SusceptibilityPipeline:
         if temp_mev is not None:
             eff_temp = float(temp_mev)
         else:
-            base_temp = SUSCEPTIBILITY_TEMP_MAP.get(eff_beta, 157.0)
-            eff_temp = base_temp * (16.0 / eff_nt)
+            eff_temp = float(calculate_temperature(float(eff_beta), eff_nt))
 
         eff_zm = get_zm_factor(eff_beta)
         inv_zm = (1.0 / eff_zm **2 ) if abs(eff_zm) > 1e-15 else 1.0
@@ -224,29 +219,17 @@ class SusceptibilityPipeline:
                 continue
 
             meta = parse_ensemble_meta_from_dir(d.name)
-            try:
-                from docs.physics_setup import parse_ensemble_dirname as p_ed, calculate_temperature as c_temp
-                rich_meta = p_ed(d.name)
-                if rich_meta:
-                    meta.update(rich_meta)
-            except Exception:
-                pass
+            rich_meta = parse_ensemble_dirname(d.name)
+            if rich_meta:
+                meta.update(rich_meta)
 
             eff_ns = int(meta.get("ns", 48))
             eff_nt = int(meta.get("nt", 16))
             eff_beta_str = str(meta.get("beta", "4.17"))
-            try:
-                eff_beta_val = float(eff_beta_str)
-            except ValueError:
-                eff_beta_val = 4.17
+            eff_beta_val = float(eff_beta_str)
 
-            # 温度计算：优先使用标准几何比例 T = T(Nt=16) * 16 / Nt
-            try:
-                from docs.physics_setup import calculate_temperature
-                eff_temp = float(calculate_temperature(eff_beta_val, eff_nt))
-            except Exception:
-                base_temp = SUSCEPTIBILITY_TEMP_MAP.get(eff_beta_str, 153.31)
-                eff_temp = float(base_temp * (16.0 / eff_nt))
+            # 温度计算：标准几何比例 T = T(Nt=16) * 16 / Nt
+            eff_temp = float(calculate_temperature(eff_beta_val, eff_nt))
 
             eff_zm = get_zm_factor(eff_beta_str)
             inv_zm = (1.0 / eff_zm ** 2) if abs(eff_zm) > 1e-15 else 1.0
@@ -279,8 +262,7 @@ class SusceptibilityPipeline:
                 print(f"  [WARN] 处理 {d.name} 失败: {e}")
 
         if not results:
-            print("[WARN] 未能在给定数据目录中提取到任何有效数据，载入已有全量基准数据...")
-            return self.get_full_scan_results()
+            raise RuntimeError(f"未能在 {readin_dir} 中提取到任何有效磁化率数据")
 
         df_res = pl.DataFrame(results).sort(["Beta", "Temp"])
 
@@ -299,122 +281,14 @@ class SusceptibilityPipeline:
         return df_res
 
 
-    def get_full_scan_results(
-        self,
-        force_recompute: bool = False,
-    ) -> pl.DataFrame:
-        """
-        获取手征磁化率完整数据集 (含 Zm 重整化与物理标度)。
-        优先载入包含全量真实测量的 all_ensembles_susceptibility.csv 并注入 Zm 重整化；
-        若不存在则自 ana 基准数据对齐同步，并自动导出至 output/LCP/。
-        """
-        out_csv = self.output_dir / "results_susceptibility.csv"
-        out_parquet = self.output_dir / "results_susceptibility.parquet"
-        out_all_csv = self.output_dir / "all_ensembles_susceptibility.csv"
-        ana_csv = self.ana_root / "ttest" / "results_susceptibility.csv"
-
-        # 1. 优先从已有全量系综汇总表载入并计算重整化列
-        if out_all_csv.exists():
-            df_exist = pl.read_csv(out_all_csv)
-            if "Ensemble" in df_exist.columns and df_exist.height > 0:
-                rows = []
-                for r in df_exist.iter_rows(named=True):
-                    b = float(r["Beta"])
-                    zm = float(r.get("Zm", r.get("zm", get_zm_factor(b))))
-                    inv_zm = (1.0 / zm **2 ) if abs(zm) > 1e-15 else 1.0
-                    m_scaled = float(r["Mean_scaled"])
-                    e_scaled = float(r["Error_scaled"])
-                    m_gev2 = m_scaled / 1e6
-                    e_gev2 = e_scaled / 1e6
-                    row_dict = dict(r)
-                    row_dict["Beta"] = b
-                    row_dict["Zm"] = zm
-                    row_dict["Mean_scaled_gev2"] = m_gev2
-                    row_dict["Error_scaled_gev2"] = e_gev2
-                    row_dict["Mean_scaled_gev2_renorm"] = m_gev2 * inv_zm
-                    row_dict["Error_scaled_gev2_renorm"] = e_gev2 * inv_zm
-                    rows.append(row_dict)
-                df_enriched = pl.DataFrame(rows).sort(["Beta", "Temp"])
-                df_enriched.write_csv(out_csv)
-                df_enriched.write_parquet(out_parquet)
-                df_enriched.write_csv(out_all_csv)
-                self.export_lcp_outputs(df_enriched)
-                print(f"[SusceptibilityPipeline] 成功同步并重整化全量 {df_enriched.height} 组格点系综磁化率数据")
-                return df_enriched
-
-        if not force_recompute and out_csv.exists():
-            return pl.read_csv(out_csv)
-
-        # 2. 兜底读取 ana/ttest 基准数据
-        if ana_csv.exists():
-            df_norm = pl.read_csv(ana_csv)
-        else:
-            raise FileNotFoundError(f"未找到基准数据: {ana_csv}")
-
-        # 标准化添加 Ns=48, Nt=16, 体积因子, 标度因子与 Zm 重整化
-        rows = []
-        for r in df_norm.iter_rows(named=True):
-            b = r["Beta"]
-            t = float(r["Temp"])
-            mu = float(r["Mean_unscaled"])
-            eu = float(r["Error_unscaled"])
-            r_ns = int(r.get("Ns", 48))
-            r_nt = int(r.get("Nt", 16))
-            f_vol, f_scaled = compute_scaling_factors(r_ns, r_nt, t)
-            zm = get_zm_factor(b)
-            inv_zm = (1.0 / zm**2) if abs(zm) > 1e-15 else 1.0
-            m_scaled = mu * f_scaled
-            e_scaled = eu * f_scaled
-            m_gev2 = m_scaled / 1e6
-            e_gev2 = e_scaled / 1e6
-
-            b_str = f"{float(b):.2f}" if abs(float(b) - 4.405) > 1e-4 else "4.405"
-            rows.append({
-                "Ensemble": str(r.get("Ensemble", f"L{r_ns}T{r_nt}beta{b_str}")),
-                "Beta": float(b),
-                "Temp": t,
-                "Ns": r_ns,
-                "Nt": r_nt,
-                "Num_cfgs": int(r.get("Num_cfgs", 2000)),
-                "Zm": zm,
-                "Mean_unscaled": mu,
-                "Error_unscaled": eu,
-                "Mean_vol_scaled": mu * f_vol,
-                "Error_vol_scaled": eu * f_vol,
-                "Mean_scaled": m_scaled,
-                "Error_scaled": e_scaled,
-                "Mean_scaled_gev2": m_gev2,
-                "Error_scaled_gev2": e_gev2,
-                "Mean_scaled_gev2_renorm": m_gev2 * inv_zm,
-                "Error_scaled_gev2_renorm": e_gev2 * inv_zm,
-            })
-
-        df_enriched = pl.DataFrame(rows).sort("Temp")
-        df_enriched.write_csv(out_csv)
-        df_enriched.write_parquet(out_parquet)
-        df_enriched.write_csv(out_all_csv)
-        self.export_lcp_outputs(df_enriched)
-
-        print(f"[SusceptibilityPipeline] 成功同步全量磁化率数据集至 {self.output_dir}")
-        return df_enriched
-
-
-
 def main():
     parser = argparse.ArgumentParser(description="手征磁化率数据抽取与统计分析管道")
-    parser.add_argument("--readin-dir", type=str, default=None, help="包含原始格点构型 meas.* 的数据根目录")
+    parser.add_argument("--readin-dir", type=str, default=str(DEFAULT_READIN_DIR), help="包含原始格点构型 meas.* 的数据根目录")
     parser.add_argument("--output-dir", type=str, default=str(OUTPUT_CONDENSATE_DIR), help="输出结果目录")
     args = parser.parse_args()
 
     pipeline = SusceptibilityPipeline(output_dir=Path(args.output_dir))
-
-    if args.readin_dir and Path(args.readin_dir).exists():
-        print(f"正在集群模式下扫描: {args.readin_dir}")
-        pipeline.run_cluster_scan(Path(args.readin_dir))
-    else:
-        df_res = pipeline.get_full_scan_results(force_recompute=True)
-        print("=== Chiral Susceptibility (8 温度扫描) ===")
-        print(df_res)
+    print(pipeline.run_cluster_scan(Path(args.readin_dir)))
 
 
 if __name__ == "__main__":

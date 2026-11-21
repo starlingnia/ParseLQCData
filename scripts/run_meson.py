@@ -29,6 +29,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from docs.physics_setup import (
+    meson_stage_dir,
+    meson_summary_path,
     BETAS,
     CHANNELS,
     CHANNEL_CONFIGS,
@@ -205,9 +207,6 @@ def run_meson_pipeline(
 
     for is_single in sources:
         mode_str = "singlesrc" if is_single else "multisrc"
-        dir_pick = "pickdata-singlesrc" if is_single else "pickdata"
-        dir_ratio = "ratio_results-singlesrc" if is_single else "ratio_results"
-        dir_sim = "simulateresult-singlesrc" if is_single else "simulateresult"
         slice_map = SINGLE_FIT_SLICES if is_single else MULTI_FIT_SLICES
 
         print(f"\n==========================================================================")
@@ -222,9 +221,9 @@ def run_meson_pipeline(
                 print(f"  [WARN] 目录不存在，跳过: {input_dir}")
                 continue
 
-            pick_dir = output_root / dir_pick / f"b4.{beta}"
-            ratio_dir = output_root / dir_ratio / f"b4.{beta}"
-            sim_dir = output_root / dir_sim / f"b4.{beta}"
+            pick_dir = meson_stage_dir("correlator", beta, is_single, output_root=output_root)
+            ratio_dir = meson_stage_dir("meff", beta, is_single, output_root=output_root)
+            sim_dir = meson_stage_dir("fit", beta, is_single, output_root=output_root)
 
             pick_dir.mkdir(parents=True, exist_ok=True)
             ratio_dir.mkdir(parents=True, exist_ok=True)
@@ -251,7 +250,7 @@ def run_meson_pipeline(
 
         if all_fits:
             new_df = pl.DataFrame(all_fits)
-            summary_path = output_root / dir_sim / "all_fits_summary.csv"
+            summary_path = meson_summary_path(is_single, output_root)
             if summary_path.exists() and len(betas) < len(BETAS):
                 try:
                     old_df = pl.read_csv(summary_path)

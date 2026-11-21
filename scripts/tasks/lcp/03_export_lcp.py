@@ -53,7 +53,7 @@ def run_export_lcp_task(
     if input_csv is not None and input_csv.exists():
         df = pl.read_csv(input_csv)
     else:
-        df = pipeline.get_full_scan_results()
+        df = pl.read_csv(OUTPUT_CONDENSATE_DIR / "results_susceptibility.csv")
 
     # 规范导出至 output/LCP/
     target_dirs = [output_lcp_dir]

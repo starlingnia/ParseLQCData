@@ -36,17 +36,13 @@ def run_lcp_susceptibility(
 
     print("==========================================================================")
     print("[LCP SUSCEPTIBILITY] 启动常物理线手征磁化率数据抽取与物理标度流水线...")
-    print(f"  - 输入目录: {readin_dir if readin_dir else '基准/本地验证模式'}")
+    print(f"  - 输入目录: {readin_dir}")
     print(f"  - 输出目录: {output_dir}")
     print("==========================================================================")
 
     pipeline = SusceptibilityPipeline(output_dir=output_dir)
 
-    if readin_dir and readin_dir.exists():
-        print(f"[INFO] 正在从真实构型目录执行扫描: {readin_dir}")
-        df = pipeline.run_cluster_scan(readin_dir)
-    else:
-        df = pipeline.get_full_scan_results(force_recompute=True)
+    df = pipeline.run_cluster_scan(readin_dir)
 
     print(f"[OK] LCP 磁化率计算完成 (共 {df.height} 组数据)，耗时: {time.time() - t0:.2f}s")
 

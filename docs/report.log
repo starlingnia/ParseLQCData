@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.10.23)  29 OCT 2026 11:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.10.23)  12 NOV 2026 10:35
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -401,7 +401,7 @@ Package: array 2023/10/16 v2.5g Tabular extension package (FMi)
 ))
 Package hyperref Info: Option `colorlinks' set `true' on input line 16.
 Package translations Info: No language package found. I am going to use `englis
-h' as default language. on input line 22.
+h' as default language. on input line 26.
 
 (/usr/local/texlive/2024/texmf-dist/tex/latex/graphics/color.sty
 Package: color 2022/01/06 v1.3d Standard LaTeX Color (DPC)
@@ -420,24 +420,24 @@ File: l3backend-pdftex.def 2024-02-20 L3 backend support: PDF output (pdfTeX)
 (./report.aux)
 \openout1 = `report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 22.
-LaTeX Font Info:    ... okay on input line 22.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 26.
+LaTeX Font Info:    ... okay on input line 26.
 
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
@@ -498,25 +498,25 @@ e
 Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: hyperref package is loaded.
 Package caption Info: End \AtBeginDocument code.
-Package hyperref Info: Link coloring ON on input line 22.
+Package hyperref Info: Link coloring ON on input line 26.
 
 (./report.out) (./report.out)
 \@outlinefile=\write3
 \openout3 = `report.out'.
 
-LaTeX Info: Redefining \microtypecontext on input line 22.
-Package microtype Info: Applying patch `item' on input line 22.
-Package microtype Info: Applying patch `toc' on input line 22.
-Package microtype Info: Applying patch `eqnum' on input line 22.
-Package microtype Info: Applying patch `footnote' on input line 22.
-Package microtype Info: Applying patch `verbatim' on input line 22.
+LaTeX Info: Redefining \microtypecontext on input line 26.
+Package microtype Info: Applying patch `item' on input line 26.
+Package microtype Info: Applying patch `toc' on input line 26.
+Package microtype Info: Applying patch `eqnum' on input line 26.
+Package microtype Info: Applying patch `footnote' on input line 26.
+Package microtype Info: Applying patch `verbatim' on input line 26.
 Package microtype Info: Generating PDF output.
 Package microtype Info: Character protrusion enabled (level 2).
 Package microtype Info: Using default protrusion set `alltext'.
 Package microtype Info: Automatic font expansion enabled (level 2),
 (microtype)             stretch: 20, shrink: 20, step: 1, non-selected.
 Package microtype Info: Using default expansion set `alltext-nott'.
-LaTeX Info: Redefining \showhyphens on input line 22.
+LaTeX Info: Redefining \showhyphens on input line 26.
 Package microtype Info: No adjustment of tracking.
 Package microtype Info: No adjustment of interword spacing.
 Package microtype Info: No adjustment of character kerning.
@@ -531,16 +531,8 @@ File: translations-basic-dictionary-english.trsl (english translation file `tra
 nslations-basic-dictionary')
 )
 Package translations Info: loading dictionary `translations-basic-dictionary' f
-or `english'. on input line 22.
-<figures/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.pdf, id=4, 1120.185pt x 
-433.62pt>
-File: figures/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.pdf Graphic file (t
-ype pdf)
-<use figures/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.pdf>
-Package pdftex.def Info: figures/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.
-pdf  used on input line 26.
-(pdftex.def)             Requested size: 512.14963pt x 198.25679pt.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 27.
+or `english'. on input line 26.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 28.
 
 
 (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsa.fd
@@ -549,7 +541,7 @@ File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 (/usr/local/texlive/2024/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 27.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 28.
 
 
 (/usr/local/texlive/2024/texmf-dist/tex/latex/amsfonts/umsb.fd
@@ -558,56 +550,73 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 (/usr/local/texlive/2024/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
+<figures/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.pdf, id=4, 1120.185pt x 
+433.62pt>
+File: figures/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.pdf Graphic file (t
+ype pdf)
+<use figures/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.pdf>
+Package pdftex.def Info: figures/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.
+pdf  used on input line 47.
+(pdftex.def)             Requested size: 512.14963pt x 198.25679pt.
 <figures/chiral_condensate_bare_light_strange.pdf, id=5, 1120.185pt x 419.166pt
 >
 File: figures/chiral_condensate_bare_light_strange.pdf Graphic file (type pdf)
 <use figures/chiral_condensate_bare_light_strange.pdf>
 Package pdftex.def Info: figures/chiral_condensate_bare_light_strange.pdf  used
- on input line 35.
+ on input line 56.
 (pdftex.def)             Requested size: 512.14963pt x 191.64824pt.
  [1
 
 {/usr/local/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <./figur
-es/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.pdf> <./figures/chiral_condens
-ate_bare_light_strange.pdf>]
-<figures/chiral_susceptibility_multimodal_p2.pdf, id=247, 614.295pt x 419.166pt
+es/chiral_lcp_comparison_p2_22_p3_02_q2_22_q3_02.pdf>] [2 <./figures/chiral_con
+densate_bare_light_strange.pdf>]
+<figures/chiral_susceptibility_multimodal_p2.pdf, id=255, 542.025pt x 375.804pt
 >
 File: figures/chiral_susceptibility_multimodal_p2.pdf Graphic file (type pdf)
 <use figures/chiral_susceptibility_multimodal_p2.pdf>
 Package pdftex.def Info: figures/chiral_susceptibility_multimodal_p2.pdf  used 
-on input line 49.
-(pdftex.def)             Requested size: 250.95612pt x 171.23875pt.
-<figures/chiral_susceptibility_multimodal_p3.pdf, id=248, 614.295pt x 419.166pt
+on input line 71.
+(pdftex.def)             Requested size: 250.95612pt x 173.99586pt.
+<figures/chiral_susceptibility_multimodal_p3.pdf, id=256, 542.025pt x 375.804pt
 >
 File: figures/chiral_susceptibility_multimodal_p3.pdf Graphic file (type pdf)
 <use figures/chiral_susceptibility_multimodal_p3.pdf>
 Package pdftex.def Info: figures/chiral_susceptibility_multimodal_p3.pdf  used 
-on input line 56.
-(pdftex.def)             Requested size: 250.95612pt x 171.23875pt.
-<figures/chiral_susceptibility_multimodal_q2.pdf, id=249, 614.295pt x 419.166pt
+on input line 78.
+(pdftex.def)             Requested size: 250.95612pt x 173.99586pt.
+<figures/chiral_susceptibility_multimodal_q2.pdf, id=257, 542.025pt x 375.804pt
 >
 File: figures/chiral_susceptibility_multimodal_q2.pdf Graphic file (type pdf)
 <use figures/chiral_susceptibility_multimodal_q2.pdf>
 Package pdftex.def Info: figures/chiral_susceptibility_multimodal_q2.pdf  used 
-on input line 63.
-(pdftex.def)             Requested size: 250.95612pt x 171.23875pt.
-<figures/chiral_susceptibility_multimodal_q3.pdf, id=250, 614.295pt x 419.166pt
+on input line 85.
+(pdftex.def)             Requested size: 250.95612pt x 173.99586pt.
+<figures/chiral_susceptibility_multimodal_q3.pdf, id=258, 542.025pt x 375.804pt
 >
 File: figures/chiral_susceptibility_multimodal_q3.pdf Graphic file (type pdf)
 <use figures/chiral_susceptibility_multimodal_q3.pdf>
 Package pdftex.def Info: figures/chiral_susceptibility_multimodal_q3.pdf  used 
-on input line 70.
-(pdftex.def)             Requested size: 250.95612pt x 171.23875pt.
- [2
+on input line 92.
+(pdftex.def)             Requested size: 250.95612pt x 173.99586pt.
+ [3
 
  <./figures/chiral_susceptibility_multimodal_p2.pdf> <./figures/chiral_suscepti
 bility_multimodal_p3.pdf> <./figures/chiral_susceptibility_multimodal_q2.pdf> <
 ./figures/chiral_susceptibility_multimodal_q3.pdf>]
-[3
+[4
 
-] [4
+] [5
 
-] (./report.aux)
+]
+<figures/chiral_condensate_physical_all.pdf, id=671, 614.295pt x 419.166pt>
+File: figures/chiral_condensate_physical_all.pdf Graphic file (type pdf)
+<use figures/chiral_condensate_physical_all.pdf>
+Package pdftex.def Info: figures/chiral_condensate_physical_all.pdf  used on in
+put line 236.
+(pdftex.def)             Requested size: 450.69417pt x 307.53645pt.
+ [6
+
+ <./figures/chiral_condensate_physical_all.pdf>] (./report.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
@@ -616,31 +625,35 @@ Package rerunfilecheck Info: File `report.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 17380 strings out of 474116
- 336298 string characters out of 5743681
+ 17424 strings out of 474116
+ 337231 string characters out of 5743681
  1956187 words of memory out of 5000000
- 39516 multiletter control sequences out of 15000+600000
- 568406 words of font info for 94 fonts, out of 8000000 for 9000
+ 39543 multiletter control sequences out of 15000+600000
+ 570501 words of font info for 106 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  75i,15n,79p,1003b,905s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbsy10.pf
 b></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmbsy
 7.pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10
 .pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx7.p
-fb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pf
-b></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb>
-</usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb>
-</usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib7.
-pfb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pf
-b></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><
-/usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></us
-r/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr
-/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/l
-ocal/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb>
-Output written on report.pdf (4 pages, 493092 bytes).
+fb></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pf
+b></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb
+></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb><
+/usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></u
+sr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb></u
+sr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib7.pfb
+></usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><
+/usr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></u
+sr/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr
+/local/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/lo
+cal/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local
+/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/
+texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/local/te
+xlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb>
+Output written on report.pdf (6 pages, 564461 bytes).
 PDF statistics:
- 736 PDF objects out of 1000 (max. 8388607)
- 179 compressed objects within 2 object streams
- 12 named destinations out of 1000 (max. 500000)
- 18463 words of extra memory for PDF output out of 20736 (max. 10000000)
+ 860 PDF objects out of 1000 (max. 8388607)
+ 221 compressed objects within 3 object streams
+ 16 named destinations out of 1000 (max. 500000)
+ 22564 words of extra memory for PDF output out of 24883 (max. 10000000)
 

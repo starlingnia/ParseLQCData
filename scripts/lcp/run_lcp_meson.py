@@ -6,7 +6,7 @@ scripts/lcp/run_lcp_meson.py
 1. 通过 MesonOrchestrator (C++ 核心库) 批量抽取 7 组 Beta 的 6 种信道多源/单源关联函数
 2. 调用 effective_mass_solver 内存级求解有效质量方程 (中心对称点 24.0)
 3. 调用 cosh_fitter 执行非线性平台拟合与 Jackknife 统计推断
-4. 输出结果至 output/pickdata*, output/ratio_results*, output/simulateresult*
+4. 输出结果至 output/meson/{multisrc,singlesrc}/<格点>_b<beta>/{correlator,meff,fit}
 5. 可选自动生成 LCP 介子物理图表 (--plot)
 --------------------------------------------------------------------------------
 """
@@ -29,6 +29,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from docs.physics_setup import (
+    meson_stage_dir,
     BETAS,
     CHANNELS,
     CHANNEL_CONFIGS,
@@ -138,9 +139,9 @@ def run_single_task(
     if not input_dir.exists():
         input_dir = readin_dir / f"L48T16beta4.{beta}" / "Output"
 
-    pick_dir = out_root / f"pickdata{suffix}" / f"b4.{beta}"
-    ratio_dir = out_root / f"ratio_results{suffix}" / f"b4.{beta}"
-    sim_dir = out_root / f"simulateresult{suffix}" / f"b4.{beta}"
+    pick_dir = meson_stage_dir("correlator", beta, is_single, output_root=out_root)
+    ratio_dir = meson_stage_dir("meff", beta, is_single, output_root=out_root)
+    sim_dir = meson_stage_dir("fit", beta, is_single, output_root=out_root)
 
     for d in (pick_dir, ratio_dir, sim_dir):
         d.mkdir(parents=True, exist_ok=True)

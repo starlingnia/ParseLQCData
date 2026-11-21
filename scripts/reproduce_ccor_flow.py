@@ -875,7 +875,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     # 导出包含全量 Jackknife 统计重采样样本的明细 CSV
     jk_rows = []
-    for r in results:
+    for r in records:
         ds = r.get("dataset", "")
         cs = r.get("case", "")
         ml_val = r.get("ml", "")

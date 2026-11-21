@@ -1,6 +1,6 @@
 {
   "dataset_name": "L32T12beta4.17",
-  "dataset_path": "data/readin/L32T12beta4.17/test_condensate",
+  "dataset_path": "/Users/junxiongnie/code/algo/ParseLQCData/data/readin/L32T12beta4.17/test_condensate",
   "ns": 48,
   "nt": 16,
   "beta": 4.17,

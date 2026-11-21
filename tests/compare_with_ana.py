@@ -24,7 +24,7 @@ import polars as pl
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 from docs.physics_setup import (
-    BETAS, CHANNELS, ANA_ROOT, OUTPUT_ROOT, REPORT_PATH
+    BETAS, CHANNELS, ANA_ROOT, OUTPUT_ROOT, REPORT_PATH, meson_stage_dir, meson_summary_path
 )
 
 
@@ -38,7 +38,7 @@ def compare_correlators(is_single: bool = False) -> Tuple[bool, List[dict]]:
 
     for beta in BETAS:
         for ch in CHANNELS:
-            my_file = OUTPUT_ROOT / dir_name / f"b4.{beta}" / f"save_{ch}.csv"
+            my_file = meson_stage_dir("correlator", beta, is_single) / f"save_{ch}.csv"
             ana_file = ANA_ROOT / "dat" / "func" / dir_name / f"b4.{beta}" / f"save_{ch}.csv"
 
             if not my_file.exists() or not ana_file.exists():
@@ -93,7 +93,7 @@ def compare_effective_masses(is_single: bool = False) -> Tuple[bool, List[dict]]
 
     for beta in BETAS:
         for ch in CHANNELS:
-            my_file = OUTPUT_ROOT / dir_name / f"b4.{beta}" / f"meff_{ch}.csv"
+            my_file = meson_stage_dir("meff", beta, is_single) / f"meff_{ch}.csv"
             ana_file = ANA_ROOT / "dat" / "func" / dir_name / f"b4.{beta}" / f"meff_{ch}.csv"
 
             if not my_file.exists() or not ana_file.exists():
@@ -171,7 +171,7 @@ def compare_fit_summaries() -> Tuple[bool, List[dict]]:
         mode_str = "Single-Source" if is_single else "Multi-Source"
         sub_dir = "simulateresult-singlesrc" if is_single else "simulateresult"
 
-        my_file = OUTPUT_ROOT / sub_dir / "all_fits_summary.csv"
+        my_file = meson_summary_path(is_single)
         ana_file = ANA_ROOT / "dat" / "func" / sub_dir / "all_fits_summary.csv"
 
         if not my_file.exists() or not ana_file.exists():

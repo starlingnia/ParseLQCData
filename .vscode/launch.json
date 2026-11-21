@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug /tmp/dbg (通用 C++ 断点调试)",
+      "type": "lldb",
+      "request": "launch",
+      "program": "/tmp/dbg",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopOnEntry": false
+    },
+    {
+      "name": "Debug bin/test_condensate",
+      "type": "lldb",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/test_condensate",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "stopOnEntry": false
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+==========================================================================
+>>> [PROJECT: CCOR] 启动 CCOR 对称性破缺流水线总控编排
+==========================================================================
+
+>>> [CCOR STEP 1/3] 调度原子任务: block 关联函数抽取与折叠...
+[WARN] 未知系综规格: 32x12 (支持规格: (ScanCase(order=0, ns=32, nt=12, mls=(0.002, 0.0035, 0.007, 0.012), temp_ref_mev=204.0, ms=0.04, beta=4.17), ScanCase(order=1, ns=32, nt=14, mls=(0.002, 0.0035, 0.007, 0.012), temp_ref_mev=174.86, ms=0.04, beta=4.17), ScanCase(order=2, ns=32, nt=16, mls=(0.002, 0.0035, 0.007, 0.012), temp_ref_mev=153.0, ms=0.04, beta=4.17), ScanCase(order=3, ns=36, nt=18, mls=(0.002, 0.0035, 0.007, 0.012), temp_ref_mev=136.0, ms=0.04, beta=4.17), ScanCase(order=4, ns=40, nt=16, mls=(0.002, 0.0035, 0.007, 0.012), temp_ref_mev=153.0, ms=0.04, beta=4.17), ScanCase(order=5, ns=48, nt=18, mls=(0.002, 0.0035, 0.007, 0.012), temp_ref_mev=136.0, ms=0.04, beta=4.17)))
+
+>>> [CCOR STEP 2/3] 调度原子任务: 逐 Jackknife 样本 cosh 平台拟合...
+[CCOR-TASK-02] 执行逐 Jackknife 样本 cosh 平台质量拟合完成
+
+>>> [CCOR STEP 3/3] 调度原子任务: 4 组手征/自旋手征质量差 ΔM 计算与对照...
+[CCOR-TASK-03] 正在调度 reproduce_ccor_flow 计算质量差与基准对比...
+[CCOR] datasets=['reference', 'multisrc', 'singlesrc'] ensembles=['32x12', '32x14', '32x16', '36x18']
+[CCOR] 参考数据目录: /Users/junxiongnie/code/ana/dat/ccor
+[CCOR] 共 48 个任务 (dataset x ensemble x ml)
+[  1/48] reference  32x12   ml=0.0120 -> 6/6 信道
+[  2/48] reference  32x12   ml=0.0035 -> 6/6 信道
+[  3/48] reference  32x12   ml=0.0020 -> 6/6 信道
+[  4/48] reference  32x12   ml=0.0070 -> 6/6 信道
+[  5/48] reference  32x14   ml=0.0020 -> 6/6 信道
+[  6/48] reference  32x14   ml=0.0035 -> 6/6 信道
+[WARN] reference: ensemble 36x18 的 Ns=36 != 32, ana 参考口径 (前 32 行 + 对称点 16) 仅为复刻 ccor 而保留, 物理上不可信; 请用 multisrc / singlesrc 数据源 (按 Ns/2 自动对称化)
+[  7/48] reference  32x16   ml=0.0035 -> 6/6 信道
+[WARN] reference: ensemble 36x18 的 Ns=36 != 32, ana 参考口径 (前 32 行 + 对称点 16) 仅为复刻 ccor 而保留, 物理上不可信; 请用 multisrc / singlesrc 数据源 (按 Ns/2 自动对称化)
+[  8/48] reference  32x16   ml=0.0020 -> 6/6 信道
+[WARN] reference: ensemble 36x18 的 Ns=36 != 32, ana 参考口径 (前 32 行 + 对称点 16) 仅为复刻 ccor 而保留, 物理上不可信; 请用 multisrc / singlesrc 数据源 (按 Ns/2 自动对称化)
+[  9/48] reference  32x16   ml=0.0070 -> 6/6 信道
+[WARN] reference: ensemble 36x18 的 Ns=36 != 32, ana 参考口径 (前 32 行 + 对称点 16) 仅为复刻 ccor 而保留, 物理上不可信; 请用 multisrc / singlesrc 数据源 (按 Ns/2 自动对称化)
+[ 10/48] reference  36x18   ml=0.0020 -> 6/6 信道
+[ 11/48] reference  32x14   ml=0.0070 -> 6/6 信道
+[ 12/48] reference  32x16   ml=0.0120 -> 6/6 信道
+[ 13/48] reference  32x14   ml=0.0120 -> 6/6 信道
+[ 14/48] reference  36x18   ml=0.0035 -> 6/6 信道
+[ 15/48] multisrc   32x12   ml=0.0020 -> 6/6 信道 (win=[8,17)/[10,17))
+[ 16/48] multisrc   32x12   ml=0.0035 -> 6/6 信道 (win=[8,17)/[10,17))
+[ 17/48] multisrc   32x12   ml=0.0120 -> 6/6 信道 (win=[8,17)/[10,17))
+[ 18/48] multisrc   32x12   ml=0.0070 -> 6/6 信道 (win=[8,17)/[10,17))
+[ 19/48] reference  36x18   ml=0.0070 -> 6/6 信道
+[ 20/48] multisrc   32x14   ml=0.0020 -> 6/6 信道 (win=[6,14))
+[ 21/48] multisrc   32x14   ml=0.0035 -> 6/6 信道 (win=[6,14))
+[ 22/48] multisrc   32x14   ml=0.0070 -> 6/6 信道 (win=[6,14))
+[ 23/48] multisrc   32x16   ml=0.0020 -> 6/6 信道 (win=[8,17))
+[ 24/48] multisrc   36x18   ml=0.0020 -> 36x18 未在 config/fit_windows.txt 中定义窗口
+[ 25/48] multisrc   36x18   ml=0.0035 -> 36x18 未在 config/fit_windows.txt 中定义窗口
+[ 26/48] multisrc   36x18   ml=0.0070 -> 36x18 未在 config/fit_windows.txt 中定义窗口
+[ 27/48] multisrc   36x18   ml=0.0120 -> 36x18 未在 config/fit_windows.txt 中定义窗口
+[ 28/48] multisrc   32x14   ml=0.0120 -> 6/6 信道 (win=[6,14))
+[ 29/48] reference  36x18   ml=0.0120 -> 6/6 信道
+[ 30/48] multisrc   32x16   ml=0.0035 -> 6/6 信道 (win=[8,17))
+[ 31/48] multisrc   32x16   ml=0.0070 -> 6/6 信道 (win=[8,17))
+[ 32/48] singlesrc  32x12   ml=0.0020 -> 6/6 信道 (win=[8,17)/[10,17))
+[ 33/48] multisrc   32x16   ml=0.0120 -> 6/6 信道 (win=[8,17))
+[ 34/48] singlesrc  32x12   ml=0.0035 -> 6/6 信道 (win=[8,17)/[10,17))
+[ 35/48] singlesrc  32x12   ml=0.0070 -> 6/6 信道 (win=[8,17)/[10,17))
+[ 36/48] singlesrc  32x12   ml=0.0120 -> 6/6 信道 (win=[8,17)/[10,17))
+[ 37/48] singlesrc  32x14   ml=0.0020 -> 6/6 信道 (win=[6,14))
+[ 38/48] singlesrc  32x16   ml=0.0020 -> 6/6 信道 (win=[8,17))
+[ 39/48] singlesrc  32x14   ml=0.0035 -> 6/6 信道 (win=[6,14))
+[ 40/48] singlesrc  36x18   ml=0.0020 -> 36x18 未在 config/fit_windows.txt 中定义窗口
+[ 41/48] singlesrc  36x18   ml=0.0035 -> 36x18 未在 config/fit_windows.txt 中定义窗口
+[ 42/48] singlesrc  36x18   ml=0.0070 -> 36x18 未在 config/fit_windows.txt 中定义窗口
+[ 43/48] singlesrc  36x18   ml=0.0120 -> 36x18 未在 config/fit_windows.txt 中定义窗口
+[ 44/48] singlesrc  32x14   ml=0.0070 -> 6/6 信道 (win=[6,14))
+[ 45/48] singlesrc  32x16   ml=0.0035 -> 6/6 信道 (win=[8,17))
+[ 46/48] singlesrc  32x14   ml=0.0120 -> 6/6 信道 (win=[6,14))
+[ 47/48] singlesrc  32x16   ml=0.0070 -> 6/6 信道 (win=[8,17))
+[ 48/48] singlesrc  32x16   ml=0.0120 -> 6/6 信道 (win=[8,17))
+[CCOR] 质量表 240 行, 质量差表 160 行
+[GNUPLOT] reference SU(2)XSU(2) V-A: rc=0 
+[GNUPLOT] reference U(1)A T-X: rc=0 
+[GNUPLOT] reference U(1) S-PS: rc=0 
+[GNUPLOT] reference SU(2)spinxchiral X-A: rc=0 
+[GNUPLOT] reference massvtem: rc=0 
+[GNUPLOT] reference deltamassvsm: rc=0 
+[GNUPLOT] multisrc SU(2)XSU(2) V-A: rc=0 
+[GNUPLOT] multisrc U(1)A T-X: rc=0 
+[GNUPLOT] multisrc U(1) S-PS: rc=0 
+[GNUPLOT] multisrc SU(2)spinxchiral X-A: rc=0 
+[GNUPLOT] multisrc massvtem: rc=0 
+[GNUPLOT] multisrc deltamassvsm: rc=0 
+[GNUPLOT] singlesrc SU(2)XSU(2) V-A: rc=0 
+[GNUPLOT] singlesrc U(1)A T-X: rc=0 
+[GNUPLOT] singlesrc U(1) S-PS: rc=0 
+[GNUPLOT] singlesrc SU(2)spinxchiral X-A: rc=0 
+[GNUPLOT] singlesrc massvtem: rc=0 
+[GNUPLOT] singlesrc deltamassvsm: rc=0 
+[CCOR] 关联函数对比: /Users/junxiongnie/code/algo/ParseLQCData/output/ccor_flow/comparison_correlator.csv (信号点中位相对差 58.79%, 信号点平均 pull 4.81)
+[CCOR] 对照表: /Users/junxiongnie/code/algo/ParseLQCData/output/ccor_flow/comparison_delta.csv, /Users/junxiongnie/code/algo/ParseLQCData/output/ccor_flow/comparison_mass.csv
+[CCOR] 对照图: /Users/junxiongnie/code/algo/ParseLQCData/output/ccor_flow/compare_delta_mass.png
+[CCOR] 对照图: /Users/junxiongnie/code/algo/ParseLQCData/output/ccor_flow/compare_delta_mass.pdf
+[CCOR] 对照图: /Users/junxiongnie/code/algo/ParseLQCData/output/ccor_flow/compare_correlators.png
+[CCOR] 对照图: /Users/junxiongnie/code/algo/ParseLQCData/output/ccor_flow/compare_correlators.pdf
+[DONE] ccor 流程复刻完成, 用时 176.7s -> /Users/junxiongnie/code/algo/ParseLQCData/output/ccor_flow
+[CCOR-TASK-03] 对称性信道质量差计算完成！
+
+==========================================================================
+>>> [PROJECT: CCOR] CCOR 项目全流水线执行完毕！总耗时: 215s
+==========================================================================
